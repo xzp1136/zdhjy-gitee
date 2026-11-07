@@ -1,0 +1,55 @@
+
+hualanxiaoshi.png
+size: 661,279
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+images/tx/4b
+  rotate: true
+  xy: 498, 114
+  size: 165, 163
+  orig: 167, 166
+  offset: 1, 1
+  index: -1
+images/tx/4c
+  rotate: true
+  xy: 0, 2
+  size: 277, 251
+  orig: 291, 266
+  offset: 7, 7
+  index: -1
+images/tx/4d
+  rotate: true
+  xy: 577, 47
+  size: 65, 71
+  orig: 67, 73
+  offset: 1, 1
+  index: -1
+images/tx/f
+  rotate: false
+  xy: 498, 35
+  size: 77, 77
+  orig: 77, 77
+  offset: 0, 0
+  index: -1
+images/tx/g
+  rotate: false
+  xy: 498, 0
+  size: 33, 33
+  orig: 37, 37
+  offset: 2, 2
+  index: -1
+images/tx/lizi
+  rotate: false
+  xy: 577, 3
+  size: 42, 42
+  orig: 53, 53
+  offset: 7, 6
+  index: -1
+images/tx/shuye
+  rotate: false
+  xy: 253, 13
+  size: 243, 266
+  orig: 243, 266
+  offset: 0, 0
+  index: -1

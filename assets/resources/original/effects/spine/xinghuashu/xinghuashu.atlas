@@ -1,0 +1,41 @@
+
+xinghuashu.png
+size: 329,96
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+tx/langy3
+  rotate: false
+  xy: 276, 19
+  size: 16, 16
+  orig: 16, 16
+  offset: 0, 0
+  index: -1
+tx/langy4
+  rotate: true
+  xy: 304, 35
+  size: 61, 25
+  orig: 64, 30
+  offset: 2, 3
+  index: -1
+tx/lizi2
+  rotate: false
+  xy: 243, 37
+  size: 59, 59
+  orig: 63, 63
+  offset: 2, 2
+  index: -1
+tx/quan4
+  rotate: false
+  xy: 243, 4
+  size: 31, 31
+  orig: 31, 31
+  offset: 0, 0
+  index: -1
+tx/wenzi
+  rotate: false
+  xy: 0, 0
+  size: 241, 96
+  orig: 241, 96
+  offset: 0, 0
+  index: -1

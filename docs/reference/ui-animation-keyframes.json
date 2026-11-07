@@ -1,0 +1,1598 @@
+{
+  "bowen": {
+    "duration": 1.0333333015441895,
+    "loop": false,
+    "bindings": [
+      {
+        "path": 2673217936,
+        "attribute": 304273561,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 212,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      },
+      {
+        "path": 2673217936,
+        "attribute": 2526845255,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 212,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      },
+      {
+        "path": 2673217936,
+        "attribute": 4215373228,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 212,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      },
+      {
+        "path": 523412544,
+        "attribute": 304273561,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 212,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      },
+      {
+        "path": 523412544,
+        "attribute": 2526845255,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 212,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      },
+      {
+        "path": 523412544,
+        "attribute": 4215373228,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 212,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      },
+      {
+        "path": 523412544,
+        "attribute": 2334886179,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 212,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      },
+      {
+        "path": 523412544,
+        "attribute": 2086281974,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 1,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      },
+      {
+        "path": 2673217936,
+        "attribute": 2086281974,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 1,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      },
+      {
+        "path": 2673217936,
+        "attribute": 0,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 212,
+        "customType": 23,
+        "isPPtrCurve": 1,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      },
+      {
+        "path": 523412544,
+        "attribute": 0,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 212,
+        "customType": 23,
+        "isPPtrCurve": 1,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      },
+      {
+        "path": 2673217936,
+        "attribute": 2334886179,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 212,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      }
+    ],
+    "frames": [
+      {
+        "time": 0.0,
+        "channels": {
+          "0": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              -42.99201202392578,
+              19.346406936645508,
+              0.0,
+              0.0
+            ]
+          },
+          "1": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              14.325643539428711,
+              -6.446539878845215,
+              0.0,
+              1.0
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              -0.04054440185427666,
+              0.0,
+              1.0
+            ]
+          },
+          "3": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              53.29961395263672,
+              -24.08455467224121,
+              0.0,
+              1.0
+            ]
+          },
+          "4": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.7678327560424805,
+              -1.3324087858200073,
+              0.0,
+              1.0
+            ]
+          },
+          "5": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              -0.06834268569946289,
+              -0.11846063286066055,
+              0.0,
+              1.0
+            ]
+          },
+          "6": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "7": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "8": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.066667,
+        "channels": {
+          "9": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.1,
+        "channels": {
+          "9": {
+            "value": 2.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              2.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.2,
+        "channels": {
+          "9": {
+            "value": 3.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              3.0
+            ]
+          },
+          "10": {
+            "value": 17.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              17.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.266667,
+        "channels": {
+          "3": {
+            "value": 0.2980392277240753,
+            "cubicCoefficients": [
+              1.934486985206604,
+              2.4825949668884277,
+              -1.4745101928710938,
+              0.2980392277240753
+            ]
+          },
+          "4": {
+            "value": 0.9198113083839417,
+            "cubicCoefficients": [
+              20.375673294067383,
+              -5.959741115570068,
+              -0.5468137264251709,
+              0.9198113083839417
+            ]
+          },
+          "5": {
+            "value": 0.9902801513671875,
+            "cubicCoefficients": [
+              5.021147727966309,
+              -1.590775728225708,
+              -0.0777587890625,
+              0.9902801513671875
+            ]
+          },
+          "6": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              2.970458745956421,
+              -1.0396604537963867,
+              0.0,
+              1.0
+            ]
+          },
+          "9": {
+            "value": 4.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              4.0
+            ]
+          },
+          "10": {
+            "value": 18.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              18.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.3,
+        "channels": {
+          "0": {
+            "value": 0.5803921818733215,
+            "cubicCoefficients": [
+              21.288515090942383,
+              -10.961718559265137,
+              0.0,
+              0.5803921818733215
+            ]
+          },
+          "1": {
+            "value": 0.8066037893295288,
+            "cubicCoefficients": [
+              -2.795245885848999,
+              1.2578606605529785,
+              0.0,
+              0.8066037893295288
+            ]
+          },
+          "2": {
+            "value": 0.9963510036468506,
+            "cubicCoefficients": [
+              3.1266255378723145,
+              -1.3664370775222778,
+              -0.024326641112565994,
+              0.9963510036468506
+            ]
+          },
+          "9": {
+            "value": 5.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              5.0
+            ]
+          },
+          "10": {
+            "value": 19.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              19.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.4,
+        "channels": {
+          "9": {
+            "value": 6.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              6.0
+            ]
+          },
+          "10": {
+            "value": 20.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              20.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.466667,
+        "channels": {
+          "9": {
+            "value": 7.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              7.0
+            ]
+          },
+          "10": {
+            "value": 21.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              21.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.5,
+        "channels": {
+          "3": {
+            "value": 0.11372549086809158,
+            "cubicCoefficients": [
+              -141.1763916015625,
+              21.176464080810547,
+              0.0,
+              0.11372549086809158
+            ]
+          },
+          "4": {
+            "value": 0.7265931367874146,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.7265931367874146
+            ]
+          },
+          "5": {
+            "value": 0.9493147134780884,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.9493147134780884
+            ]
+          },
+          "6": {
+            "value": 0.9811320900917053,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.9811320900917053
+            ]
+          },
+          "9": {
+            "value": 8.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              8.0
+            ]
+          },
+          "10": {
+            "value": 22.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              22.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.533333,
+        "channels": {
+          "9": {
+            "value": 9.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              9.0
+            ]
+          },
+          "10": {
+            "value": 23.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              23.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.6,
+        "channels": {
+          "0": {
+            "value": 0.16862745583057404,
+            "cubicCoefficients": [
+              0.08753503859043121,
+              0.9838937520980835,
+              -0.8291317224502563,
+              0.16862745583057404
+            ]
+          },
+          "1": {
+            "value": 0.8443396091461182,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.8443396091461182
+            ]
+          },
+          "2": {
+            "value": 0.9504925608634949,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.9504925608634949
+            ]
+          },
+          "3": {
+            "value": 0.18431372940540314,
+            "cubicCoefficients": [
+              5.759806156158447,
+              -3.455883264541626,
+              0.0,
+              0.18431372940540314
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.666667,
+        "channels": {
+          "9": {
+            "value": 10.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              10.0
+            ]
+          },
+          "10": {
+            "value": 24.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              24.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.7,
+        "channels": {
+          "9": {
+            "value": 11.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              11.0
+            ]
+          },
+          "10": {
+            "value": 25.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              25.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.733333,
+        "channels": {
+          "9": {
+            "value": 12.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              12.0
+            ]
+          },
+          "10": {
+            "value": 26.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              26.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.8,
+        "channels": {
+          "9": {
+            "value": 13.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              13.0
+            ]
+          },
+          "10": {
+            "value": 27.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              27.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.9,
+        "channels": {
+          "9": {
+            "value": 14.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              14.0
+            ]
+          },
+          "10": {
+            "value": 28.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              28.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.933333,
+        "channels": {
+          "9": {
+            "value": 15.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              15.0
+            ]
+          },
+          "10": {
+            "value": 29.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              29.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 1.0,
+        "channels": {
+          "0": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "3": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "10": {
+            "value": 30.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              30.0
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "effect_lianyi_1": {
+    "duration": 0.5333333611488342,
+    "loop": true,
+    "bindings": [
+      {
+        "path": 2673217936,
+        "attribute": 0,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 212,
+        "customType": 23,
+        "isPPtrCurve": 1,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      }
+    ],
+    "frames": [
+      {
+        "time": 0.1,
+        "channels": {
+          "0": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.2,
+        "channels": {
+          "0": {
+            "value": 2.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              2.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.3,
+        "channels": {
+          "0": {
+            "value": 3.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              3.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.4,
+        "channels": {
+          "0": {
+            "value": 4.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              4.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.5,
+        "channels": {
+          "0": {
+            "value": 5.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              5.0
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "ImageScaleAni": {
+    "duration": 2.0,
+    "loop": true,
+    "bindings": [
+      {
+        "path": 0,
+        "attribute": 3,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 4,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      }
+    ],
+    "frames": [
+      {
+        "time": 0.0,
+        "channels": {
+          "0": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              -125.94754028320312,
+              22.040821075439453,
+              0.0,
+              1.0
+            ]
+          },
+          "1": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              37.784217834472656,
+              -6.61223840713501,
+              0.0,
+              1.0
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.116667,
+        "channels": {
+          "0": {
+            "value": 1.100000023841858,
+            "cubicCoefficients": [
+              88.88890075683594,
+              -20.000003814697266,
+              0.0,
+              1.100000023841858
+            ]
+          },
+          "1": {
+            "value": 0.9700000286102295,
+            "cubicCoefficients": [
+              -77.03702545166016,
+              17.333332061767578,
+              0.0,
+              0.9700000286102295
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.266667,
+        "channels": {
+          "0": {
+            "value": 0.949999988079071,
+            "cubicCoefficients": [
+              -43.19999694824219,
+              10.79999828338623,
+              0.0,
+              0.949999988079071
+            ]
+          },
+          "1": {
+            "value": 1.100000023841858,
+            "cubicCoefficients": [
+              43.20002365112305,
+              -10.800004959106445,
+              0.0,
+              1.100000023841858
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.433333,
+        "channels": {
+          "0": {
+            "value": 1.0499999523162842,
+            "cubicCoefficients": [
+              139.99978637695312,
+              -20.999971389770508,
+              0.0,
+              1.0499999523162842
+            ]
+          },
+          "1": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              -79.9998779296875,
+              11.999983787536621,
+              0.0,
+              1.0
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.533333,
+        "channels": {
+          "0": {
+            "value": 0.9800000190734863,
+            "cubicCoefficients": [
+              -16.87498664855957,
+              3.374997138977051,
+              0.0,
+              0.9800000190734863
+            ]
+          },
+          "1": {
+            "value": 1.0399999618530273,
+            "cubicCoefficients": [
+              33.74997329711914,
+              -6.749994277954102,
+              0.0,
+              1.0399999618530273
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.666667,
+        "channels": {
+          "0": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "1": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 2.0,
+        "channels": {
+          "0": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "1": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "StartIconAni": {
+    "duration": 1.0,
+    "loop": false,
+    "bindings": [
+      {
+        "path": 0,
+        "attribute": 3,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 4,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      }
+    ],
+    "frames": [
+      {
+        "time": 0.0,
+        "channels": {
+          "0": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              -34.560020446777344,
+              8.640005111694336,
+              0.0,
+              1.0
+            ]
+          },
+          "1": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              8.639991760253906,
+              -2.1599979400634766,
+              0.0,
+              1.0
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.166667,
+        "channels": {
+          "0": {
+            "value": 1.0800000429153442,
+            "cubicCoefficients": [
+              16.640012741088867,
+              -6.240004062652588,
+              0.0,
+              1.0800000429153442
+            ]
+          },
+          "1": {
+            "value": 0.9800000190734863,
+            "cubicCoefficients": [
+              -15.360006332397461,
+              5.7600016593933105,
+              0.0,
+              0.9800000190734863
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.416667,
+        "channels": {
+          "0": {
+            "value": 0.949999988079071,
+            "cubicCoefficients": [
+              -12.7999906539917,
+              4.799997329711914,
+              0.0,
+              0.949999988079071
+            ]
+          },
+          "1": {
+            "value": 1.100000023841858,
+            "cubicCoefficients": [
+              12.79999828338623,
+              -4.800000190734863,
+              0.0,
+              1.100000023841858
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.666667,
+        "channels": {
+          "0": {
+            "value": 1.0499999523162842,
+            "cubicCoefficients": [
+              30.2399959564209,
+              -7.559996604919434,
+              0.0,
+              1.0499999523162842
+            ]
+          },
+          "1": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              -17.279996871948242,
+              4.319998264312744,
+              0.0,
+              1.0
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.833333,
+        "channels": {
+          "0": {
+            "value": 0.9800000190734863,
+            "cubicCoefficients": [
+              -8.63999080657959,
+              2.1599977016448975,
+              0.0,
+              0.9800000190734863
+            ]
+          },
+          "1": {
+            "value": 1.0399999618530273,
+            "cubicCoefficients": [
+              17.27998161315918,
+              -4.319995403289795,
+              0.0,
+              1.0399999618530273
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 1.0,
+        "channels": {
+          "0": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "1": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "boxAni": {
+    "duration": 0.6666666865348816,
+    "loop": true,
+    "bindings": [
+      {
+        "path": 0,
+        "attribute": 4,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 4,
+        "customType": 4,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      }
+    ],
+    "frames": [
+      {
+        "time": 0.0,
+        "channels": {
+          "0": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "1": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "2": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              -2069.280029296875,
+              517.3200073242188,
+              0.0,
+              0.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.166667,
+        "channels": {
+          "0": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "1": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "2": {
+            "value": 4.789999961853027,
+            "cubicCoefficients": [
+              1065.9598388671875,
+              -350.0999755859375,
+              0.0,
+              4.789999961853027
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.333333,
+        "channels": {
+          "0": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "1": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "2": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              940.6802368164062,
+              -151.5600128173828,
+              -27.8700008392334,
+              0.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.5,
+        "channels": {
+          "0": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "1": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "2": {
+            "value": -4.5,
+            "cubicCoefficients": [
+              -1943.9996337890625,
+              485.99993896484375,
+              0.0,
+              -4.5
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.666667,
+        "channels": {
+          "0": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "1": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          },
+          "2": {
+            "value": 0.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              0.0
+            ]
+          }
+        }
+      }
+    ]
+  },
+  "handAni": {
+    "duration": 0.6666666865348816,
+    "loop": true,
+    "bindings": [
+      {
+        "path": 0,
+        "attribute": 3,
+        "script": {
+          "m_FileID": 0,
+          "m_PathID": 0
+        },
+        "typeID": 4,
+        "customType": 0,
+        "isPPtrCurve": 0,
+        "isIntCurve": 0,
+        "isSerializeReferenceCurve": 0
+      }
+    ],
+    "frames": [
+      {
+        "time": 0.0,
+        "channels": {
+          "0": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              -5.400001525878906,
+              2.700000762939453,
+              0.0,
+              1.0
+            ]
+          },
+          "1": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              -5.400001525878906,
+              2.700000762939453,
+              0.0,
+              1.0
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              -5.400001525878906,
+              2.700000762939453,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.333333,
+        "channels": {
+          "0": {
+            "value": 1.100000023841858,
+            "cubicCoefficients": [
+              5.400001525878906,
+              -2.700000762939453,
+              0.0,
+              1.100000023841858
+            ]
+          },
+          "1": {
+            "value": 1.100000023841858,
+            "cubicCoefficients": [
+              5.400001525878906,
+              -2.700000762939453,
+              0.0,
+              1.100000023841858
+            ]
+          },
+          "2": {
+            "value": 1.100000023841858,
+            "cubicCoefficients": [
+              5.400001525878906,
+              -2.700000762939453,
+              0.0,
+              1.100000023841858
+            ]
+          }
+        }
+      },
+      {
+        "time": 0.666667,
+        "channels": {
+          "0": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "1": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          },
+          "2": {
+            "value": 1.0,
+            "cubicCoefficients": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ]
+          }
+        }
+      }
+    ]
+  }
+}

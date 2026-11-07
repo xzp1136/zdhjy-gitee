@@ -1,0 +1,130 @@
+[
+  {
+    "name": "pink_deep",
+    "spritePathId": 1362,
+    "texturePathId": 167,
+    "logical": [
+      272.0,
+      192.0
+    ],
+    "borderLTRB": [
+      112.0,
+      0.0,
+      110.0,
+      0.0
+    ],
+    "ppu": 100.0
+  },
+  {
+    "name": "tittlebg",
+    "spritePathId": 1499,
+    "texturePathId": 305,
+    "logical": [
+      401.0,
+      113.0
+    ],
+    "borderLTRB": [
+      64.0,
+      0.0,
+      57.0,
+      0.0
+    ],
+    "ppu": 100.0
+  },
+  {
+    "name": "bg21",
+    "spritePathId": 1564,
+    "texturePathId": 373,
+    "logical": [
+      938.0,
+      125.0
+    ],
+    "borderLTRB": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ppu": 100.0
+  },
+  {
+    "name": "hl0",
+    "spritePathId": 1622,
+    "texturePathId": 435,
+    "logical": [
+      139.0,
+      167.0
+    ],
+    "borderLTRB": [
+      39.0,
+      55.0,
+      37.0,
+      0.0
+    ],
+    "ppu": 100.0
+  },
+  {
+    "name": "pink",
+    "spritePathId": 1669,
+    "texturePathId": 484,
+    "logical": [
+      455.0,
+      192.0
+    ],
+    "borderLTRB": [
+      115.0,
+      0.0,
+      123.0,
+      0.0
+    ],
+    "ppu": 100.0
+  },
+  {
+    "name": "topbar",
+    "spritePathId": 1822,
+    "texturePathId": 639,
+    "logical": [
+      228.0,
+      68.0
+    ],
+    "borderLTRB": [
+      0.0,
+      0.0,
+      0.0,
+      0.0
+    ],
+    "ppu": 100.0
+  },
+  {
+    "name": "bg1",
+    "spritePathId": 1994,
+    "texturePathId": 816,
+    "logical": [
+      944.0,
+      738.0
+    ],
+    "borderLTRB": [
+      0.0,
+      335.0,
+      0.0,
+      331.0
+    ],
+    "ppu": 100.0
+  },
+  {
+    "name": "green button",
+    "spritePathId": 2103,
+    "texturePathId": 931,
+    "logical": [
+      455.0,
+      192.0
+    ],
+    "borderLTRB": [
+      103.0,
+      0.0,
+      109.0,
+      0.0
+    ],
+    "ppu": 100.0
+  }
+]

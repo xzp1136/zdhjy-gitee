@@ -1,0 +1,309 @@
+{
+  "level": 1,
+  "source": "original-vase-table-and-prefab-geometry-with-observed-flower-color-selection",
+  "note": "Container mappings, names, unlock level and variant indices are original data. Preview species selection is visually inferred; rear sunflowers in the last bouquet are not yet verified.",
+  "bouquets": [
+    {
+      "name": "暮云笺",
+      "vaseIndex": 1401,
+      "containerPrefab": "prefabs/vase/bkt1_3cdsy_01",
+      "mappingConfidence": "original-vase-table",
+      "flowerSelectionSource": "Observed color/type; rear sunflower group in vase5201 is inferred.",
+      "layers": [
+        {
+          "resource": "original/vase/bkt1_3cdsy_01",
+          "x": 0.0,
+          "y": 150.0,
+          "width": 262.0,
+          "height": 300.0,
+          "angle": 0
+        },
+        {
+          "resource": "original/flower/cdsy_dhmd_02",
+          "x": -67.5,
+          "y": 210.5,
+          "width": 150.5,
+          "height": 132.0,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/cdsy_dhmd_03",
+          "x": 57.2,
+          "y": 208.9,
+          "width": 129.5,
+          "height": 109.5,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/cdsy_dhmd_01",
+          "x": -3.4,
+          "y": 171.8,
+          "width": 148.0,
+          "height": 146.5,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/vase/bkt1_3cdsy_01_mask",
+          "x": 6.02675,
+          "y": 124.17612,
+          "width": 241.0,
+          "height": 105.0,
+          "angle": 0.0
+        }
+      ]
+    },
+    {
+      "name": "浅梦来信",
+      "vaseIndex": 1501,
+      "containerPrefab": "prefabs/vase/bkt1_3dys_01",
+      "mappingConfidence": "original-vase-table",
+      "flowerSelectionSource": "Observed color/type; rear sunflower group in vase5201 is inferred.",
+      "layers": [
+        {
+          "resource": "original/vase/bkt1_3dys_01",
+          "x": 0.0,
+          "y": 145.0,
+          "width": 253.0,
+          "height": 290.0,
+          "angle": 0
+        },
+        {
+          "resource": "original/flower/dys_bbh_02",
+          "x": -5.9,
+          "y": 201.0,
+          "width": 103.5,
+          "height": 95.0,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/dys_bbh_01",
+          "x": 32.9380602478981,
+          "y": 141.5,
+          "width": 121.5,
+          "height": 101.5,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/dys_bbh_03",
+          "x": -39.1,
+          "y": 144.9,
+          "width": 116.0,
+          "height": 96.5,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/vase/bkt1_3dys_01_mask",
+          "x": 0.0,
+          "y": 87.0,
+          "width": 253.0,
+          "height": 174.0,
+          "angle": 0.0
+        }
+      ]
+    },
+    {
+      "name": "小竹兰",
+      "vaseIndex": 1901,
+      "containerPrefab": "prefabs/vase/bkt1_3zy_01",
+      "mappingConfidence": "original-vase-table",
+      "flowerSelectionSource": "Observed color/type; rear sunflower group in vase5201 is inferred.",
+      "layers": [
+        {
+          "resource": "original/vase/bkt1_3zy_01",
+          "x": 0.0,
+          "y": 142.5,
+          "width": 267.0,
+          "height": 285.0,
+          "angle": 0
+        },
+        {
+          "resource": "original/flower/zy_hxj_01",
+          "x": 5.0,
+          "y": 192.5,
+          "width": 83.0,
+          "height": 82.5,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/zy_hxj_02",
+          "x": -56.5,
+          "y": 140.4,
+          "width": 93.0,
+          "height": 69.5,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/zy_hxj_03",
+          "x": 53.8,
+          "y": 135.6,
+          "width": 86.5,
+          "height": 54.0,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/vase/bkt1_3zy_01_mask",
+          "x": -1.22388,
+          "y": 98.47612,
+          "width": 228.0,
+          "height": 77.0,
+          "angle": 0.0
+        }
+      ]
+    },
+    {
+      "name": "浅绯",
+      "vaseIndex": 2001,
+      "containerPrefab": "prefabs/vase/bkt1_3zyj_01",
+      "mappingConfidence": "original-vase-table",
+      "flowerSelectionSource": "Observed color/type; rear sunflower group in vase5201 is inferred.",
+      "layers": [
+        {
+          "resource": "original/vase/bkt1_3zyj_01",
+          "x": 0.0,
+          "y": 166.0,
+          "width": 209.0,
+          "height": 332.0,
+          "angle": 0
+        },
+        {
+          "resource": "original/flower/zyj_byjx_01",
+          "x": -66.38394937515258,
+          "y": 233.0,
+          "width": 88.8,
+          "height": 105.0,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/zyj_byjx_02",
+          "x": 42.34567229747772,
+          "y": 213.04567229747772,
+          "width": 81.0,
+          "height": 97.8,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/zyj_byjx_03",
+          "x": 6.045672297477722,
+          "y": 291.0,
+          "width": 73.2,
+          "height": 100.2,
+          "angle": 0.0
+        }
+      ]
+    },
+    {
+      "name": "翠扶摇",
+      "vaseIndex": 2201,
+      "containerPrefab": "prefabs/vase/bkt1_3xy_01",
+      "mappingConfidence": "original-vase-table",
+      "flowerSelectionSource": "Observed color/type; rear sunflower group in vase5201 is inferred.",
+      "layers": [
+        {
+          "resource": "original/vase/bkt1_3xy_01",
+          "x": 0.0,
+          "y": 160.07612,
+          "width": 198.0,
+          "height": 320.0,
+          "angle": 0
+        },
+        {
+          "resource": "original/flower/xy_sz_01",
+          "x": 12.2,
+          "y": 159.6,
+          "width": 77.39999999999999,
+          "height": 71.39999999999999,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/xy_sz_02",
+          "x": 41.1,
+          "y": 236.4,
+          "width": 86.39999999999999,
+          "height": 62.4,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/xy_sz_03",
+          "x": -40.2,
+          "y": 237.6,
+          "width": 80.39999999999999,
+          "height": 69.6,
+          "angle": 0.0
+        }
+      ]
+    },
+    {
+      "name": "浅棕笺",
+      "vaseIndex": 5201,
+      "containerPrefab": "prefabs/vase/bkt2_3zyj3cdtx_01",
+      "mappingConfidence": "original-vase-table",
+      "flowerSelectionSource": "Observed color/type; rear sunflower group in vase5201 is inferred.",
+      "layers": [
+        {
+          "resource": "original/vase/bkt2_3zyj3cdtx_01",
+          "x": 0.0,
+          "y": 150.0,
+          "width": 286.0,
+          "height": 300.0,
+          "angle": 0
+        },
+        {
+          "resource": "original/flower/zyj_dfyjx_01",
+          "x": -63.6,
+          "y": 196.2,
+          "width": 73.5,
+          "height": 88.0,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/zyj_dfyjx_02",
+          "x": 62.3,
+          "y": 200.7,
+          "width": 71.0,
+          "height": 90.0,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/zyj_dfyjx_03",
+          "x": 0.1,
+          "y": 199.2,
+          "width": 61.0,
+          "height": 81.0,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/cdtx_xrk_01",
+          "x": -57.0,
+          "y": 149.6,
+          "width": 129.85,
+          "height": 110.94999999999999,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/cdtx_xrk_02",
+          "x": 67.4,
+          "y": 149.6,
+          "width": 114.44999999999999,
+          "height": 110.94999999999999,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/flower/cdtx_xrk_03",
+          "x": 3.5,
+          "y": 136.8,
+          "width": 127.05,
+          "height": 105.69999999999999,
+          "angle": 0.0
+        },
+        {
+          "resource": "original/vase/bkt2_3zyj3cdtx_01_mask",
+          "x": 3.54291,
+          "y": 106.02675,
+          "width": 267.0,
+          "height": 116.0,
+          "angle": 0.0
+        }
+      ]
+    }
+  ]
+}

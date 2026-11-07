@@ -1,0 +1,289 @@
+[
+  {
+    "file": "level1",
+    "componentId": 445,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnStartGame/imgbtn",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "level1",
+    "componentId": 502,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnStartGame/imgUnlockMotifTip",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "level1",
+    "componentId": 547,
+    "path": "Canvas/Start/PanelButton/Image (1)",
+    "spritePathId": 1622,
+    "imageType": 1
+  },
+  {
+    "file": "level1",
+    "componentId": 552,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnStartGame",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "level1",
+    "componentId": 618,
+    "path": "Canvas/CommonReward/Panel/btnDraw",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "level2",
+    "componentId": 850,
+    "path": "Canvas/CommonReward/Panel/btnDraw",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "level2",
+    "componentId": 902,
+    "path": "Canvas/Over/Panel/winPanel/ContinueWin",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "level2",
+    "componentId": 915,
+    "path": "Canvas/Over/Panel/failPanel/ContinueLose",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 20409,
+    "path": "ClearOver/Panel/view2/btnVideo2",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 20439,
+    "path": "Canvas/PauseView/Panel/btnBack",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 20453,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnStartGame/imgbtn",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 20576,
+    "path": "PanelHome/btnStartGame/imgUnlockMotifTip",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 21166,
+    "path": "ClearOver/Panel/view1/btnRevive1",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 21351,
+    "path": "ClearOver/Panel/view2/bg/Image",
+    "spritePathId": 1994,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 21481,
+    "path": "PanelHome/btnStartGame/imgbtn",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 21972,
+    "path": "TimeUpOver/Panel/view2/Image",
+    "spritePathId": 1994,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22031,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnStartGame/imgUnlockMotifTip",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22076,
+    "path": "Start/PanelButton/Image (1)",
+    "spritePathId": 1622,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22113,
+    "path": "Canvas/ClearOver/Panel/view2/btnVideo2",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22132,
+    "path": "Start/PanelHome/PanelHome/btnStartGame",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22194,
+    "path": "RewardOver/Panel/btnVideo",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22281,
+    "path": "Canvas/ClearOver/Panel/view2/bg/Image",
+    "spritePathId": 1994,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22358,
+    "path": "CommonReward/Panel/btnDraw",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22376,
+    "path": "TimeUpOver/Panel/view2/btnVideo2",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22407,
+    "path": "Canvas/ClearOver/Panel/view1/btnRevive1",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22505,
+    "path": "Canvas/ClearOver/Panel/view1/btnVideo1",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22538,
+    "path": "Canvas/RewardOver/Panel/btnVideo",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22712,
+    "path": "Canvas/Start/PanelButton/Image (1)",
+    "spritePathId": 1622,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22767,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnStartGame",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22805,
+    "path": "Start/PanelHome/PanelHome/btnStartGame/imgUnlockMotifTip",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22922,
+    "path": "Canvas/Over/Panel/winPanel/ContinueWin",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 22956,
+    "path": "Canvas/ClearOver/Panel/view2/btnRevive2",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 23058,
+    "path": "Canvas/Over/Panel/failPanel/ContinueLose",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 23083,
+    "path": "PauseView/Panel/btnBack",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 23187,
+    "path": "Start/PanelHome/PanelHome/btnStartGame/imgbtn",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 23255,
+    "path": "Over/Panel/failPanel/ContinueLose",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 23309,
+    "path": "ClearOver/Panel/view1/btnVideo1",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 23399,
+    "path": "PanelHome/btnStartGame",
+    "spritePathId": 2103,
+    "imageType": 0
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 23425,
+    "path": "Over/Panel/winPanel/ContinueWin",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 23567,
+    "path": "Canvas/CommonReward/Panel/btnDraw",
+    "spritePathId": 2103,
+    "imageType": 1
+  },
+  {
+    "file": "resources.assets",
+    "componentId": 23832,
+    "path": "ClearOver/Panel/view2/btnRevive2",
+    "spritePathId": 2103,
+    "imageType": 1
+  }
+]

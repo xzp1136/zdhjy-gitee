@@ -1,0 +1,1787 @@
+{
+  "1001": {
+    "path": "prefabs/vase/bkt1_2cdtx_01",
+    "name": "晨露",
+    "width": 246.0,
+    "height": 300.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1002": {
+    "path": "prefabs/vase/bkt1_2cdtx_02",
+    "name": "小黑瓶",
+    "width": 158.0,
+    "height": 285.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1101": {
+    "path": "prefabs/vase/bkt1_3cddz_01",
+    "name": "花架小筑",
+    "width": 161.0,
+    "height": 214.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1102": {
+    "path": "prefabs/vase/bkt1_3cddz_02",
+    "name": "栖台",
+    "width": 146.0,
+    "height": 254.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1201": {
+    "path": "prefabs/vase/bkt1_3cdcs_01",
+    "name": "青野",
+    "width": 266.0,
+    "height": 336.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1202": {
+    "path": "prefabs/vase/bkt1_3cdcs_02",
+    "name": "赴云汀",
+    "width": 218.0,
+    "height": 465.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1203": {
+    "path": "prefabs/vase/bkt1_3cdcs_03",
+    "name": "星落瓶",
+    "width": 121.0,
+    "height": 289.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1301": {
+    "path": "prefabs/vase/bkt1_3cdy_01",
+    "name": "白织篮",
+    "width": 228.0,
+    "height": 258.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1302": {
+    "path": "prefabs/vase/bkt1_3cdy_02",
+    "name": "透蓝玻璃瓶",
+    "width": 176.0,
+    "height": 265.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1303": {
+    "path": "prefabs/vase/bkt1_3cdy_03",
+    "name": "浅木叙",
+    "width": 324.0,
+    "height": 303.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1401": {
+    "path": "prefabs/vase/bkt1_3cdsy_01",
+    "name": "暮云笺",
+    "width": 262.0,
+    "height": 300.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1402": {
+    "path": "prefabs/vase/bkt1_3cdsy_02",
+    "name": "凝光瓶",
+    "width": 252.0,
+    "height": 320.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1403": {
+    "path": "prefabs/vase/bkt1_3cdsy_03",
+    "name": "荷塘月色",
+    "width": 249.0,
+    "height": 295.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1501": {
+    "path": "prefabs/vase/bkt1_3dys_01",
+    "name": "浅梦来信",
+    "width": 253.0,
+    "height": 290.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1502": {
+    "path": "prefabs/vase/bkt1_3dys_02",
+    "name": "予风",
+    "width": 247.0,
+    "height": 414.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1503": {
+    "path": "prefabs/vase/bkt1_3dys_03",
+    "name": "薄雾瓶",
+    "width": 118.0,
+    "height": 318.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1504": {
+    "path": "prefabs/vase/bkt1_3dys_04",
+    "name": "清酌瓶",
+    "width": 173.0,
+    "height": 304.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1505": {
+    "path": "prefabs/vase/bkt1_3dys_05",
+    "name": "漫渡春隅瓶",
+    "width": 240.0,
+    "height": 371.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1601": {
+    "path": "prefabs/vase/bkt1_3dy_01",
+    "name": "清欢",
+    "width": 287.0,
+    "height": 362.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1602": {
+    "path": "prefabs/vase/bkt1_3dy_02",
+    "name": "云柒",
+    "width": 228.0,
+    "height": 327.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1603": {
+    "path": "prefabs/vase/bkt1_3dy_03",
+    "name": "一纸思念",
+    "width": 200.0,
+    "height": 329.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1604": {
+    "path": "prefabs/vase/bkt1_3dy_04",
+    "name": "绯染尘隅",
+    "width": 178.0,
+    "height": 242.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1605": {
+    "path": "prefabs/vase/bkt1_3dy_05",
+    "name": "月叙",
+    "width": 168.0,
+    "height": 295.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1701": {
+    "path": "prefabs/vase/bkt1_3cdyz_01",
+    "name": "方汀",
+    "width": 95.0,
+    "height": 175.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1702": {
+    "path": "prefabs/vase/bkt1_3cdyz_02",
+    "name": "墨盏桃花",
+    "width": 106.0,
+    "height": 178.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1703": {
+    "path": "prefabs/vase/bkt1_3cdyz_03",
+    "name": "苍松",
+    "width": 155.0,
+    "height": 83.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1704": {
+    "path": "prefabs/vase/bkt1_2cdyz_04",
+    "name": "青雨",
+    "width": 89.0,
+    "height": 199.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1705": {
+    "path": "prefabs/vase/bkt1_3cdyz_05",
+    "name": "寒屿栖幽",
+    "width": 194.0,
+    "height": 135.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1706": {
+    "path": "prefabs/vase/bkt1_3cdyz_06",
+    "name": "烛曳",
+    "width": 66.0,
+    "height": 145.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1707": {
+    "path": "prefabs/vase/bkt1_3cdyz_07",
+    "name": "陶暄",
+    "width": 79.0,
+    "height": 130.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1708": {
+    "path": "prefabs/vase/bkt1_3cdyz_08",
+    "name": "炫彩琉璃",
+    "width": 89.0,
+    "height": 199.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1801": {
+    "path": "prefabs/vase/bkt1_3cdz_01",
+    "name": "深海信札",
+    "width": 260.0,
+    "height": 268.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1802": {
+    "path": "prefabs/vase/bkt1_3cdz_02",
+    "name": "黄皮纸袋",
+    "width": 123.0,
+    "height": 132.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1803": {
+    "path": "prefabs/vase/bkt1_3cdz_03",
+    "name": "石瓶",
+    "width": 208.0,
+    "height": 324.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1804": {
+    "path": "prefabs/vase/bkt1_3cdz_04",
+    "name": "篱间篮",
+    "width": 244.0,
+    "height": 285.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1805": {
+    "path": "prefabs/vase/bkt1_3cdz_05",
+    "name": "柔岚",
+    "width": 292.0,
+    "height": 228.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1901": {
+    "path": "prefabs/vase/bkt1_3zy_01",
+    "name": "小竹兰",
+    "width": 267.0,
+    "height": 285.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1902": {
+    "path": "prefabs/vase/bkt1_3zy_02",
+    "name": "待春盏",
+    "width": 186.0,
+    "height": 321.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1903": {
+    "path": "prefabs/vase/bkt1_3zy_03",
+    "name": "汐贝",
+    "width": 274.0,
+    "height": 268.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1904": {
+    "path": "prefabs/vase/bkt1_3zy_04",
+    "name": "幻彩凝春",
+    "width": 195.0,
+    "height": 277.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "1905": {
+    "path": "prefabs/vase/bkt1_3zy_05",
+    "name": "白环清盏",
+    "width": 181.0,
+    "height": 289.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2001": {
+    "path": "prefabs/vase/bkt1_3zyj_01",
+    "name": "浅绯",
+    "width": 209.0,
+    "height": 332.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2002": {
+    "path": "prefabs/vase/bkt1_3zyj_02",
+    "name": "凝春盏",
+    "width": 230.0,
+    "height": 353.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2003": {
+    "path": "prefabs/vase/bkt1_3zyj_03",
+    "name": "冷彩花束",
+    "width": 264.0,
+    "height": 266.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2004": {
+    "path": "prefabs/vase/bkt1_3zyj_04",
+    "name": "彩揽疏影",
+    "width": 184.0,
+    "height": 353.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2005": {
+    "path": "prefabs/vase/bkt1_3zyj_05",
+    "name": "陶芜",
+    "width": 240.0,
+    "height": 334.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2101": {
+    "path": "prefabs/vase/bkt1_3zdgh_01",
+    "name": "瓜陶罐",
+    "width": 259.0,
+    "height": 300.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2102": {
+    "path": "prefabs/vase/bkt1_3zdgh_02",
+    "name": "涟玻",
+    "width": 103.0,
+    "height": 118.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2103": {
+    "path": "prefabs/vase/bkt1_3zdgh_03",
+    "name": "青瓷揽翠",
+    "width": 168.0,
+    "height": 318.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2104": {
+    "path": "prefabs/vase/bkt1_3zdgh_04",
+    "name": "暖笺束影",
+    "width": 274.0,
+    "height": 253.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2105": {
+    "path": "prefabs/vase/bkt1_3zdgh_05",
+    "name": "青芜瓶",
+    "width": 199.0,
+    "height": 287.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2201": {
+    "path": "prefabs/vase/bkt1_3xy_01",
+    "name": "翠扶摇",
+    "width": 198.0,
+    "height": 321.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2202": {
+    "path": "prefabs/vase/bkt1_3xy_02",
+    "name": "白日焰火",
+    "width": 152.0,
+    "height": 320.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2203": {
+    "path": "prefabs/vase/bkt1_3xy_03",
+    "name": "野芳笼",
+    "width": 231.0,
+    "height": 290.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2301": {
+    "path": "prefabs/vase/bkt1_6xy_01",
+    "name": "琉斑瓶",
+    "width": 263.0,
+    "height": 327.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2302": {
+    "path": "prefabs/vase/bkt1_6xy_02",
+    "name": "黄陶罐",
+    "width": 215.0,
+    "height": 307.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2303": {
+    "path": "prefabs/vase/bkt1_6xy_03",
+    "name": "蓝绡",
+    "width": 267.0,
+    "height": 341.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2401": {
+    "path": "prefabs/vase/bkt1_9cxy_01",
+    "name": "星梦酌",
+    "width": 293.0,
+    "height": 336.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "2402": {
+    "path": "prefabs/vase/bkt1_9cxy_02",
+    "name": "喵喵陶罐",
+    "width": 196.0,
+    "height": 266.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "4001": {
+    "path": "prefabs/vase/bkt1_6zytx_01",
+    "name": "萌宠素纸",
+    "width": 228.0,
+    "height": 300.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "4002": {
+    "path": "prefabs/vase/bkt1_6zytx_02",
+    "name": "粉色丝绒",
+    "width": 190.0,
+    "height": 287.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5001": {
+    "path": "prefabs/vase/bkt2_1cdtx3zy_01",
+    "name": "云笺袋",
+    "width": 260.0,
+    "height": 303.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5002": {
+    "path": "prefabs/vase/bkt2_1cdtx3zy_02",
+    "name": "浮光泡泡",
+    "width": 167.0,
+    "height": 343.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5101": {
+    "path": "prefabs/vase/bkt2_1cdtx6zy_01",
+    "name": "浅绮篮",
+    "width": 267.0,
+    "height": 245.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5102": {
+    "path": "prefabs/vase/bkt2_1cdtx6zy_02",
+    "name": "绯色波点",
+    "width": 258.0,
+    "height": 293.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5201": {
+    "path": "prefabs/vase/bkt2_3zyj3cdtx_01",
+    "name": "浅棕笺",
+    "width": 286.0,
+    "height": 300.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5202": {
+    "path": "prefabs/vase/bkt2_3zyj3cdtx_02",
+    "name": "幻粉樽",
+    "width": 209.0,
+    "height": 330.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5301": {
+    "path": "prefabs/vase/bkt2_3zyj3hfx_01",
+    "name": "绯金",
+    "width": 256.0,
+    "height": 280.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5302": {
+    "path": "prefabs/vase/bkt2_3zyj3hfx_02",
+    "name": "旧笺寄语",
+    "width": 242.0,
+    "height": 276.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5401": {
+    "path": "prefabs/vase/bkt2_3cdcs2cdy_01",
+    "name": "青帛",
+    "width": 268.0,
+    "height": 294.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5402": {
+    "path": "prefabs/vase/bkt2_3cdcs2cdy_02",
+    "name": "紫瓠葫芦",
+    "width": 187.0,
+    "height": 279.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5501": {
+    "path": "prefabs/vase/bkt2_3cdcs3dy_01",
+    "name": "银薰",
+    "width": 265.0,
+    "height": 299.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5502": {
+    "path": "prefabs/vase/bkt2_3cdcs3dy_02",
+    "name": "雾蓝结",
+    "width": 236.0,
+    "height": 344.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5601": {
+    "path": "prefabs/vase/bkt2_3dy3zy_01",
+    "name": "黄素纱",
+    "width": 262.0,
+    "height": 270.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5602": {
+    "path": "prefabs/vase/bkt2_3dy3zy_02",
+    "name": "花纸袋",
+    "width": 265.0,
+    "height": 300.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5603": {
+    "path": "prefabs/vase/bkt2_3dy3zy_03",
+    "name": "墨环",
+    "width": 274.0,
+    "height": 353.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5604": {
+    "path": "prefabs/vase/bkt2_3dy3zy_04",
+    "name": "金瓷栖翠",
+    "width": 226.0,
+    "height": 310.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5605": {
+    "path": "prefabs/vase/bkt2_3dy3zy_05",
+    "name": "浅香匣",
+    "width": 265.0,
+    "height": 300.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5801": {
+    "path": "prefabs/vase/bkt2_3zy3zy_01",
+    "name": "撞色波点",
+    "width": 257.0,
+    "height": 302.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5802": {
+    "path": "prefabs/vase/bkt2_3zy3zy_02",
+    "name": "静泱",
+    "width": 190.0,
+    "height": 332.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5803": {
+    "path": "prefabs/vase/bkt2_3zy3zy_03",
+    "name": "复古先锋",
+    "width": 245.0,
+    "height": 340.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5804": {
+    "path": "prefabs/vase/bkt2_3zy3zy_04",
+    "name": "几何艺术",
+    "width": 258.0,
+    "height": 351.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5805": {
+    "path": "prefabs/vase/bkt2_3zy3zy_05",
+    "name": "清函",
+    "width": 292.0,
+    "height": 228.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5901": {
+    "path": "prefabs/vase/bkt2_6cs3zy_01",
+    "name": "墨色香氛",
+    "width": 260.0,
+    "height": 294.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "5902": {
+    "path": "prefabs/vase/bkt2_6cs3zy_02",
+    "name": "邮寄思念",
+    "width": 233.0,
+    "height": 235.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "6001": {
+    "path": "prefabs/vase/bkt2_6cs3zyj_01",
+    "name": "素纸承茵",
+    "width": 259.0,
+    "height": 277.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "6002": {
+    "path": "prefabs/vase/bkt2_6cs3zyj_02",
+    "name": "浅箩赋",
+    "width": 217.0,
+    "height": 287.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "6101": {
+    "path": "prefabs/vase/bkt2_6xy6xy_01",
+    "name": "棱石盏",
+    "width": 263.0,
+    "height": 338.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "6102": {
+    "path": "prefabs/vase/bkt2_6xy6xy_02",
+    "name": "繁花缀",
+    "width": 177.0,
+    "height": 229.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "6202": {
+    "path": "prefabs/vase/bkt2_1cdy6xy_01",
+    "name": "粉绿轻绾",
+    "width": 258.0,
+    "height": 272.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "6203": {
+    "path": "prefabs/vase/bkt2_1cdy6xy_02",
+    "name": "墨栖",
+    "width": 251.0,
+    "height": 225.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "9001": {
+    "path": "prefabs/vase/bkt2_1cdtxwj6zy_01",
+    "name": "粉红礼盒",
+    "width": 237.0,
+    "height": 258.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "9002": {
+    "path": "prefabs/vase/bkt2_1cdtxwj6zy_02",
+    "name": "素带礼盒",
+    "width": 251.0,
+    "height": 298.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "9101": {
+    "path": "prefabs/vase/bkt2_2dytx6zy_01",
+    "name": "两小无猜",
+    "width": 270.0,
+    "height": 250.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "9102": {
+    "path": "prefabs/vase/bkt2_2dytx6zy_02",
+    "name": "绒绒礼盒",
+    "width": 201.0,
+    "height": 267.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10001": {
+    "path": "prefabs/vase/bkt3_3cdcs3cdz3xy_01",
+    "name": "英伦格纹",
+    "width": 262.0,
+    "height": 300.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10002": {
+    "path": "prefabs/vase/bkt3_3cdcs3cdz3xy_02",
+    "name": "芽礼提",
+    "width": 189.0,
+    "height": 342.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10003": {
+    "path": "prefabs/vase/bkt3_3cdcs3cdz3xy_03",
+    "name": "紫布格",
+    "width": 299.0,
+    "height": 238.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10101": {
+    "path": "prefabs/vase/bkt3_3cs3cs3dy_01",
+    "name": "星涟花绾",
+    "width": 260.0,
+    "height": 279.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10102": {
+    "path": "prefabs/vase/bkt3_3cs3cs3dy_02",
+    "name": "蔓木厢",
+    "width": 262.0,
+    "height": 162.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10103": {
+    "path": "prefabs/vase/bkt3_3cs3cs3cdsy_03",
+    "name": "素纸承芳",
+    "width": 272.0,
+    "height": 291.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10201": {
+    "path": "prefabs/vase/bkt3_3cs3cs3cs_01",
+    "name": "烟花雨",
+    "width": 267.0,
+    "height": 322.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10202": {
+    "path": "prefabs/vase/bkt3_3cs3cs3cs_02",
+    "name": "赴芳辕",
+    "width": 228.0,
+    "height": 195.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10203": {
+    "path": "prefabs/vase/bkt3_3cs3cs3cs_03",
+    "name": "森叶花札",
+    "width": 337.0,
+    "height": 320.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10301": {
+    "path": "prefabs/vase/bkt3_3zyj3zyj3zyj_01",
+    "name": "浅壶春",
+    "width": 196.0,
+    "height": 330.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10302": {
+    "path": "prefabs/vase/bkt3_3zyj3zyj3zyj_02",
+    "name": "碧波凝芽",
+    "width": 203.0,
+    "height": 328.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10303": {
+    "path": "prefabs/vase/bkt3_3zyj3zyj3zyj_03",
+    "name": "山野青笺",
+    "width": 256.0,
+    "height": 316.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10401": {
+    "path": "prefabs/vase/bkt3_3cdz3zyj3dys_01",
+    "name": "青蕨提篮",
+    "width": 276.0,
+    "height": 245.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10402": {
+    "path": "prefabs/vase/bkt3_3cdz3zyj3dys_02",
+    "name": "野禾束",
+    "width": 234.0,
+    "height": 299.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10403": {
+    "path": "prefabs/vase/bkt3_3cdz3zyj3dys_03",
+    "name": "烟蓝青芜",
+    "width": 261.0,
+    "height": 265.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10501": {
+    "path": "prefabs/vase/bkt3_3cs3zy3dys_01",
+    "name": "晴蓝花绾",
+    "width": 264.0,
+    "height": 300.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10502": {
+    "path": "prefabs/vase/bkt3_3cs3zy3dys_02",
+    "name": "双耳贮芽",
+    "width": 170.0,
+    "height": 294.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10503": {
+    "path": "prefabs/vase/bkt3_3cs3zy3dys_03",
+    "name": "南屿束",
+    "width": 263.0,
+    "height": 292.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10601": {
+    "path": "prefabs/vase/bkt3_3cs6xy9cxy_01",
+    "name": "琉瓶青影",
+    "width": 229.0,
+    "height": 325.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10602": {
+    "path": "prefabs/vase/bkt3_3cs6xy9cxy_02",
+    "name": "纯白时刻",
+    "width": 246.0,
+    "height": 389.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10603": {
+    "path": "prefabs/vase/bkt3_3cs6xy9cxy_03",
+    "name": "翠箩谣",
+    "width": 237.0,
+    "height": 244.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10701": {
+    "path": "prefabs/vase/bkt3_3zyj6xy9cxy_01",
+    "name": "絮扎彩带",
+    "width": 254.0,
+    "height": 287.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10702": {
+    "path": "prefabs/vase/bkt3_3zyj6xy9cxy_02",
+    "name": "紫箩彩带",
+    "width": 217.0,
+    "height": 335.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  },
+  "10703": {
+    "path": "prefabs/vase/bkt3_3zyj6xy9cxy_03",
+    "name": "森木束",
+    "width": 225.0,
+    "height": 227.0,
+    "pivot": [
+      0.5,
+      0.0
+    ],
+    "scale": [
+      1.0,
+      1.0,
+      1.0
+    ]
+  }
+}

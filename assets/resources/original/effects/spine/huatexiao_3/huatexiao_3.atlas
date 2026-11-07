@@ -1,0 +1,55 @@
+
+huatexiao_3.png
+size: 127,255
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+tx/1
+  rotate: true
+  xy: 0, 103
+  size: 152, 127
+  orig: 223, 202
+  offset: 36, 37
+  index: -1
+tx/feijian_004
+  rotate: true
+  xy: 0, 24
+  size: 77, 83
+  orig: 109, 127
+  offset: 24, 17
+  index: -1
+tx/gy5
+  rotate: false
+  xy: 85, 13
+  size: 26, 26
+  orig: 26, 26
+  offset: 0, 0
+  index: -1
+tx/xian1
+  rotate: true
+  xy: 114, 41
+  size: 60, 10
+  orig: 64, 12
+  offset: 2, 1
+  index: -1
+tx/xing_052
+  rotate: false
+  xy: 85, 74
+  size: 27, 27
+  orig: 32, 32
+  offset: 2, 3
+  index: -1
+tx/xing_053
+  rotate: false
+  xy: 85, 45
+  size: 27, 27
+  orig: 32, 32
+  offset: 2, 3
+  index: -1
+tx/xing_054
+  rotate: true
+  xy: 0, 0
+  size: 22, 24
+  orig: 32, 32
+  offset: 5, 4
+  index: -1

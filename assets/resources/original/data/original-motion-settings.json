@@ -1,0 +1,2998 @@
+{
+  "version": 1,
+  "source": "/Users/zhangxiaoqiang/Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files/wxid_2godfknbh8v622_57d5/msg/file/2026-11/真的好解压_wx38b4f3dff4fbedf0_资源汇总_20261106(1)/真的好解压_wx38b4f3dff4fbedf0/runtime-cache/d83724c5931a26b5.webgl.data.unityweb.bin",
+  "sourceWasmSha256": "9f5a09f6a716a3d240fcf8d045fc80feb9012f0cb0a7459151ab135270863e92",
+  "flowerManager": {
+    "sourceFile": "level2",
+    "sourcePathId": 701,
+    "sourcePath": "BackGround",
+    "values": {
+      "vacancyStartDelay": 0.029999999329447746,
+      "vacancyNearRadius": 1.2999999523162842,
+      "vacancyTargetRandomRadius": 0.07999999821186066,
+      "bottomToUpDelay": 0.14000000059604645,
+      "bottomToUpDuration": 0.699999988079071,
+      "bottomToUpMoveRate": 0.23999999463558197,
+      "bottomToUpRandomRadius": 0.14000000059604645,
+      "bottomToUpRotateAngle": 8.0,
+      "bottomToUpOvershoot": 1.034999966621399,
+      "bottomToUpDepthSwitchProgress": 0.46000000834465027,
+      "bottomToUpEndImpulse": 0.029999999329447746,
+      "bottomPromoteCooldown": 0.3499999940395355,
+      "downToBottomDelay": 0.10000000149011612,
+      "downToBottomDuration": 0.11999999731779099,
+      "downToUpDelay": 0.14000000059604645,
+      "downToUpDuration": 0.6600000262260437,
+      "downToUpMoveRate": 0.2199999988079071,
+      "downToUpRandomRadius": 0.1599999964237213,
+      "downToUpRotateAngle": 10.0,
+      "downToUpOvershoot": 1.0449999570846558,
+      "downToUpEndImpulse": 0.03500000014901161,
+      "autoPromoteIntervalMin": 5.199999809265137,
+      "autoPromoteIntervalMax": 7.800000190734863,
+      "autoPromoteChance": 0.5,
+      "middleAutoUpExtraLimit": 3,
+      "middleToUpDuration": 0.8999999761581421,
+      "middleToUpRotateAngle": 5.0,
+      "middleToUpOvershoot": 1.0180000066757202,
+      "middleToUpEndImpulse": 0.014999999664723873,
+      "middlePromoteCooldown": 0.6499999761581421,
+      "bottomDirectUpChance": 0.30000001192092896,
+      "downDirectUpChance": 0.15000000596046448
+    },
+    "serializedOffsets": {
+      "vacancyStartDelay": 60,
+      "vacancyNearRadius": 64,
+      "vacancyTargetRandomRadius": 68,
+      "bottomToUpDelay": 72,
+      "bottomToUpDuration": 76,
+      "bottomToUpMoveRate": 80,
+      "bottomToUpRandomRadius": 84,
+      "bottomToUpRotateAngle": 88,
+      "bottomToUpOvershoot": 92,
+      "bottomToUpDepthSwitchProgress": 96,
+      "bottomToUpEndImpulse": 100,
+      "bottomPromoteCooldown": 104,
+      "downToBottomDelay": 108,
+      "downToBottomDuration": 112,
+      "downToUpDelay": 116,
+      "downToUpDuration": 120,
+      "downToUpMoveRate": 124,
+      "downToUpRandomRadius": 128,
+      "downToUpRotateAngle": 132,
+      "downToUpOvershoot": 136,
+      "downToUpEndImpulse": 140,
+      "autoPromoteIntervalMin": 144,
+      "autoPromoteIntervalMax": 148,
+      "autoPromoteChance": 152,
+      "middleAutoUpExtraLimit": 156,
+      "middleToUpDuration": 160,
+      "middleToUpRotateAngle": 164,
+      "middleToUpOvershoot": 168,
+      "middleToUpEndImpulse": 172,
+      "middlePromoteCooldown": 176,
+      "bottomDirectUpChance": 180,
+      "downDirectUpChance": 184
+    }
+  },
+  "flowerCollection": {
+    "sourceFunction": 44385,
+    "runtimeFieldOffsets": {
+      "moveDuration": 172,
+      "pickedScaleRatio": 176,
+      "targetScaleRatio": 180
+    },
+    "moveDuration": 0.5799999833106995,
+    "pickedScaleRatio": 1.25,
+    "targetScaleRatioDefault": 0.46000000834465027,
+    "prefabCountChecked": 442,
+    "serializedRecordLengths": {
+      "164": 418,
+      "176": 24
+    },
+    "serializedOverride": false,
+    "note": "These three private runtime fields are absent from the serialized FlowerCtr data. The target scale field is overwritten by the target argument in function 44288."
+  },
+  "spawn": {
+    "function": 41077,
+    "batchSizeMinInclusive": 3,
+    "batchSizeMaxExclusive": 5,
+    "batchInterval": 0.05,
+    "finalWait": 0.35,
+    "visibleScaleIn": {
+      "function": 41042,
+      "duration": 0.35,
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": "configured flower root scale",
+      "ease": 9,
+      "easeName": "OutCubic"
+    },
+    "soundId": 73,
+    "soundName": "flowerstart",
+    "soundRemark": "关卡开始创建花朵"
+  },
+  "buttonHandlers": [
+    {
+      "sourceFile": "level1",
+      "sourcePathId": 440,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnWelfare",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "level1",
+      "sourcePathId": 477,
+      "path": "Canvas/Start/PanelButton/btnSet",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "level1",
+      "sourcePathId": 533,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnTimeReward",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "level1",
+      "sourcePathId": 553,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnOpenGamePage",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "level1",
+      "sourcePathId": 562,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnSuperGift",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "level1",
+      "sourcePathId": 595,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnStartGame",
+      "IsScaleAction": true,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.9399999976158142,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "level1",
+      "sourcePathId": 624,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnShareReward",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "level2",
+      "sourcePathId": 724,
+      "path": "Canvas/Game/prop/prop3",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": false,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "level2",
+      "sourcePathId": 805,
+      "path": "Canvas/Game/prop/prop1",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": false,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "level2",
+      "sourcePathId": 836,
+      "path": "Canvas/Game/imgTop/TopParent/imgPause",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "level2",
+      "sourcePathId": 847,
+      "path": "Canvas/Over/Panel/failPanel/spiritItem/btnSpirit",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "level2",
+      "sourcePathId": 867,
+      "path": "Canvas/Game/prop/prop2",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": false,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 19885,
+      "path": "ItemInvite/btnInvite",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 19896,
+      "path": "PropView/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20364,
+      "path": "Canvas/LoginShare/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20387,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnWelfare",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20406,
+      "path": "Canvas/SuperGift/Panel/btnDraw",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20418,
+      "path": "PropView/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20448,
+      "path": "Canvas/DailyChallenge/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20463,
+      "path": "LoginShare/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20466,
+      "path": "Canvas/SetView/Panel/imgSound/btnSound",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20497,
+      "path": "TimeReward/Panel/btnDraw",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20501,
+      "path": "RewardOver/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20527,
+      "path": "PauseView/Panel/imgMusic/btnMusic",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20537,
+      "path": "Canvas/ClearOver/Panel/view1/btnCoin1",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20545,
+      "path": "Canvas/SuperGift/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20558,
+      "path": "Canvas/ClearOver/Panel/view2/btnVideo2",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20564,
+      "path": "Game/prop/prop2",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": false,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20574,
+      "path": "Start/PanelHome/PanelHome/btnStartGame",
+      "IsScaleAction": true,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.9399999976158142,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20607,
+      "path": "Canvas/Game/imgTop/TopParent/imgPause",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20627,
+      "path": "DailyChallenge/Panel/btnChallenge",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20628,
+      "path": "Canvas/ClearOver/Panel/view2/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20641,
+      "path": "Canvas/TimeReward/Panel/btnDraw",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20674,
+      "path": "PropView/Panel/btnDraw",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20701,
+      "path": "Canvas/PauseView/Panel/imgVibrate/btnVibrate",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20717,
+      "path": "Canvas/RewardOver/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21172,
+      "path": "RewardOver/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21214,
+      "path": "Canvas/SetView/Panel/imgVibrate/btnVibrate",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21223,
+      "path": "Canvas/ClearOver/Panel/view2/btnCoin2",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21255,
+      "path": "PropView/Panel/btnCoin",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21270,
+      "path": "Canvas/Start/PanelButton/btnSet",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21285,
+      "path": "PanelHome/btnTimeReward",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21287,
+      "path": "Start/PanelHome/PanelHome/btnShareReward",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21361,
+      "path": "Canvas/Game/prop/prop1",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": false,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21368,
+      "path": "ClearOver/Panel/view1/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21376,
+      "path": "Canvas/SpiritExpend/Panel/btnContinue",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21417,
+      "path": "ClearOver/Panel/view1/btnCoin1",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21439,
+      "path": "ClearOver/Panel/view2/btnVideo2",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21442,
+      "path": "SetView/Panel/imgSound/btnSound",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21961,
+      "path": "PauseView/Panel/btnAgain",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21962,
+      "path": "ClearOver/Panel/view2/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21977,
+      "path": "PanelHome/btnWelfare",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22074,
+      "path": "WelfareView/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22078,
+      "path": "Canvas/SpiritIncome/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22135,
+      "path": "Canvas/DailyChallenge/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22144,
+      "path": "PauseView/Panel/btnStart",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22148,
+      "path": "RankRewardView/Panel/ableReceive/btnReceive",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22152,
+      "path": "Start/PanelHome/PanelHome/btnOpenGamePage",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22189,
+      "path": "SuperGift/Panel/btnDraw",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22218,
+      "path": "Canvas/PauseView/Panel/btnBack",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22219,
+      "path": "SetView/Panel/imgVibrate/btnVibrate",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22255,
+      "path": "SpiritExpend/Panel/btnContinue",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22282,
+      "path": "RankDrawItem/btnReceived",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22289,
+      "path": "Start/PanelHome/PanelHome/btnSuperGift",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22290,
+      "path": "ItemInvite/btnReceived",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22293,
+      "path": "Canvas/PauseView/Panel/imgSound/btnSound",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22294,
+      "path": "Canvas/ClearOver/Panel/view1/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22325,
+      "path": "SpiritIncome/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22335,
+      "path": "Canvas/PropView/Panel/btnShare",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22342,
+      "path": "Canvas/Game/prop/prop3",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": false,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22386,
+      "path": "Canvas/DailyChallenge/Panel/btnDraw",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22395,
+      "path": "ClearOver/Panel/view2/btnCoin2",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22410,
+      "path": "TimeIncrease/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22417,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnTimeReward",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22418,
+      "path": "SuperGift/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22445,
+      "path": "SpiritExpend/Panel/btnQuit",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22470,
+      "path": "SetView/Panel/imgMusic/btnMusic",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22473,
+      "path": "AddDesktop/Panel/Close",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22497,
+      "path": "LoginShare/Panel/btnInvite",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22500,
+      "path": "Canvas/ClearOver/Panel/view2/btnRevive2",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22515,
+      "path": "SuperGift/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22529,
+      "path": "TimeUpOver/Panel/view2/btnCoin2",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22691,
+      "path": "Canvas/LoginShare/Panel/btnInvite",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22700,
+      "path": "ClearOver/Panel/view1/btnRevive1",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22743,
+      "path": "TimeIncrease/Panel/btnShare",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22751,
+      "path": "PauseView/Panel/imgVibrate/btnVibrate",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22760,
+      "path": "Canvas/TimeReward/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22776,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnOpenGamePage",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22801,
+      "path": "Game/prop/prop3",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": false,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22808,
+      "path": "PanelHome/btnStartGame",
+      "IsScaleAction": true,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.9399999976158142,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22812,
+      "path": "TimeReward/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22833,
+      "path": "Over/Panel/failPanel/spiritItem/btnSpirit",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22850,
+      "path": "Canvas/PauseView/Panel/imgMusic/btnMusic",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22878,
+      "path": "PropView/Panel/btnShare",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22883,
+      "path": "TimeReward/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22906,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnSuperGift",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22972,
+      "path": "ClearOver/Panel/view1/btnVideo1",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22973,
+      "path": "DailyChallenge/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22982,
+      "path": "Canvas/TimeReward/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23004,
+      "path": "ItemInvite/btnDraw",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23011,
+      "path": "TimeUpOver/Panel/view2/btnVideo2",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23066,
+      "path": "Start/PanelHome/PanelHome/btnTimeReward",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23076,
+      "path": "PanelHome/btnShareReward",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23125,
+      "path": "Canvas/DailyChallenge/Panel/btnChallenge",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23130,
+      "path": "TimeIncrease/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23146,
+      "path": "Canvas/RewardOver/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23184,
+      "path": "Canvas/ClearOver/Panel/view1/btnRevive1",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23208,
+      "path": "VideoPrompt/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23223,
+      "path": "SpiritIncome/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23226,
+      "path": "Canvas/SetView/Panel/imgMusic/btnMusic",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23275,
+      "path": "Start/PanelHome/PanelHome/btnWelfare",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23280,
+      "path": "RewardOver/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23285,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnStartGame",
+      "IsScaleAction": true,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.9399999976158142,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23292,
+      "path": "Canvas/PropView/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23316,
+      "path": "ClearOver/Panel/view2/btnRevive2",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23326,
+      "path": "PauseView/Panel/btnBack",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23332,
+      "path": "Game/prop/prop1",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": false,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23351,
+      "path": "Canvas/SpiritExpend/Panel/btnQuit",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23366,
+      "path": "Canvas/PropView/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23383,
+      "path": "DailyChallenge/Panel/btnDraw",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23398,
+      "path": "PauseView/Panel/imgSound/btnSound",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23410,
+      "path": "PanelHome/btnOpenGamePage",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23444,
+      "path": "Canvas/PropView/Panel/btnCoin",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23450,
+      "path": "Canvas/SuperGift/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23455,
+      "path": "Canvas/SpiritIncome/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23504,
+      "path": "Canvas/Over/Panel/failPanel/spiritItem/btnSpirit",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23552,
+      "path": "VideoPrompt/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23563,
+      "path": "PanelHome/btnSuperGift",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23566,
+      "path": "Canvas/PauseView/Panel/btnStart",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23710,
+      "path": "Game/imgTop/TopParent/imgPause",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23726,
+      "path": "Canvas/PropView/Panel/btnDraw",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23763,
+      "path": "Canvas/PauseView/Panel/btnAgain",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23777,
+      "path": "Canvas/RewardOver/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23780,
+      "path": "Canvas/ClearOver/Panel/view1/btnVideo1",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23791,
+      "path": "Start/PanelButton/btnSet",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23792,
+      "path": "Canvas/WelfareView/Panel/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23804,
+      "path": "Canvas/Game/prop/prop2",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": false,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23817,
+      "path": "Canvas/Start/PanelHome/PanelHome/btnShareReward",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23820,
+      "path": "TimeUpOver/Panel/view2/btnClose",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23826,
+      "path": "DailyChallenge/Panel/btnVideo",
+      "IsScaleAction": false,
+      "DelayScaleAnim": 0.0,
+      "IsPlaySound": true,
+      "scaleSize": 0.8999999761581421,
+      "LongPressBtn": false,
+      "LongPressInterval": 0.10000000149011612
+    }
+  ],
+  "buttonPressDefaults": {
+    "downFunction": 43784,
+    "upFunction": 43785,
+    "duration": 0.1,
+    "ease": 7,
+    "easeName": "InOutQuad",
+    "scaleSize": 0.9,
+    "homeStartScaleSize": 0.94
+  },
+  "baseViews": [
+    {
+      "sourceFile": "level1",
+      "sourcePathId": 496,
+      "class": "CommonRewardControl",
+      "path": "Canvas/CommonReward",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 340
+      },
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "level1",
+      "sourcePathId": 583,
+      "class": "StartUIControl",
+      "path": "Canvas/Start",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": null,
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "level2",
+      "sourcePathId": 759,
+      "class": "CommonRewardControl",
+      "path": "Canvas/CommonReward",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 533
+      },
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "level2",
+      "sourcePathId": 780,
+      "class": "GameUIControl",
+      "path": "Canvas/Game",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": null,
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "level2",
+      "sourcePathId": 842,
+      "class": "OverUIControl",
+      "path": "Canvas/Over",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 601
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20396,
+      "class": "WelfareControl",
+      "path": "WelfareView",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 18138
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20578,
+      "class": "OverUIControl",
+      "path": "Canvas/Over",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19341
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20616,
+      "class": "SuperGiftControl",
+      "path": "Canvas/SuperGift",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 18196
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 20662,
+      "class": "ClearOverControl",
+      "path": "Canvas/ClearOver",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17490
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21273,
+      "class": "RankViewControl",
+      "path": "PanelRank/RankView",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": null,
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21352,
+      "class": "RewardOverControl",
+      "path": "Canvas/RewardOver",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19392
+      },
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21467,
+      "class": "PropViewControl",
+      "path": "PropView",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.5,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17483
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21484,
+      "class": "CommonRewardControl",
+      "path": "Canvas/CommonReward",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17810
+      },
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21485,
+      "class": "PropRecevieControl",
+      "path": "PropReceive",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19344
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 21960,
+      "class": "PauseViewControl",
+      "path": "PauseView",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 18867
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22007,
+      "class": "DailyChallengeControl",
+      "path": "Canvas/DailyChallenge",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 18442
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22094,
+      "class": "GameUIControl",
+      "path": "Canvas/Game",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": null,
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22170,
+      "class": "OverUIControl",
+      "path": "Over",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 18446
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22176,
+      "class": "PropGuideControl",
+      "path": "PropGuide",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17568
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22343,
+      "class": "ClearOverControl",
+      "path": "ClearOver",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 18007
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22348,
+      "class": "StartUIControl",
+      "path": "Start",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": null,
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22359,
+      "class": "SuperGiftControl",
+      "path": "SuperGift",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19417
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22456,
+      "class": "SpiritExpendControl",
+      "path": "SpiritExpend",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19727
+      },
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22731,
+      "class": "LoginShareControl",
+      "path": "Canvas/LoginShare",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19821
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22769,
+      "class": "PropViewControl",
+      "path": "Canvas/PropView",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.5,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19844
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22806,
+      "class": "LoginShareControl",
+      "path": "LoginShare",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19740
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22864,
+      "class": "SetViewControl",
+      "path": "SetView",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 18999
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22893,
+      "class": "WelfareControl",
+      "path": "Canvas/WelfareView",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19159
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 22979,
+      "class": "PropGuideControl",
+      "path": "Canvas/PropGuide",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19739
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23028,
+      "class": "RankViewControl",
+      "path": "RankView",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17412
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23071,
+      "class": "GameUIControl",
+      "path": "Game",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": null,
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23121,
+      "class": "StartUIControl",
+      "path": "Canvas/Start",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": null,
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23167,
+      "class": "AddDesktop",
+      "path": "AddDesktop",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 18195
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23264,
+      "class": "RankRewardView",
+      "path": "RankRewardView",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19454
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23289,
+      "class": "RewardOverControl",
+      "path": "RewardOver",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17077
+      },
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23308,
+      "class": "TimeRewardControl",
+      "path": "TimeReward",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17546
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23318,
+      "class": "CommonRewardControl",
+      "path": "CommonReward",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19067
+      },
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23354,
+      "class": "SpiritExpendControl",
+      "path": "Canvas/SpiritExpend",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 18596
+      },
+      "IsOpenSound": false,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23397,
+      "class": "TimeRewardControl",
+      "path": "Canvas/TimeReward",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17559
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23403,
+      "class": "SpiritIncomeControl",
+      "path": "Canvas/SpiritIncome",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17269
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23480,
+      "class": "TimeIncreaseControl",
+      "path": "TimeIncrease",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19402
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": false,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23502,
+      "class": "PropRecevieControl",
+      "path": "Canvas/PropReceive",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17765
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23542,
+      "class": "SetViewControl",
+      "path": "Canvas/SetView",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 19734
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23577,
+      "class": "DailyChallengeControl",
+      "path": "DailyChallenge",
+      "animationDurationOpen": 0.5,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.30000001192092896,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17552
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23755,
+      "class": "SpiritIncomeControl",
+      "path": "SpiritIncome",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 17499
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23762,
+      "class": "PauseViewControl",
+      "path": "Canvas/PauseView",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 16968
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    },
+    {
+      "sourceFile": "resources.assets",
+      "sourcePathId": 23803,
+      "class": "TimeUpOverControl",
+      "path": "TimeUpOver",
+      "animationDurationOpen": 0.4000000059604645,
+      "startScale": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "endScale": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "animationDurationClose": 0.4000000059604645,
+      "StartAnimEase": 27,
+      "EndAnimEase": 26,
+      "Panel": {
+        "fileId": 0,
+        "pathId": 18264
+      },
+      "IsOpenSound": true,
+      "IsCloseSound": true,
+      "delayOpenTime": 0.0,
+      "isDelayOpen": false
+    }
+  ],
+  "uiAnimationRestart": {
+    "StartFunction": 43173,
+    "UpdateFunction": 43175,
+    "CoroutineFunction": 43179,
+    "interval": "integer Random.Range(2,5), sampled once at Start; 2, 3 or 4 seconds",
+    "trigger": "wait normalizedTime>=1; mark IsPlaying=false/completed=true; wait the sampled interval; restart from normalizedTime 0. Normal completion does not disable the Animator."
+  },
+  "gameUIEntry": {
+    "UIManagerFunction": 43184,
+    "GameUIShowFunction": 42695,
+    "CloseCutSceneFunction": 42696,
+    "GameMgrStartFunction": 41031,
+    "GamePlayMoveNextFunction": 41073,
+    "animateArgument": false,
+    "scenePanelReference": null,
+    "note": "No whole-board popup scale. GameUI ShowView calls CloseCutSceneAni immediately; GamePlay yields one frame then enables IsPlayGame/gameState."
+  },
+  "soundMapping": {
+    "sourceFunction": 56047,
+    "72": {
+      "remark": "花朵飞到花篮位置",
+      "resourceName": "flowerhit"
+    },
+    "73": {
+      "remark": "关卡开始创建花朵",
+      "resourceName": "flowerstart"
+    },
+    "74": {
+      "remark": "花篮订单完成",
+      "resourceName": "vasesuccss"
+    }
+  }
+}

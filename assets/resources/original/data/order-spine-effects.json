@@ -1,0 +1,344 @@
+{
+  "version": 1,
+  "source": "/Users/zhangxiaoqiang/Library/Containers/com.tencent.xinWeChat/Data/Documents/xwechat_files/wxid_2godfknbh8v622_57d5/msg/file/2026-11/真的好解压_wx38b4f3dff4fbedf0_资源汇总_20261106(1)/真的好解压_wx38b4f3dff4fbedf0/runtime-cache/d83724c5931a26b5.webgl.data.unityweb.bin",
+  "spineVersion": "3.8.99",
+  "roles": {
+    "flowerPut": {
+      "selection": "uniform",
+      "choices": [
+        {
+          "prefab": "prefabs/model/flowerspineeft1",
+          "resource": "original/effects/spine/huatexiao_1/huatexiao_1",
+          "animation": "animation",
+          "track": 0,
+          "loop": false,
+          "duration": 1.2333,
+          "prefabScale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sourceSkeletonDataScale": 0.009999999776482582,
+          "sourcePrefabPositionIgnored": [
+            -14.109999656677246,
+            0.7599999904632568,
+            0.0
+          ],
+          "sourcePrefabPathId": 2329,
+          "sourceSkeletonAnimationPathId": 23251,
+          "sourceSkeletonDataPathId": 19864,
+          "sourceJsonPathId": 1109,
+          "sourceAtlasPathId": 1116,
+          "sourceTexturePathId": 737,
+          "sourceJsonSha256": "92b4818e8c802428dd653e9e7ad618c89f7d96ecb1ec03d95bddd93cb6a4849c",
+          "importNormalization": null,
+          "textureSize": [
+            152,
+            156
+          ],
+          "alphaMode": "straight",
+          "sourceMaterialPathId": 8,
+          "sourceStraightAlphaInput": 1.0
+        },
+        {
+          "prefab": "prefabs/model/flowerspineeft2",
+          "resource": "original/effects/spine/huatexiao_3/huatexiao_3",
+          "animation": "animation",
+          "track": 0,
+          "loop": false,
+          "duration": 1.2333,
+          "prefabScale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sourceSkeletonDataScale": 0.009999999776482582,
+          "sourcePrefabPositionIgnored": [
+            -14.109999656677246,
+            0.7599999904632568,
+            0.0
+          ],
+          "sourcePrefabPathId": 2327,
+          "sourceSkeletonAnimationPathId": 23249,
+          "sourceSkeletonDataPathId": 19866,
+          "sourceJsonPathId": 1107,
+          "sourceAtlasPathId": 1117,
+          "sourceTexturePathId": 926,
+          "sourceJsonSha256": "9b3c4382e832386a1c6d70098d38a9c6a8d74e70484985a9270555fc9a669ccc",
+          "importNormalization": null,
+          "textureSize": [
+            127,
+            255
+          ],
+          "alphaMode": "straight",
+          "sourceMaterialPathId": 10,
+          "sourceStraightAlphaInput": 1.0
+        },
+        {
+          "prefab": "prefabs/model/flowerspineeft3",
+          "resource": "original/effects/spine/huatexiao_4/huatexiao_4",
+          "animation": "animation",
+          "track": 0,
+          "loop": false,
+          "duration": 1.2333,
+          "prefabScale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sourceSkeletonDataScale": 0.009999999776482582,
+          "sourcePrefabPositionIgnored": [
+            -14.109999656677246,
+            0.7599999904632568,
+            0.0
+          ],
+          "sourcePrefabPathId": 2328,
+          "sourceSkeletonAnimationPathId": 23250,
+          "sourceSkeletonDataPathId": 19868,
+          "sourceJsonPathId": 1110,
+          "sourceAtlasPathId": 1112,
+          "sourceTexturePathId": 557,
+          "sourceJsonSha256": "e7941c886e88874ad73f909b4eb2055c19307a201e43863c7c57082a9548cac2",
+          "importNormalization": null,
+          "textureSize": [
+            292,
+            185
+          ],
+          "alphaMode": "straight",
+          "sourceMaterialPathId": 12,
+          "sourceStraightAlphaInput": 1.0
+        }
+      ],
+      "offsetPolicy": "caller-anchor-world-position; ignore prefab authoring position"
+    },
+    "vaseComplete": {
+      "selection": "single",
+      "choices": [
+        {
+          "prefab": "prefabs/model/vasecmpspineeft",
+          "resource": "original/effects/spine/hualanxiaoshi/hualanxiaoshi",
+          "animation": "animation",
+          "track": 0,
+          "loop": false,
+          "duration": 1.4333,
+          "prefabScale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sourceSkeletonDataScale": 0.009999999776482582,
+          "sourcePrefabPositionIgnored": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "sourcePrefabPathId": 4422,
+          "sourceSkeletonAnimationPathId": 21478,
+          "sourceSkeletonDataPathId": 19862,
+          "sourceJsonPathId": 1101,
+          "sourceAtlasPathId": 1105,
+          "sourceTexturePathId": 967,
+          "sourceJsonSha256": "db5fdd8683304ae2a181852951c544ab502e56dbf991a51356c79fb828b73443",
+          "importNormalization": null,
+          "textureSize": [
+            661,
+            279
+          ],
+          "alphaMode": "straight",
+          "sourceMaterialPathId": 6,
+          "sourceStraightAlphaInput": 1.0
+        }
+      ],
+      "offsetPolicy": "caller-anchor-world-position; ignore prefab authoring position"
+    },
+    "vaseSwitch": {
+      "selection": "single",
+      "choices": [
+        {
+          "prefab": "prefabs/model/vaseswitchspineeft",
+          "resource": "original/effects/spine/hualanxiaoshi2/hualanxiaoshi2",
+          "animation": "animation",
+          "track": 0,
+          "loop": false,
+          "duration": 1.4333,
+          "prefabScale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sourceSkeletonDataScale": 0.009999999776482582,
+          "sourcePrefabPositionIgnored": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "sourcePrefabPathId": 4113,
+          "sourceSkeletonAnimationPathId": 23443,
+          "sourceSkeletonDataPathId": 19860,
+          "sourceJsonPathId": 1100,
+          "sourceAtlasPathId": 1098,
+          "sourceTexturePathId": 821,
+          "sourceJsonSha256": "9d785384b36f9d893620868951e89939d5b20032d3891ef60df441868ce7770b",
+          "importNormalization": "Rename metadata header hualanxiaoshi2 to skeleton for Cocos importer detection; no animation changes.",
+          "textureSize": [
+            687,
+            251
+          ],
+          "alphaMode": "straight",
+          "sourceMaterialPathId": 4,
+          "sourceStraightAlphaInput": 1.0
+        }
+      ],
+      "offsetPolicy": "caller-anchor-world-position; ignore prefab authoring position"
+    },
+    "orderTip": {
+      "selection": "single",
+      "choices": [
+        {
+          "prefab": "prefabs/model/ordertipspine",
+          "resource": "original/effects/spine/orderTipSpine/orderTipSpine",
+          "animation": "animation",
+          "track": 0,
+          "loop": false,
+          "duration": 1.5,
+          "prefabScale": [
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sourceSkeletonDataScale": 0.009999999776482582,
+          "sourcePrefabPositionIgnored": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "sourcePrefabPathId": 7334,
+          "sourceSkeletonAnimationPathId": 20394,
+          "sourceSkeletonDataPathId": 19870,
+          "sourceJsonPathId": 1113,
+          "sourceAtlasPathId": 1115,
+          "sourceTexturePathId": 910,
+          "sourceJsonSha256": "16ddcd3ffb3100986ab2666aea9b933e8ed020bef52e9512b7db3076c43c5e9a",
+          "importNormalization": null,
+          "textureSize": [
+            232,
+            158
+          ],
+          "alphaMode": "straight",
+          "sourceMaterialPathId": 14,
+          "sourceStraightAlphaInput": 1.0
+        }
+      ],
+      "offsetPolicy": "caller-anchor-world-position; ignore prefab authoring position",
+      "newVaseMode": {
+        "loop": true,
+        "lifetime": 5,
+        "sourceFunction": 43453,
+        "note": "isNew=true loops and is returned after 5 seconds; ordinary group-change hint is a single 1.5 second play."
+      }
+    },
+    "orderNewVase": {
+      "selection": "single",
+      "choices": [
+        {
+          "prefab": "prefabs/model/ordernewvasespine",
+          "resource": "original/effects/spine/xinghuashu/xinghuashu",
+          "animation": "animation",
+          "track": 0,
+          "loop": false,
+          "duration": 2.7333,
+          "prefabScale": [
+            0.20000000298023224,
+            0.20000000298023224,
+            0.20000000298023224
+          ],
+          "sourceSkeletonDataScale": 0.009999999776482582,
+          "sourcePrefabPositionIgnored": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "sourcePrefabPathId": 2535,
+          "sourceSkeletonAnimationPathId": 22799,
+          "sourceSkeletonDataPathId": 19872,
+          "sourceJsonPathId": 1108,
+          "sourceAtlasPathId": 1111,
+          "sourceTexturePathId": 909,
+          "sourceJsonSha256": "dea557917830909956167bb3dddf080121a46148a01d3fd0ca562c29fab8da0f",
+          "importNormalization": null,
+          "textureSize": [
+            329,
+            96
+          ],
+          "alphaMode": "straight",
+          "sourceMaterialPathId": 16,
+          "sourceStraightAlphaInput": 1.0
+        }
+      ],
+      "offsetPolicy": "caller-anchor-world-position; ignore prefab authoring position"
+    }
+  },
+  "scalePolicy": {
+    "unityCameraOrthographicSize": 9.600000381,
+    "unityReferenceHeight": 1920,
+    "unityPixelsPerWorldUnit": 100,
+    "cocosNodeScale": "750/1080 * prefabScale; Cocos SkeletonData.scale=1. Source SkeletonData.scale .01 is canceled by 100 UI pixels per Unity world unit."
+  },
+  "anchors": {
+    "coordinateSpace": "1080x1920 Unity UI units relative to OrderItem/vaseParent center",
+    "vaseParent": {
+      "position": [
+        0,
+        0
+      ],
+      "size": [
+        240,
+        290
+      ],
+      "pivot": [
+        0.5,
+        0.5
+      ]
+    },
+    "orderNewVase": {
+      "position": [
+        0,
+        -145
+      ],
+      "sourceNode": "newVaseSpinePos"
+    },
+    "vaseComplete": {
+      "position": [
+        0,
+        0
+      ],
+      "sourceNode": "OrderItem.transform"
+    },
+    "vaseSwitch": {
+      "position": [
+        0,
+        0
+      ],
+      "sourceNode": "OrderItem.transform"
+    },
+    "orderTip": {
+      "position": [
+        -13,
+        -166.799987793
+      ],
+      "sourceNode": "imgOrderTip.transform",
+      "size": [
+        176,
+        116
+      ],
+      "pivot": [
+        0.5,
+        0.449999988
+      ]
+    },
+    "flowerPut": {
+      "position": "each received flower attachment pivot",
+      "sourceNode": "flower node Transform"
+    }
+  }
+}

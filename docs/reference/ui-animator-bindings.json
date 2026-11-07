@@ -1,0 +1,274 @@
+[
+  {
+    "file": "level1",
+    "animatorPathId": 158,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnTimeReward/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "level1",
+    "animatorPathId": 159,
+    "path": "Canvas/Start/PanelButton/imgHomeHand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "level1",
+    "animatorPathId": 160,
+    "path": "Canvas/Start/PanelButton/BtnParent/btnHome/imgHomeHand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "level1",
+    "animatorPathId": 161,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnShareReward/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "level1",
+    "animatorPathId": 162,
+    "path": "Canvas/Start/PanelHome/PanelHome/imgStarBox/starBox",
+    "clips": [
+      "boxAni"
+    ]
+  },
+  {
+    "file": "level1",
+    "animatorPathId": 163,
+    "path": "Canvas/Start/PanelHome/PanelHome/imgLevelBox/levelBox",
+    "clips": [
+      "boxAni"
+    ]
+  },
+  {
+    "file": "level1",
+    "animatorPathId": 164,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnSuperGift/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "level1",
+    "animatorPathId": 165,
+    "path": "Canvas/Start/PanelButton/BtnParent/btnStore/imgVoiceHand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "level2",
+    "animatorPathId": 281,
+    "path": "Canvas/Game/hand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13785,
+    "path": "Start/PanelHome/PanelHome/btnSuperGift/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13786,
+    "path": "Start/PanelButton/BtnParent/btnStore/imgVoiceHand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13787,
+    "path": "PanelHome/btnTimeReward/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13792,
+    "path": "PanelHome/btnShareReward/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13796,
+    "path": "PanelHome/imgStarBox/starBox",
+    "clips": [
+      "boxAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13798,
+    "path": "Canvas/Game/hand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13799,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnTimeReward/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13801,
+    "path": "Canvas/Start/PanelButton/imgHomeHand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13806,
+    "path": "Canvas/Start/PanelButton/BtnParent/btnHome/imgHomeHand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13807,
+    "path": "Start/PanelHome/PanelHome/imgLevelBox/levelBox",
+    "clips": [
+      "boxAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13808,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnShareReward/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13809,
+    "path": "Canvas/Start/PanelHome/PanelHome/imgStarBox/starBox",
+    "clips": [
+      "boxAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13810,
+    "path": "StoreItem/iconParent",
+    "clips": [
+      "ImageScaleAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13812,
+    "path": "PanelHome/btnSuperGift/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13814,
+    "path": "Start/PanelButton/imgHomeHand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13817,
+    "path": "Start/PanelHome/PanelHome/btnTimeReward/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13819,
+    "path": "GuideFinger",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13826,
+    "path": "Start/PanelButton/BtnParent/btnHome/imgHomeHand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13827,
+    "path": "Start/PanelHome/PanelHome/btnShareReward/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13828,
+    "path": "Canvas/Start/PanelHome/PanelHome/imgLevelBox/levelBox",
+    "clips": [
+      "boxAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13831,
+    "path": "Game/hand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13832,
+    "path": "Start/PanelHome/PanelHome/imgStarBox/starBox",
+    "clips": [
+      "boxAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13833,
+    "path": "Canvas/Start/PanelHome/PanelHome/btnSuperGift/Image",
+    "clips": [
+      "StartIconAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13837,
+    "path": "Canvas/Start/PanelButton/BtnParent/btnStore/imgVoiceHand",
+    "clips": [
+      "handAni"
+    ]
+  },
+  {
+    "file": "resources.assets",
+    "animatorPathId": 13841,
+    "path": "PanelHome/imgLevelBox/levelBox",
+    "clips": [
+      "boxAni"
+    ]
+  }
+]
