@@ -1,0 +1,14 @@
+{
+  "setting": {
+    "urlCheck": true
+  },
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "remote"
+      }
+    ],
+    "include": []
+  }
+}

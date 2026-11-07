@@ -7,7 +7,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/Resources/resources/3d/engine/node_modules/typescript');
 const project = path.join(__dirname, '..');
-const resourceFile = resource => path.join(project, 'assets/resources', resource);
+const resourceFile = require('./resource-file.cjs');
 const manifest = JSON.parse(fs.readFileSync(resourceFile('original/data/order-spine-effects.json'), 'utf8'));
 const source = ts.transpileModule(fs.readFileSync(path.join(project, 'assets/scripts/FlowerEffects.ts'), 'utf8'), {
   compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS },
@@ -92,7 +92,7 @@ function harness(options = {}) {
       });
     },
   } };
-  const scope = { exports: {}, require(name) { if (name === 'cc') return cc; if (name === './FlowerUI') return { uiNode }; throw new Error(name); } };
+  const scope = { exports: {}, require(name) { if (name === 'cc') return cc; if (name === './FlowerAssets') return {loadFlowerAsset: cc.resources.load}; if (name === './FlowerUI') return { uiNode }; throw new Error(name); } };
   vm.runInNewContext(source, scope);
   return { FlowerEffects: scope.exports.FlowerEffects, Node, UITransform, Vec3, Skeleton, SkeletonData, uiNode, loads, skeletons };
 }

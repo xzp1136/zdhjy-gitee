@@ -1,3 +1,4 @@
+const resourceFile = require('./resource-file.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -31,16 +32,18 @@ class Component {
 }
 const animationTweens = [];
 const cc = {
-  _decorator: { ccclass: () => value => value }, Component, Node, Vec3, UITransform, Mask,
+  _decorator: { ccclass: () => value => value, property: () => () => {} }, Component, Node, Vec3, UITransform, Mask,
   Tween: { stopAllByTarget(target) { for (const value of animationTweens) if (value.target === target) value.stopped = true; } },
   tween(target) { return { target, steps: [], to(duration, properties, options) { this.steps.push({duration, properties, options}); return this; }, call(callback) { this.callback = callback; return this; }, start() { animationTweens.push(this); return this; } }; },
   JsonAsset: class {},
-  resources: { load(name, Type, callback) { callback(null, { json: JSON.parse(fs.readFileSync(path.join(root, 'assets/resources', name + '.json'), 'utf8')) }); } },
+  resources: { load(name, Type, callback) { callback(null, { json: JSON.parse(fs.readFileSync(resourceFile(name + '.json'), 'utf8')) }); } },
 };
 const uiNode = (parent, name, x = 0, y = 0, width = 750, height = 1334) => {
   const node = new Node(name); Object.assign(node, { x, y, width, height }); parent.addChild(node); return node;
 };
-const ui = { uiNode, sprite: async (...args) => uiNode(...args), loadFrame: async () => ({}) };
+const rewardDialogs = [];
+const ui = { uiNode, sprite: async (...args) => uiNode(...args), loadFrame: async () => ({}),
+  message: async (parent, title, body, action, onAction) => { rewardDialogs.push({title, body, action, onAction}); return new Node('Message'); } };
 const catalog = { flowerSpritePath: (kind, variant = 1) => 'original/flower/' + kind + '_0' + variant };
 const modules = {};
 function load(name) {
@@ -51,10 +54,11 @@ function load(name) {
   }).outputText;
   vm.runInNewContext(text, { exports, console, Map, Set, Math, Number, Object, Array, Promise, require(request) {
     if (request === 'cc') return cc;
+    if (request === './FlowerAssets') return {loadFlowerAsset: cc.resources.load};
     if (request === 'cc/env') return { DEBUG: false };
     if (request === './FlowerUI') return ui;
     if (request === './FlowerCatalog') return catalog;
-    if (['./FlowerRules', './FlowerBouquet'].includes(request)) return load(request.slice(2));
+    if (['./FlowerRules', './FlowerBouquet', './FlowerRewardedVideo'].includes(request)) return load(request.slice(2));
     return {};
   } });
   return exports;
@@ -254,4 +258,38 @@ test('clearing a scene mid-flight prevents the old event stream from landing or 
   assert.equal(hudUpdates, 0); assert.equal(disposed, 1); assert.equal(flying.isValid, false);
   assert.equal(game.sceneMode, 'home'); assert.equal(game.visual, null); assert.equal(game.pendingAnimations.size, 0);
   assert.equal(game.content.name, 'GameContent'); assert.equal(game.content.isValid, true);
+});
+
+test('the order-slot reward keeps its dialog and applies unlock/add events without a coin charge or duplicate grant', async () => {
+  const game = new FlowerGame(), rules = new FlowerRules(); game.rules = rules; game.content = new Node();
+  game.visual = new FlowerPresentationState(rules);
+  let renders = 0, streams = 0;
+  game.renderOrder = async () => {renders++;};
+  game.animateEvents = async events => {streams++; for (const event of events) apply(game.visual, rules, event);};
+  await game.unlockOrderWithVideo(2);
+  const dialog = rewardDialogs.at(-1); assert.equal(dialog.title, '解锁花束位'); assert.equal(dialog.action, '解锁');
+  dialog.onAction(); dialog.onAction();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(rules.isOrderSlotUnlocked(2), true); assert.equal(rules.coins, 0);
+  assert.equal(streams, 1); assert.equal(renders, 1); assert.equal(game.visual.orders[2].kind, 'cdcs_jyc');
+  assert.equal(game.busy, false); assert.equal(game.paused, false);
+  const count = rewardDialogs.length; await game.unlockOrderWithVideo(2); assert.equal(rewardDialogs.length, count);
+});
+
+test('an exhausted tool dialog grants exactly one original use, does not auto-use it, and ignores an abandoned dialog', async () => {
+  const game = new FlowerGame(), rules = new FlowerRules(2), inventory = new Map([['compose', 0]]);
+  game.rules = rules; game.content = new Node();
+  game.read = (key, fallback) => inventory.has(key) ? inventory.get(key) : fallback;
+  game.write = (key, value) => inventory.set(key, value);
+  let refreshed = 0; game.buildTools = async () => {refreshed++;};
+  await game.useTool(0);
+  const dialog = rewardDialogs.at(-1); assert.equal(dialog.title, '道具已用完'); assert.match(dialog.body, /合成.*1/);
+  dialog.onAction(); dialog.onAction();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(inventory.get('compose'), 1); assert.equal(refreshed, 1); assert.equal(rules.progress, 0);
+  assert.equal(game.busy, false); assert.equal(game.paused, false);
+  inventory.set('compose', 0); await game.useTool(0); const abandoned = rewardDialogs.at(-1);
+  game.revision++; abandoned.onAction();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(inventory.get('compose'), 0); assert.equal(refreshed, 1);
 });

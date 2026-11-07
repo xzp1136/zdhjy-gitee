@@ -1,7 +1,8 @@
 from pathlib import Path
+from asset_paths import resource_file, manifest_file
 import json, struct, UnityPy
 P=Path(__file__).resolve().parents[1]
-m=json.loads((P/'assets/resources/original/manifest.json').read_text())
+m=json.loads(manifest_file().read_text())
 env=UnityPy.load(m['source']);objects={(o.assets_file.name,o.path_id):o for o in env.objects};sprites={a['pathId']:a['resource'] for a in m['assets'] if a['type']=='Sprite' and a['unityFile']=='resources.assets'}
 
 textures={(a['unityFile'],a['pathId']):a['resource'] for a in m['assets'] if a['type']=='Texture2D'}

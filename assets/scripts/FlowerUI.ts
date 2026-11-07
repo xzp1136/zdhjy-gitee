@@ -1,4 +1,5 @@
-import { BlockInputEvents, Button, Color, Font, game, Graphics, JsonAsset, Label, Node, resources, Sprite, SpriteFrame, tween, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
+import { loadFlowerAsset } from './FlowerAssets';
+import { BlockInputEvents, Button, Color, Font, game, Graphics, JsonAsset, Label, Node, Sprite, SpriteFrame, tween, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
 import { ButtonMotionOptions, FlowerButtonMotion } from './FlowerButtonMotion';
 
 const frames = new Map<string, Promise<SpriteFrame>>();
@@ -10,11 +11,11 @@ let typography: Promise<void> | null = null;
 /** Load the two embedded original fonts before constructing any visible UI. */
 export function preloadTypography(): Promise<void> {
     if (!typography) typography = Promise.all([
-        new Promise<Font>((resolve, reject) => resources.load('original/fonts/AlibabaPuHuiTi-2-65-Medium', Font,
+        new Promise<Font>((resolve, reject) => loadFlowerAsset('original/fonts/AlibabaPuHuiTi-2-65-Medium', Font,
             (error, font) => error ? reject(error) : resolve(font))),
-        new Promise<Font>((resolve, reject) => resources.load('original/fonts/ZhanKuXiaoLOGOTi-2', Font,
+        new Promise<Font>((resolve, reject) => loadFlowerAsset('original/fonts/ZhanKuXiaoLOGOTi-2', Font,
             (error, font) => error ? reject(error) : resolve(font))),
-        new Promise<JsonAsset>((resolve, reject) => resources.load('original/fonts/font-coverage', JsonAsset,
+        new Promise<JsonAsset>((resolve, reject) => loadFlowerAsset('original/fonts/font-coverage', JsonAsset,
             (error, asset) => error ? reject(error) : resolve(asset))),
     ]).then(([body, display, chars]) => {
         typefaces.body = body; typefaces.display = display;
@@ -24,10 +25,10 @@ export function preloadTypography(): Promise<void> {
     return typography;
 }
 
-/** Resource paths are relative to assets/resources, without the file extension. */
+/** Resource paths are relative to assets/without the file extension. */
 export function loadFrame(path: string): Promise<SpriteFrame> {
     if (!frames.has(path)) frames.set(path, new Promise((resolve, reject) => {
-        resources.load(`${path}/spriteFrame`, SpriteFrame, (error, frame) => {
+        loadFlowerAsset(`${path}/spriteFrame`, SpriteFrame, (error, frame) => {
             if (error) { frames.delete(path); reject(error); } else resolve(frame);
         });
     }));

@@ -1,3 +1,4 @@
+const resourceFile = require('./resource-file.cjs');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -5,9 +6,8 @@ const vm = require('node:vm');
 const test = require('node:test');
 const typescript = require('/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/Resources/app.asar.unpacked/node_modules/typescript');
 const root = path.join(__dirname, '..');
-const dataDir = path.join(root, 'assets/resources/original/data');
-const originalTables = JSON.parse(fs.readFileSync(path.join(dataDir, 'original-order-flower-vase-tables.json'), 'utf8'));
-const levelTables = JSON.parse(fs.readFileSync(path.join(dataDir, 'original-level-info-tables.json'), 'utf8'));
+const originalTables = JSON.parse(fs.readFileSync(resourceFile('original/data/original-order-flower-vase-tables.json'), 'utf8'));
+const levelTables = JSON.parse(fs.readFileSync(resourceFile('original/data/original-level-info-tables.json'), 'utf8'));
 
 function loadModule(file, requireFunction, consoleObject = console) {
   const exports = {};
@@ -37,6 +37,7 @@ async function loadCatalog(transform, warnings = []) {
     },
   };
   const { FlowerCatalog } = loadModule('FlowerCatalog.ts', name => {
+    if (name === './FlowerAssets') return {loadFlowerAsset: cc.resources.load};
     assert.equal(name, 'cc');
     return cc;
   }, { warn: (...args) => warnings.push(args.join(' ')) });

@@ -1,4 +1,5 @@
-import { JsonAsset, resources } from 'cc';
+import { loadFlowerAsset } from './FlowerAssets';
+import { JsonAsset } from 'cc';
 import { FlowerLevelConfig, FlowerOrderConfig, FlowerSpecialConfig } from './FlowerRules';
 
 export interface OriginalFlower {
@@ -29,7 +30,7 @@ export function flowerSpritePath(kind: string, variant = 1): string {
 }
 
 function json<T>(name: string): Promise<T> {
-    return new Promise((resolve, reject) => resources.load('original/data/' + name, JsonAsset,
+    return new Promise((resolve, reject) => loadFlowerAsset('original/data/' + name, JsonAsset,
         (error, asset) => error ? reject(error) : resolve(asset.json as T)));
 }
 function random(seed: number) {

@@ -691,6 +691,21 @@ test('a timed-out game spends exactly 100 coins to resume for 120 seconds with i
   assert.equal(game.coins, 10);
 });
 
+test('rewarded time revival adds the original 120 seconds without coins and cannot award twice', () => {
+  const game = create();
+  const flower = game.flowers.find(item => item.kind === game.orders[0].kind);
+  game.select(flower.id); game.tick(game.remainingSeconds);
+  const before = JSON.stringify({flowers: game.flowers, orders: game.orders, buffer: game.buffer, stars: game.stars});
+  const events = game.reviveTimeWithReward();
+  assert.equal(events.length, 1); assert.equal(events[0].type, 'time-revived');
+  assert.equal(events[0].seconds, 120); assert.equal(events[0].cost, 0);
+  assert.equal(game.coins, 0); assert.equal(game.status, 'playing'); assert.equal(game.remainingSeconds, 120);
+  assert.equal(JSON.stringify({flowers: game.flowers, orders: game.orders, buffer: game.buffer, stars: game.stars}), before);
+  assert.equal(game.reviveTimeWithReward().length, 0);
+  game.status = 'lost'; game.failureReason = 'buffer';
+  assert.equal(game.reviveTimeWithReward().length, 0);
+});
+
 test('time revival rejects insufficient funds and all states other than timeout without side effects', () => {
   const poor = create(1, 99);
   poor.tick(180);

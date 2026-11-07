@@ -67,6 +67,7 @@ function load(name) {
   }).outputText;
   vm.runInNewContext(output, {exports, console, Map, WeakMap, Set, WeakSet, Math, Number, Date, Object, Array, Promise, require(request) {
     if (request === 'cc') return cc;
+    if (request === './FlowerAssets') return {loadFlowerAsset: cc.resources.load};
     if (request === './FlowerPause') return {createPause: async () => {}};
     return load(request.slice(2));
   }});
@@ -83,6 +84,16 @@ test('Cocos scripts declare at most one Component per source file', () => {
       clause.token === ts.SyntaxKind.ExtendsKeyword && clause.types.some(type => type.expression.getText(file) === 'Component')));
     assert(components.length <= 1, `${filename}: multiple components fail Cocos runtime registration even when tsc succeeds`);
   }
+});
+
+test('the final-board result visibly offers replay while retaining its home action', async () => {
+  const {createWinResult} = load('FlowerResults');
+  const result = await createWinResult(new Node('Canvas'), 85, 3, 10, () => {}, () => {}, '再玩一次');
+  const panel = result.getChildByName('PopupContent');
+  const next = panel.getChildByName('NextLevelHit').getChildByName('NextLevel');
+  assert.equal(next.getChildByName('Text').getComponent(Label).string, '再玩一次');
+  assert.ok(panel.getChildByName('BackHomeHit'));
+  result.destroy();
 });
 
 test('pressing preserves hit geometry, uses original 0.9/0.1s InOutQuad, and cancellation never clicks', () => {
@@ -194,4 +205,25 @@ test('verified popup sounds emit once per transition and generic tap never inven
   assert.equal(sounds.length, 2, 'unverified click/common-message triggers remain silent');
   const over = ui.modal(new Node(), 'Over'); ui.presentPopup(over, {openSound: true}); ui.dismissPopup(over);
   assert.deepEqual(sounds[2], ['flower-ui-sound', 'open']); assert.equal(sounds.length, 3);
+});
+
+test('the retained video continuation button grants 120 seconds once without charging coins and ignores a destroyed popup', async () => {
+  const {FlowerRules} = load('FlowerRules'), {createTimeContinue} = load('FlowerContinue');
+  const rules = new FlowerRules(); rules.tick(rules.remainingSeconds);
+  let purchases = 0, rewards = 0;
+  const popup = await createTimeContinue(new Node(), 0, () => {purchases++; return false;}, () => {}, () => {
+    rewards++; return rules.reviveTimeWithReward().length > 0;
+  });
+  const video = popup.getChildByName('PopupContent').getChildByName('ContinueWithVideoHit');
+  video.emit('start', touch()); video.emit('end', touch()); video.emit('start', touch()); video.emit('end', touch());
+  for (let i = 0; i < 10; i++) await Promise.resolve();
+  assert.equal(rewards, 1); assert.equal(purchases, 0); assert.equal(rules.coins, 0); assert.equal(rules.remainingSeconds, 120);
+  video.emit('start', touch()); video.emit('end', touch());
+  for (let i = 0; i < 3; i++) await Promise.resolve();
+  assert.equal(rewards, 1, 'closing popup cannot award again');
+  const stale = await createTimeContinue(new Node(), 0, () => false, () => {}, () => {rewards++; return true;});
+  const staleButton = stale.getChildByName('PopupContent').getChildByName('ContinueWithVideoHit');
+  staleButton.emit('start', touch()); staleButton.emit('end', touch()); stale.destroy();
+  for (let i = 0; i < 5; i++) await Promise.resolve();
+  assert.equal(rewards, 1, 'abandoned popup cannot grant a late direct reward');
 });

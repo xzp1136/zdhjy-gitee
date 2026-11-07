@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Export original order Spine 3.8 assets and all 119 vase RectTransforms."""
 from pathlib import Path
+from asset_paths import resource_file, manifest_file
 import json, struct, hashlib
 import UnityPy
 P=Path(__file__).resolve().parents[1]
-m=json.loads((P/'assets/resources/original/manifest.json').read_text())
+m=json.loads(manifest_file().read_text())
 source=Path(m['source']);env=UnityPy.load(str(source))
 objects={(o.assets_file.name,o.path_id):o for o in env.objects}
 rm=dict(json.loads((source.parent.parent/'completeness-audit/resource-manager.json').read_text())['m_Container'])
@@ -43,11 +44,11 @@ for role,prefab,name in defs:
         evidence=P/'docs/reference/spine-source';evidence.mkdir(exist_ok=True)
         (evidence/(name+'.source.json')).write_text(source_text)
     assert data['skeleton']['spine']=='3.8.99'
-    out=P/'assets/resources/original/effects/spine'/name;out.mkdir(parents=True,exist_ok=True)
-    (out/(name+'.json')).write_text(json.dumps(data,ensure_ascii=False,separators=(',',':')) if fix else source_text)
+    resource='original/effects/spine/'+name+'/'+name
+    resource_file(resource+'.json', write=True).write_text(json.dumps(data,ensure_ascii=False,separators=(',',':')) if fix else source_text)
     atlas_text=atlas.read().m_Script;assert atlas_text.lstrip().splitlines()[0]==name+'.png'
-    (out/(name+'.atlas')).write_text(atlas_text)
-    texture=tex.read();texture.image.save(out/(name+'.png'))
+    resource_file(resource+'.atlas', write=True).write_text(atlas_text)
+    texture=tex.read();texture.image.save(resource_file(resource+'.png', write=True))
     entry={'prefab':pp,'resource':'original/effects/spine/'+name+'/'+name,
         'animation':'animation','track':0,'loop':False,'duration':duration(data['animations']['animation']),
         'prefabScale':[tr.m_LocalScale.x,tr.m_LocalScale.y,tr.m_LocalScale.z],
@@ -70,8 +71,8 @@ data={'version':1,'source':str(source),'spineVersion':'3.8.99','roles':roles,
     'vaseSwitch':{'position':[0,0],'sourceNode':'OrderItem.transform'},
     'orderTip':{'position':[-13,-166.799987793],'sourceNode':'imgOrderTip.transform','size':[176,116],'pivot':[.5,.449999988]},
     'flowerPut':{'position':'each received flower attachment pivot','sourceNode':'flower node Transform'}}}
-(P/'assets/resources/original/data/order-spine-effects.json').write_text(json.dumps(data,ensure_ascii=False,indent=2))
-table=json.loads((P/'assets/resources/original/data/original-order-flower-vase-tables.json').read_text())['tables']['VaseInfoConfig']
+resource_file('original/data/order-spine-effects.json', write=True).write_text(json.dumps(data,ensure_ascii=False,indent=2))
+table=json.loads(resource_file('original/data/original-order-flower-vase-tables.json').read_text())['tables']['VaseInfoConfig']
 rects={}
 for v in table:
     path='prefabs/vase/'+v['uiPrefabPath'];go=objects['resources.assets',rm[path]['m_PathID']].read()
@@ -79,5 +80,5 @@ for v in table:
     rects[str(v['index'])]={'path':path,'name':v['name'],'width':t.m_SizeDelta.x,'height':t.m_SizeDelta.y,
         'pivot':[t.m_Pivot.x,t.m_Pivot.y],'scale':[t.m_LocalScale.x,t.m_LocalScale.y,t.m_LocalScale.z]}
 assert len(rects)==119
-(P/'assets/resources/original/data/order-motion-layouts.json').write_text(json.dumps(rects,ensure_ascii=False,indent=2))
+resource_file('original/data/order-motion-layouts.json', write=True).write_text(json.dumps(rects,ensure_ascii=False,indent=2))
 print(json.dumps({'effects':[(k,len(v['choices'])) for k,v in roles.items()],'vases':len(rects)},ensure_ascii=False))

@@ -1,5 +1,6 @@
 import { Node } from 'cc';
 import { dismissPopup, label, loadFrame, message, modal, presentPopup, slicedSprite, sprite, tap } from './FlowerUI';
+import { rewardedVideo } from './FlowerRewardedVideo';
 
 const A = 'original/';
 const art = ['extras/bg1_816', 'extras/bg21_373', 'extras/tittlebg_305', 'extras/tittlede_line_491',
@@ -10,9 +11,9 @@ export async function preloadContinue(): Promise<void> {
     await Promise.all(art.map(path => loadFrame(A + path)));
 }
 
-/** The observed time-out offer; only a successful local coin purchase resumes. */
+/** Keep both original continuation buttons; the video adapter currently awards directly. */
 export async function createTimeContinue(parent: Node, coins: number,
-    onPurchase: () => boolean, onDecline: () => void): Promise<Node> {
+    onPurchase: () => boolean, onDecline: () => void, onVideoReward: () => boolean): Promise<Node> {
     await preloadContinue();
     const overlay = modal(parent, 'TimeContinueOverlay', '#000000bc');
     const balance = await sprite(overlay, 'CoinBalance', A + 'ui/over/buttonback', -257, 453, 170, 52);
@@ -27,13 +28,13 @@ export async function createTimeContinue(parent: Node, coins: number,
     label(overlay, 'Title', '时间到了', 0, 288, 85 * 750 / 1080, 350, '#b8793f', 'display');
     await sprite(overlay, 'ClockGirl', A + 'extras/image6_704', 0, 94, 222, 229);
     label(overlay, 'Hint', '再加120秒你一定可以！', 0, -65, 29, 570, '#4f3b22');
-    let leaving = false, explaining = false;
+    let leaving = false, explaining = false, claiming = false;
     const leave = (action: () => void) => {
-        if (leaving || explaining) return;
+        if (leaving || explaining || claiming) return;
         leaving = true; dismissPopup(overlay, action);
     };
     const info = async (title: string, body: string) => {
-        if (leaving || explaining) return;
+        if (leaving || explaining || claiming) return;
         explaining = true;
         await message(overlay, title, body, '知道了', () => { explaining = false; });
     };
@@ -43,14 +44,26 @@ export async function createTimeContinue(parent: Node, coins: number,
     await sprite(purchase, 'Coin', A + 'ui/itemicon/gold', -64, 0, 39);
     label(purchase, 'Text', '100 继续', 28, 0, 31, 180, '#d84f56');
     tap(purchase, () => {
-        if (leaving || explaining) return;
+        if (leaving || explaining || claiming) return;
         if (coins < 100) { void info('金币不足', '继续游戏需要100金币。'); return; }
         if (onPurchase()) { leaving = true; dismissPopup(overlay); }
     });
     const video = await sprite(overlay, 'ContinueWithVideo', A + 'extras/green_button_931', 156, -259, 246, 102);
     await sprite(video, 'VideoIcon', A + 'extras/adsgreen_992', -45, 0, 45);
     label(video, 'Text', '继续', 35, 0, 32, 125, '#659e2a');
-    tap(video, () => void info('视频暂不可用', '暂时无法获取视频，请稍后再试。'));
+    tap(video, () => {
+        if (leaving || explaining || claiming) return;
+        claiming = true;
+        void rewardedVideo.claim('time-continue', onVideoReward, () => overlay.isValid && !leaving)
+            .then(granted => {
+                if (granted && overlay.isValid) { leaving = true; dismissPopup(overlay); }
+            })
+            .catch(() => {
+                claiming = false;
+                if (overlay.isValid && !leaving) void info('领取未完成', '请再试一次。');
+            })
+            .then(() => { claiming = false; });
+    });
     presentPopup(overlay, { openSound: true, closeSound: true });
     return overlay;
 }

@@ -1,4 +1,5 @@
 from pathlib import Path
+from asset_paths import resource_file, manifest_file
 from collections import Counter
 import struct,re,json,hashlib
 import argparse
@@ -6,7 +7,7 @@ PROJECT=Path(__file__).resolve().parents[1]
 parser=argparse.ArgumentParser(description='Statically extract original order/flower/vase tables; never executes original game code.')
 parser.add_argument('--wat',type=Path,required=True,help='WABT wasm2wat output for the original expanded/game.wasm')
 args=parser.parse_args()
-manifest=json.loads((PROJECT/'assets/resources/original/manifest.json').read_text())
+manifest=json.loads(manifest_file().read_text())
 source=Path(manifest['source']);wasm=source.parent.parent/'expanded/game.wasm'
 WASM=wasm.read_bytes()
 expected='9f5a09f6a716a3d240fcf8d045fc80feb9012f0cb0a7459151ab135270863e92'
@@ -34,7 +35,6 @@ for line in args.wat.open():
   number=int(line.split('(;')[1].split(';')[0]);current=number if number in wanted else None
  if current is not None:functions.setdefault(current,[]).append(line.rstrip('\n'))
 assert set(functions)==wanted,'Missing expected WAT function indices.'
-DEST=PROJECT/'assets/resources/original/data';DEST.mkdir(exist_ok=True)
 def literal(v):
  if (v>>29)!=5 or not(v&1):return v
  idx=(v&0x1fffffff)>>1;n,s=struct.unpack_from('<II',META,256+idx*8)
@@ -98,5 +98,5 @@ outputs['ItemDataConfig']=mapped(56134,itemfields)
 for item in outputs['ItemDataConfig']:item['flowerSize']=struct.unpack('<f',struct.pack('<I',item['flowerSize']))[0]
 outputs['VaseInfoConfig']=mapped(56142,vasefields)
 result={'source':'Original IL2CPP static constructors, statically evaluated from supplied game.wasm; no game code executed.','sourceWasm':str(wasm),'sourceWasmSha256':expected,'sourceMetadataSha256':hashlib.sha256(META).hexdigest(),'status':'extracted-original','versionSelection':'Unverified: OrderLevelConfig/A/B/C selection is runtime logic. Preserve all variants.','functionIndices':{'OrderLevelConfig':56133,'OrderLevelConfigA':56139,'OrderLevelConfigB':56140,'OrderLevelConfigC':56141,'ItemDataConfig':56134,'VaseInfoConfig':56142},'tables':outputs}
-(DEST/'original-order-flower-vase-tables.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
-print(json.dumps({'output':str(DEST/'original-order-flower-vase-tables.json'),'counts':{k:len(v) for k,v in outputs.items()}},ensure_ascii=False))
+resource_file('original/data/original-order-flower-vase-tables.json', write=True).write_text(json.dumps(result,ensure_ascii=False,indent=2))
+print(json.dumps({'output':str(resource_file('original/data/original-order-flower-vase-tables.json')),'counts':{k:len(v) for k,v in outputs.items()}},ensure_ascii=False))

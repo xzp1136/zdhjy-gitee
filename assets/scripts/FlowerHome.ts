@@ -4,6 +4,15 @@ import { createPause } from './FlowerPause';
 import { FlowerHomeMotion } from './FlowerHomeMotion';
 
 const A = 'original/';
+/** Visible homepage art, warmed before the startup screen is dismissed. */
+export const HOME_FRAME_PATHS = [
+    'ui/bg', 'order/setting', 'extras/topbar_639', 'extras/heart_336', 'ui/start/jmtili',
+    'extras/coin_165', 'order/star128', 'ui/start/boxbutton2', 'ui/start/baoxiang blue',
+    'ui/start/baoxiang purple', 'ui/start/progress_1', 'ui/start/progress_2',
+    'extras/bgbrand_863', 'extras/nameband_597', 'extras/share_340', 'extras/dailychallenge_351',
+    'extras/super_801', 'extras/present_628', 'extras/social_764', 'extras/green_button_931',
+    'extras/hl0_435', 'extras/hl_632', 'extras/shop_524', 'extras/home_900', 'extras/rank_723',
+].map(path => A + path);
 const read = (key: string, fallback: number) => {
     const stored = sys.localStorage.getItem(`zdhjy.${key}`);
     const value = stored === null ? fallback : Number(stored);

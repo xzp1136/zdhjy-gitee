@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Export serialized scene motion settings and audited original WASM constants."""
 from pathlib import Path
+from asset_paths import resource_file, manifest_file
 import json, struct, collections, hashlib
 import UnityPy
 P=Path(__file__).resolve().parents[1]
-manifest=json.loads((P/'assets/resources/original/manifest.json').read_text())
+manifest=json.loads(manifest_file().read_text())
 source=Path(manifest['source']);env=UnityPy.load(str(source))
 wasm=source.parent.parent/'expanded/game.wasm'
 wasm_sha=hashlib.sha256(wasm.read_bytes()).hexdigest()
@@ -80,5 +81,5 @@ result={'version':1,'source':str(source),'sourceWasmSha256':wasm_sha,'flowerMana
  'uiAnimationRestart':{'StartFunction':43173,'UpdateFunction':43175,'CoroutineFunction':43179,'interval':'integer Random.Range(2,5), sampled once at Start; 2, 3 or 4 seconds','trigger':'wait normalizedTime>=1; mark IsPlaying=false/completed=true; wait the sampled interval; restart from normalizedTime 0. Normal completion does not disable the Animator.'},
  'gameUIEntry':{'UIManagerFunction':43184,'GameUIShowFunction':42695,'CloseCutSceneFunction':42696,'GameMgrStartFunction':41031,'GamePlayMoveNextFunction':41073,'animateArgument':False,'scenePanelReference':None,'note':'No whole-board popup scale. GameUI ShowView calls CloseCutSceneAni immediately; GamePlay yields one frame then enables IsPlayGame/gameState.'},
  'soundMapping':{'sourceFunction':56047,'72':{'remark':'花朵飞到花篮位置','resourceName':'flowerhit'},'73':{'remark':'关卡开始创建花朵','resourceName':'flowerstart'},'74':{'remark':'花篮订单完成','resourceName':'vasesuccss'}}}
-(P/'assets/resources/original/data/original-motion-settings.json').write_text(json.dumps(result,ensure_ascii=False,indent=2))
+resource_file('original/data/original-motion-settings.json', write=True).write_text(json.dumps(result,ensure_ascii=False,indent=2))
 print(json.dumps({'manager':manager['values'],'buttons':len(buttons),'views':len(views),'flowerCtr':flower_count},ensure_ascii=False))

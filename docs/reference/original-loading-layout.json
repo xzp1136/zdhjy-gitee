@@ -1,0 +1,1177 @@
+{
+  "version": 1,
+  "sourceScene": "level0",
+  "sourceAssets": "sharedassets0.assets",
+  "canvas": {
+    "referenceResolution": [
+      750,
+      1334
+    ],
+    "matchWidthOrHeight": 0,
+    "coordinates": "center origin, +Y up; Icon uses top-center anchor"
+  },
+  "resources": {
+    "background": "original/extras/bgLoad_8",
+    "title": "original/extras/btz_11",
+    "barBackground": "original/extras/pb_0_6",
+    "barFill": "original/extras/pb_1_7",
+    "leftFlower": "original/extras/fl_l_9",
+    "rightFlower": "original/extras/fl_r_4",
+    "smallFlower": "original/extras/fl_b_10"
+  },
+  "bar": {
+    "position": [
+      0,
+      -399.5
+    ],
+    "rootSize": [
+      500,
+      57.6
+    ],
+    "renderSize": [
+      500,
+      57.8
+    ],
+    "backgroundBorderLTRB": [
+      35,
+      0,
+      35,
+      0
+    ],
+    "fillBorderLTRB": [
+      41,
+      0,
+      38,
+      0
+    ],
+    "preserveFullTexturePadding": true
+  },
+  "title": {
+    "anchor": "top-center",
+    "position": [
+      0,
+      -330
+    ],
+    "rectSize": [
+      1112,
+      345
+    ],
+    "scale": 0.67,
+    "displaySize": [
+      745.04,
+      231.15
+    ]
+  },
+  "progress": {
+    "updateFunction": 41116,
+    "perFrameIncrement": 0.01,
+    "deltaTimeScaled": false,
+    "actualAsyncProgress": false,
+    "loadingText": "加载中...请稍后",
+    "completeText": "加载完成，即将进入游戏",
+    "completeTextDoesNotTriggerSceneSwitch": true,
+    "fixedCompleteHoldDuration": null
+  },
+  "nodes": [
+    {
+      "name": "txtProTip",
+      "pathId": 3,
+      "active": true,
+      "parent": "Canvas",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "m_LocalRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchorMax": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchoredPosition": {
+          "x": 0.0,
+          "y": -461.0
+        },
+        "m_SizeDelta": {
+          "x": 245.0,
+          "y": 70.0
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": [
+        {
+          "class": "Text",
+          "pathId": 65,
+          "color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "font": {
+            "fileId": 2,
+            "pathId": 13,
+            "file": "sharedassets0.assets",
+            "type": "Font",
+            "name": "AlibabaPuHuiTi-2-65-Medium"
+          },
+          "fontSize": 32,
+          "fontStyle": 0,
+          "alignment": 4,
+          "text": "加载中...请稍后",
+          "bestFit": {
+            "enabled": true,
+            "min": 20,
+            "max": 32
+          }
+        },
+        {
+          "class": "Outline",
+          "pathId": 66,
+          "color": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "distance": [
+            1.0,
+            1.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Image (3)",
+      "pathId": 7,
+      "active": true,
+      "parent": "Canvas",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "m_LocalRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchorMax": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchoredPosition": {
+          "x": -146.0,
+          "y": -461.0
+        },
+        "m_SizeDelta": {
+          "x": 39.0,
+          "y": 38.0
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": [
+        {
+          "class": "Image",
+          "pathId": 69,
+          "color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sprite": {
+            "fileId": 2,
+            "pathId": 19,
+            "file": "sharedassets0.assets",
+            "type": "Sprite",
+            "name": "fl_b",
+            "rect": {
+              "x": 0.0,
+              "y": 0.0,
+              "width": 39.0,
+              "height": 38.0
+            },
+            "border": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 0.0
+            },
+            "pivot": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "ppu": 100.0,
+            "texture": 10
+          },
+          "imageType": 0,
+          "tail": [
+            0,
+            1,
+            4,
+            1065353216,
+            1,
+            0,
+            0,
+            1065353216
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Image",
+      "pathId": 9,
+      "active": true,
+      "parent": "Canvas",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "m_LocalRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchorMax": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchoredPosition": {
+          "x": -254.0,
+          "y": -399.5
+        },
+        "m_SizeDelta": {
+          "x": 105.0,
+          "y": 109.0
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": [
+        {
+          "class": "Image",
+          "pathId": 71,
+          "color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sprite": {
+            "fileId": 2,
+            "pathId": 18,
+            "file": "sharedassets0.assets",
+            "type": "Sprite",
+            "name": "fl_l",
+            "rect": {
+              "x": 0.0,
+              "y": 0.0,
+              "width": 105.0,
+              "height": 109.0
+            },
+            "border": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 0.0
+            },
+            "pivot": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "ppu": 100.0,
+            "texture": 9
+          },
+          "imageType": 0,
+          "tail": [
+            0,
+            1,
+            4,
+            1065353216,
+            1,
+            0,
+            0,
+            1065353216
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Image (1)",
+      "pathId": 11,
+      "active": true,
+      "parent": "Canvas",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "m_LocalRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchorMax": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchoredPosition": {
+          "x": 244.0,
+          "y": -399.5
+        },
+        "m_SizeDelta": {
+          "x": 88.0,
+          "y": 87.0
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": [
+        {
+          "class": "Image",
+          "pathId": 73,
+          "color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sprite": {
+            "fileId": 2,
+            "pathId": 14,
+            "file": "sharedassets0.assets",
+            "type": "Sprite",
+            "name": "fl_r",
+            "rect": {
+              "x": 0.0,
+              "y": 0.0,
+              "width": 88.0,
+              "height": 87.0
+            },
+            "border": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 0.0
+            },
+            "pivot": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "ppu": 100.0,
+            "texture": 4
+          },
+          "imageType": 0,
+          "tail": [
+            0,
+            1,
+            4,
+            1065353216,
+            1,
+            0,
+            0,
+            1065353216
+          ]
+        }
+      ]
+    },
+    {
+      "name": "bg",
+      "pathId": 12,
+      "active": true,
+      "parent": "Canvas",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "m_LocalRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_AnchorMax": {
+          "x": 1.0,
+          "y": 1.0
+        },
+        "m_AnchoredPosition": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_SizeDelta": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": [
+        {
+          "class": "Image",
+          "pathId": 74,
+          "color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sprite": {
+            "fileId": 2,
+            "pathId": 17,
+            "file": "sharedassets0.assets",
+            "type": "Sprite",
+            "name": "bgLoad",
+            "rect": {
+              "x": 0.0,
+              "y": 0.0,
+              "width": 750.0,
+              "height": 1334.0
+            },
+            "border": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 0.0
+            },
+            "pivot": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "ppu": 100.0,
+            "texture": 8
+          },
+          "imageType": 0,
+          "tail": [
+            0,
+            1,
+            4,
+            1065353216,
+            1,
+            0,
+            0,
+            1065353216
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Fill",
+      "pathId": 13,
+      "active": true,
+      "parent": "Fill Area",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "m_LocalRotation": {
+          "x": -0.0,
+          "y": -0.0,
+          "z": -0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_AnchorMax": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_AnchoredPosition": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_SizeDelta": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": [
+        {
+          "class": "Image",
+          "pathId": 75,
+          "color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sprite": {
+            "fileId": 2,
+            "pathId": 16,
+            "file": "sharedassets0.assets",
+            "type": "Sprite",
+            "name": "pb_1",
+            "rect": {
+              "x": 0.0,
+              "y": 0.0,
+              "width": 202.0,
+              "height": 72.0
+            },
+            "border": {
+              "x": 41.0,
+              "y": 0.0,
+              "z": 38.0,
+              "w": 0.0
+            },
+            "pivot": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "ppu": 100.0,
+            "texture": 7
+          },
+          "imageType": 1,
+          "tail": [
+            0,
+            1,
+            4,
+            1065353216,
+            1,
+            0,
+            0,
+            1065353216
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Background",
+      "pathId": 14,
+      "active": true,
+      "parent": "Slider",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "m_LocalRotation": {
+          "x": -0.0,
+          "y": -0.0,
+          "z": -0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.0,
+          "y": 0.25
+        },
+        "m_AnchorMax": {
+          "x": 1.0,
+          "y": 0.75
+        },
+        "m_AnchoredPosition": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_SizeDelta": {
+          "x": 0.0,
+          "y": 29.0
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": [
+        {
+          "class": "Image",
+          "pathId": 76,
+          "color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sprite": {
+            "fileId": 2,
+            "pathId": 15,
+            "file": "sharedassets0.assets",
+            "type": "Sprite",
+            "name": "pb_0",
+            "rect": {
+              "x": 0.0,
+              "y": 0.0,
+              "width": 202.0,
+              "height": 72.0
+            },
+            "border": {
+              "x": 35.0,
+              "y": 0.0,
+              "z": 35.0,
+              "w": 0.0
+            },
+            "pivot": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "ppu": 100.0,
+            "texture": 6
+          },
+          "imageType": 1,
+          "tail": [
+            0,
+            1,
+            4,
+            1065353216,
+            1,
+            0,
+            0,
+            1065353216
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Slider",
+      "pathId": 15,
+      "active": true,
+      "parent": "Canvas",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "m_LocalRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchorMax": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchoredPosition": {
+          "x": 0.0,
+          "y": -399.5
+        },
+        "m_SizeDelta": {
+          "x": 500.0,
+          "y": 57.6
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": [
+        {
+          "class": "Slider",
+          "pathId": 77,
+          "minValue": 0,
+          "maxValue": 1,
+          "wholeNumbers": false,
+          "initialValue": 0,
+          "direction": "LeftToRight",
+          "handleRect": null
+        }
+      ]
+    },
+    {
+      "name": "Image (2)",
+      "pathId": 16,
+      "active": true,
+      "parent": "Canvas",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "m_LocalRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchorMax": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchoredPosition": {
+          "x": 146.0,
+          "y": -461.0
+        },
+        "m_SizeDelta": {
+          "x": 39.0,
+          "y": 38.0
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": [
+        {
+          "class": "Image",
+          "pathId": 78,
+          "color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sprite": {
+            "fileId": 2,
+            "pathId": 19,
+            "file": "sharedassets0.assets",
+            "type": "Sprite",
+            "name": "fl_b",
+            "rect": {
+              "x": 0.0,
+              "y": 0.0,
+              "width": 39.0,
+              "height": 38.0
+            },
+            "border": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 0.0
+            },
+            "pivot": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "ppu": 100.0,
+            "texture": 10
+          },
+          "imageType": 0,
+          "tail": [
+            0,
+            1,
+            4,
+            1065353216,
+            1,
+            0,
+            0,
+            1065353216
+          ]
+        }
+      ]
+    },
+    {
+      "name": "txtPro",
+      "pathId": 17,
+      "active": true,
+      "parent": "Canvas",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "m_LocalRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchorMax": {
+          "x": 0.5,
+          "y": 0.5
+        },
+        "m_AnchoredPosition": {
+          "x": 0.0,
+          "y": -395.0
+        },
+        "m_SizeDelta": {
+          "x": 240.0,
+          "y": 50.0
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": [
+        {
+          "class": "Text",
+          "pathId": 79,
+          "color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "font": {
+            "fileId": 2,
+            "pathId": 13,
+            "file": "sharedassets0.assets",
+            "type": "Font",
+            "name": "AlibabaPuHuiTi-2-65-Medium"
+          },
+          "fontSize": 32,
+          "fontStyle": 0,
+          "alignment": 4,
+          "text": "0%",
+          "bestFit": {
+            "enabled": false,
+            "min": 2,
+            "max": 300
+          }
+        },
+        {
+          "class": "Outline",
+          "pathId": 80,
+          "color": [
+            0.0,
+            0.0,
+            0.0,
+            0.8509804010391235
+          ],
+          "distance": [
+            1.0,
+            1.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Fill Area",
+      "pathId": 18,
+      "active": true,
+      "parent": "Slider",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 1.0,
+          "y": 1.0,
+          "z": 1.0
+        },
+        "m_LocalRotation": {
+          "x": -0.0,
+          "y": -0.0,
+          "z": -0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.0,
+          "y": 0.25
+        },
+        "m_AnchorMax": {
+          "x": 1.0,
+          "y": 0.75
+        },
+        "m_AnchoredPosition": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_SizeDelta": {
+          "x": 0.0,
+          "y": 29.0
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": []
+    },
+    {
+      "name": "Icon",
+      "pathId": 19,
+      "active": true,
+      "parent": "Canvas",
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 0.67,
+          "y": 0.67,
+          "z": 0.67
+        },
+        "m_LocalRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.5,
+          "y": 1.0
+        },
+        "m_AnchorMax": {
+          "x": 0.5,
+          "y": 1.0
+        },
+        "m_AnchoredPosition": {
+          "x": 0.0,
+          "y": -330.0
+        },
+        "m_SizeDelta": {
+          "x": 1112.0,
+          "y": 345.0
+        },
+        "m_Pivot": {
+          "x": 0.5,
+          "y": 0.5
+        }
+      },
+      "components": [
+        {
+          "class": "Image",
+          "pathId": 81,
+          "color": [
+            1.0,
+            1.0,
+            1.0,
+            1.0
+          ],
+          "sprite": {
+            "fileId": 2,
+            "pathId": 20,
+            "file": "sharedassets0.assets",
+            "type": "Sprite",
+            "name": "btz",
+            "rect": {
+              "x": 0.0,
+              "y": 0.0,
+              "width": 1024.0,
+              "height": 311.0
+            },
+            "border": {
+              "x": 0.0,
+              "y": 0.0,
+              "z": 0.0,
+              "w": 0.0
+            },
+            "pivot": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "ppu": 92.28486633300781,
+            "texture": 11
+          },
+          "imageType": 0,
+          "tail": [
+            0,
+            1,
+            4,
+            1065353216,
+            1,
+            0,
+            0,
+            1065353216
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Canvas",
+      "pathId": 21,
+      "active": true,
+      "parent": null,
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalScale": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0
+        },
+        "m_LocalRotation": {
+          "x": 0.0,
+          "y": 0.0,
+          "z": 0.0,
+          "w": 1.0
+        },
+        "m_AnchorMin": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_AnchorMax": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_AnchoredPosition": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_SizeDelta": {
+          "x": 0.0,
+          "y": 0.0
+        },
+        "m_Pivot": {
+          "x": 0.0,
+          "y": 0.0
+        }
+      },
+      "components": [
+        {
+          "class": "CanvasScaler",
+          "pathId": 84,
+          "mode": 1,
+          "referenceResolution": [
+            750.0,
+            1334.0
+          ],
+          "screenMatchMode": 0,
+          "matchWidthOrHeight": 0.0
+        },
+        {
+          "class": "GraphicRaycaster",
+          "pathId": 83
+        },
+        {
+          "class": "LoadCtr",
+          "pathId": 85,
+          "bindings": {
+            "32": {
+              "fileId": 0,
+              "pathId": 77,
+              "file": "level0",
+              "type": "MonoBehaviour",
+              "name": "",
+              "gameObject": "Slider"
+            },
+            "44": {
+              "fileId": 0,
+              "pathId": 79,
+              "file": "level0",
+              "type": "MonoBehaviour",
+              "name": "",
+              "gameObject": "txtPro"
+            },
+            "56": {
+              "fileId": 0,
+              "pathId": 65,
+              "file": "level0",
+              "type": "MonoBehaviour",
+              "name": "",
+              "gameObject": "txtProTip"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

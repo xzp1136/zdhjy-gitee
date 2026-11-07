@@ -1,4 +1,5 @@
-import { Color, EventTouch, JsonAsset, Node, resources, Sprite, SpriteFrame, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
+import { loadFlowerAsset } from './FlowerAssets';
+import { Color, EventTouch, JsonAsset, Node, Sprite, SpriteFrame, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
 import { FlowerPiece } from './FlowerRules';
 import { flowerSpritePath } from './FlowerCatalog';
 import { loadFrame, uiNode } from './FlowerUI';
@@ -59,7 +60,7 @@ let motionData: Promise<MotionData> | null = null;
 
 function loadMotionData(): Promise<MotionData> {
     if (!motionData) motionData = new Promise((resolve, reject) => {
-        resources.load('original/data/original-motion-settings', JsonAsset, (error, asset) => {
+        loadFlowerAsset('original/data/original-motion-settings', JsonAsset, (error, asset) => {
             if (error) { motionData = null; reject(error); }
             else resolve(asset.json as MotionData);
         });
@@ -69,7 +70,7 @@ function loadMotionData(): Promise<MotionData> {
 
 function loadRippleData(): Promise<RippleData> {
     if (!rippleData) rippleData = new Promise((resolve, reject) => {
-        resources.load('original/data/water-ripple-animations', JsonAsset, (error, asset) => {
+        loadFlowerAsset('original/data/water-ripple-animations', JsonAsset, (error, asset) => {
             if (error) { rippleData = null; reject(error); }
             else resolve(asset.json as RippleData);
         });
@@ -189,7 +190,7 @@ let clickShapes: Promise<FlowerClickShapes> | null = null;
 
 function loadClickShapes(): Promise<FlowerClickShapes> {
     if (!clickShapes) clickShapes = new Promise((resolve, reject) => {
-        resources.load('original/data/flower-click-shapes', JsonAsset, (error, asset) => {
+        loadFlowerAsset('original/data/flower-click-shapes', JsonAsset, (error, asset) => {
             if (error) { clickShapes = null; reject(error); }
             else resolve((asset.json as { shapes: FlowerClickShapes }).shapes);
         });
@@ -432,6 +433,15 @@ export class FlowerPoolView {
             pool.dispose();
             throw error;
         }
+    }
+
+    /** Warm the original shapes, motion tracks and frames without creating nodes. */
+    static async preload(flowers: readonly FlowerPiece[]): Promise<void> {
+        const [ripples] = await Promise.all([loadRippleData(), loadClickShapes(), loadMotionData()]);
+        const paths = new Set(flowers.map(flower => flowerSpritePath(flower.kind, flower.variant)));
+        if (flowers.some(flower => flower.specialId)) paths.add('original/butterfly/qipao');
+        for (const path of Object.keys(ripples.sprites)) paths.add(path);
+        await Promise.all([...paths].map(path => loadFrame(path)));
     }
 
     private path(flower: FlowerPiece): string { return flowerSpritePath(flower.kind, flower.variant); }

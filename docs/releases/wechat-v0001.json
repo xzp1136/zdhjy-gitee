@@ -1,0 +1,24 @@
+{
+  "appid": "wx3ef66f850d873a67",
+  "creator": "3.8.7",
+  "buildTask": "zdhjy-wechat-1794063852095-dec7ea",
+  "buildMeasuredAt": "2026-11-07T15:04:26.474Z",
+  "mainBytes": 3995705,
+  "localTotalBytes": 21398437,
+  "remoteBytes": 40312368,
+  "remoteFiles": 2651,
+  "remoteExcludedByProjectConfig": true,
+  "server": "https://game2cdn.chujinggamefun.com/zdhjy/wechat/v0001/",
+  "cdnVerification": {
+    "completedAt": "2026-11-07T15:13:26.190Z",
+    "checked": 30,
+    "passed": 30,
+    "failed": 0,
+    "types": {
+      "config": 10,
+      "import-json": 10,
+      "native-png": 10
+    }
+  },
+  "wechatRuntimeVerified": false
+}

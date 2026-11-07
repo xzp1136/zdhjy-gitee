@@ -1,0 +1,14 @@
+{
+  "ver": "1.2.0",
+  "importer": "directory",
+  "imported": true,
+  "uuid": "9d27d4bc-9182-4345-96c1-41f575dd3574",
+  "files": [],
+  "subMetas": {},
+  "userData": {
+    "isBundle": true,
+    "bundleName": "core-audio",
+    "priority": 6,
+    "bundleConfigID": "zdhjy-local"
+  }
+}

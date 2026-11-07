@@ -470,12 +470,21 @@ export class FlowerRules {
 
     /** Spend local game coins to resume a timed-out attempt without resetting its board. */
     reviveTime(): FlowerEvent[] {
-        if (this.status !== 'lost' || this.failureReason !== 'time' || this.coins < 100) return [];
-        this.coins -= 100;
+        return this.resumeTimedOutAttempt(100);
+    }
+
+    /** Original TimeUpOver.ShareSuccess uses the same 120-second resume without a coin charge. */
+    reviveTimeWithReward(): FlowerEvent[] {
+        return this.resumeTimedOutAttempt(0);
+    }
+
+    private resumeTimedOutAttempt(cost: number): FlowerEvent[] {
+        if (this.status !== 'lost' || this.failureReason !== 'time' || this.coins < cost) return [];
+        this.coins -= cost;
         this.remainingSeconds = 120;
         this.failureReason = null;
         this.status = 'playing';
-        return [{ type: 'time-revived', seconds: 120, cost: 100 }];
+        return [{ type: 'time-revived', seconds: 120, cost }];
     }
 
     buyExtraBufferSlot(): FlowerEvent[] {

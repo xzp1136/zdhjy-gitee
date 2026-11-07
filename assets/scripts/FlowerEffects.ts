@@ -1,4 +1,5 @@
-import { JsonAsset, Node, resources, sp, UITransform, Vec3 } from 'cc';
+import { loadFlowerAsset } from './FlowerAssets';
+import { JsonAsset, Node, sp, UITransform, Vec3 } from 'cc';
 import { uiNode } from './FlowerUI';
 
 export type FlowerEffectKind = 'landing' | 'complete' | 'group-switch' | 'order-tip' | 'new-order';
@@ -28,7 +29,7 @@ let assetPromise: Promise<EffectAssets> | null = null;
 function loadEffectAssets(): Promise<EffectAssets> {
     if (!assetPromise) {
         assetPromise = new Promise<EffectManifest>((resolve, reject) => {
-            resources.load('original/data/order-spine-effects', JsonAsset, (error, asset) => {
+            loadFlowerAsset('original/data/order-spine-effects', JsonAsset, (error, asset) => {
                 if (error) reject(error); else resolve(asset.json as EffectManifest);
             });
         }).then(async manifest => {
@@ -40,7 +41,7 @@ function loadEffectAssets(): Promise<EffectAssets> {
             }
             const skeletons = new Map<string, sp.SkeletonData>();
             await Promise.all([...paths].map(path => new Promise<void>((resolve, reject) => {
-                resources.load(path, sp.SkeletonData, (error, asset) => {
+                loadFlowerAsset(path, sp.SkeletonData, (error, asset) => {
                     if (error) reject(error);
                     else { skeletons.set(path, asset); resolve(); }
                 });

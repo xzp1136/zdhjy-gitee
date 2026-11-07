@@ -1,0 +1,14 @@
+{
+  "ver": "1.2.0",
+  "importer": "directory",
+  "imported": true,
+  "uuid": "adfa2097-dca1-46b5-963d-6050f6d5f11c",
+  "files": [],
+  "subMetas": {},
+  "userData": {
+    "isBundle": true,
+    "bundleName": "flowers-03",
+    "priority": 6,
+    "bundleConfigID": "zdhjy-remote"
+  }
+}

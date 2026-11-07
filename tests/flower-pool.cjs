@@ -1,3 +1,4 @@
+const resourceFile = require('./resource-file.cjs');
 // Headless input/motion regressions: actual FlowerPool and original shape fixtures.
 // Cocos transforms/events are stubbed; rendered appearance still needs preview checks.
 const test = require('node:test');
@@ -31,10 +32,10 @@ class UIOpacity {opacity=255;}
 class Graphics {moveTo(){}lineTo(){}stroke(){}}
 class Color {constructor(r,g,b,a){Object.assign(this,{r,g,b,a});}}
 function uiNode(parent,name,x=0,y=0,w=750,h=1334){const n=new Node(name);n.layer=parent.layer;n.addComponent(UITransform).setContentSize(w,h);n.setPosition(x,y);parent.addChild(n);return n;}
-async function loadFrame(path) { const file=project+'/assets/resources/'+path+'.png';if(!fs.existsSync(file+'.meta')){const png=fs.readFileSync(file);return {originalSize:{width:png.readUInt32BE(16),height:png.readUInt32BE(20)}};}const meta=JSON.parse(fs.readFileSync(file+'.meta','utf8')); const d=Object.values(meta.subMetas).find(s=>s.importer==='sprite-frame').userData;return {originalSize:{width:d.rawWidth,height:d.rawHeight}}; }
-const cc={Node,Button,Sprite,UITransform,UIOpacity,Graphics,Color,Vec3,JsonAsset:class{},resources:{load(path,type,done){done(null,{json:JSON.parse(fs.readFileSync(project+'/assets/resources/'+path+'.json','utf8'))});}},Tween:{stopAllByTarget(){}}};
+async function loadFrame(path) { const file=resourceFile(path+'.png');if(!fs.existsSync(file+'.meta')){const png=fs.readFileSync(file);return {originalSize:{width:png.readUInt32BE(16),height:png.readUInt32BE(20)}};}const meta=JSON.parse(fs.readFileSync(file+'.meta','utf8')); const d=Object.values(meta.subMetas).find(s=>s.importer==='sprite-frame').userData;return {originalSize:{width:d.rawWidth,height:d.rawHeight}}; }
+const cc={Node,Button,Sprite,UITransform,UIOpacity,Graphics,Color,Vec3,JsonAsset:class{},resources:{load(path,type,done){done(null,{json:JSON.parse(fs.readFileSync(resourceFile(path+'.json'),'utf8'))});}},Tween:{stopAllByTarget(){}}};
 const moduleCache={};
-function moduleLoad(name){if(moduleCache[name])return moduleCache[name];const scope={exports:{},require(path){if(path==='cc')return cc;if(path==='./FlowerUI')return {loadFrame,uiNode};if(path.startsWith('./'))return moduleLoad(path.slice(2));throw Error(path);},console:{warn(){}}};moduleCache[name]=scope.exports;vm.runInNewContext(ts.transpileModule(fs.readFileSync(project+'/assets/scripts/'+name+'.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.CommonJS}}).outputText,scope);return scope.exports;}
+function moduleLoad(name){if(moduleCache[name])return moduleCache[name];const scope={exports:{},require(path){if(path==='cc')return cc;if(path==='./FlowerAssets')return {loadFlowerAsset:cc.resources.load};if(path==='./FlowerUI')return {loadFrame,uiNode};if(path.startsWith('./'))return moduleLoad(path.slice(2));throw Error(path);},console:{warn(){}}};moduleCache[name]=scope.exports;vm.runInNewContext(ts.transpileModule(fs.readFileSync(project+'/assets/scripts/'+name+'.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.CommonJS}}).outputText,scope);return scope.exports;}
 const Pool=moduleLoad('FlowerPool').FlowerPoolView;
 Node.prototype.getChildByName=function(name){return this.children.find(n=>n.name===name)||null;};
 test('original flower shapes pass transparent corners, prioritize the foreground and keep butterfly bubble hits stable', async () => {
@@ -174,7 +175,7 @@ test('early vacancies only promote flowers from batches that have already spawne
 });
 
 test('water playback uses original sprite keys, cubic opacity and cropped sprite pivots', async () => {
- const data=JSON.parse(fs.readFileSync(project+'/assets/resources/original/data/water-ripple-animations.json','utf8'));
+ const data=JSON.parse(fs.readFileSync(resourceFile('original/data/water-ripple-animations.json'),'utf8'));
  const sample=moduleLoad('FlowerPool').sampleRippleTrack;
  const clip=data.clips.effect_lianyi_1,track=clip.tracks.find(t=>t.property==='sprite');
  assert.equal(sample(track,.099),track.keys[0].value);assert.equal(sample(track,.101),track.keys[1].value);
@@ -199,7 +200,7 @@ test('water playback uses original sprite keys, cubic opacity and cropped sprite
 });
 
 test('Bottom promotion honors serialized delay, depth-switch and scale overshoot, and is cancellable', async () => {
- const motion=JSON.parse(fs.readFileSync(project+'/assets/resources/original/data/original-motion-settings.json','utf8')).flowerManager.values;
+ const motion=JSON.parse(fs.readFileSync(resourceFile('original/data/original-motion-settings.json'),'utf8')).flowerManager.values;
  const p=await Pool.create(new Node(),layeredFlowers([1,0,2,2]),2,()=>{},[1,0,2,2]);
  const surfaces=[];p.setSurfaceListener(flower=>surfaces.push(flower.id));
  p.take('layer-0-0');const rising=p.inLayer(0)[0],transition=rising.promotion;assert(transition);

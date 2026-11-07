@@ -3,10 +3,11 @@
 Only reads the Unity runtime export; does not modify source sprites or Cocos scripts.
 """
 from pathlib import Path
+from asset_paths import resource_file, manifest_file
 import json, math
 import UnityPy
 P=Path(__file__).resolve().parents[1]
-manifest=json.loads((P/'assets/resources/original/manifest.json').read_text())
+manifest=json.loads(manifest_file().read_text())
 env=UnityPy.load(manifest['source'])
 objects={(o.assets_file.name,o.path_id):o for o in env.objects}
 assets={a['resource']:a for a in manifest['assets'] if a['type']=='Sprite'}
@@ -74,14 +75,14 @@ for o in env.objects:
     else:raise ValueError(c.type.name)
     assert resource not in shapes,resource
     shapes[resource]=rnd(result);types[c.type.name]=types.get(c.type.name,0)+1
-catalog=json.loads((P/'assets/resources/original/data/original-order-flower-vase-tables.json').read_text())['tables']['ItemDataConfig']
+catalog=json.loads(resource_file('original/data/original-order-flower-vase-tables.json').read_text())['tables']['ItemDataConfig']
 required={'original/flower/'+path for f in catalog for path in f['flowerPrefabPath']}
 missing=sorted(required-shapes.keys())
 output={'version':1,'coordinateSpace':'cropped-png-centered-normalized-y-up',
         'source':manifest['source'],'note':'Inverse-transform a pointer into the displayed FlowerImage local space, then divide x/y by displayed image width/height. Polygon paths are a union. Ellipse axes are two basis vectors from center: solve pointer=center+u*axisX+v*axisY and accept u*u+v*v<=1. Root rotation, scale and sprite fitting are supplied by the display transform, not baked twice.',
         'shapes':dict(sorted(shapes.items())),'ignored':ignored,'missingCatalogResources':missing}
 assert not missing,missing
-out=P/'assets/resources/original/data/flower-click-shapes.json';out.write_text(json.dumps(output,ensure_ascii=False,indent=2))
+out=resource_file('original/data/flower-click-shapes.json', write=True);out.write_text(json.dumps(output,ensure_ascii=False,indent=2))
 print(json.dumps({'shapes':len(shapes),'types':types,'circleNames':circle_names,'ignored':ignored,'missingCatalogResources':missing},ensure_ascii=False))
 for k in ['original/flower/hd_01','original/flower/hd_02']:
  print(k,json.dumps(shapes[k],ensure_ascii=False))

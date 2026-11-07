@@ -1,12 +1,13 @@
 """Export original vase attachment geometry. Does not execute original game code."""
 from pathlib import Path
+from asset_paths import resource_file, manifest_file
 import json,math,struct
 P=Path(__file__).resolve().parents[1]
 helper=P/'tools/inspect_unity_layout.py';ns={'__file__':str(helper)}
 exec(helper.read_text().split("for scene in ['level1','level2']:")[0],ns)
 manifest={x['resource']:x for x in ns['m']['assets']}
 rm=dict(json.loads((Path(ns['m']['source']).parent.parent/'completeness-audit/resource-manager.json').read_text())['m_Container'])
-vases=json.loads((P/'assets/resources/original/data/original-order-flower-vase-tables.json').read_text())['tables']['VaseInfoConfig']
+vases=json.loads(resource_file('original/data/original-order-flower-vase-tables.json').read_text())['tables']['VaseInfoConfig']
 metrics={}
 for resource,m in manifest.items():
  if not (resource.startswith('original/flower/') or resource.startswith('original/vase/')):continue
@@ -58,5 +59,5 @@ for vase in vases:
   output[str(vase['index'])]=item
  except Exception as exc:errors.append({'vaseId':vase['index'],'prefab':path,'error':str(exc)})
 assert not errors,errors
-D=P/'assets/resources/original/data';(D/'bouquet-layouts.json').write_text(json.dumps(output,ensure_ascii=False,indent=2));(D/'flower-sprite-metrics.json').write_text(json.dumps({k:v for k,v in metrics.items() if k.startswith('original/flower/')},ensure_ascii=False,indent=2))
+resource_file('original/data/bouquet-layouts.json', write=True).write_text(json.dumps(output,ensure_ascii=False,indent=2));resource_file('original/data/flower-sprite-metrics.json', write=True).write_text(json.dumps({k:v for k,v in metrics.items() if k.startswith('original/flower/')},ensure_ascii=False,indent=2))
 print(json.dumps({'vases':len(output),'flowerSlots':sum(len(x['flowerSlots']) for x in output.values()),'flowerSpriteMetrics':sum(k.startswith('original/flower/') for k in metrics)},ensure_ascii=False))

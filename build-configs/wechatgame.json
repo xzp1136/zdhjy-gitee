@@ -1,0 +1,52 @@
+{
+  "name": "ZDHJY",
+  "taskName": "wechatgame",
+  "platform": "wechatgame",
+  "buildPath": "project://build",
+  "outputName": "wechatgame",
+  "debug": false,
+  "sourceMaps": false,
+  "md5Cache": true,
+  "startScene": "ddcd37a9-3ddc-4cad-b1c3-07ef865e92ee",
+  "scenes": [
+    {
+      "url": "db://assets/FlowerGame.scene",
+      "uuid": "ddcd37a9-3ddc-4cad-b1c3-07ef865e92ee"
+    }
+  ],
+  "startSceneAssetBundle": true,
+  "mainBundleCompressionType": "merge_dep",
+  "mainBundleIsRemote": false,
+  "server": "https://game2cdn.chujinggamefun.com/zdhjy/wechat/v0001/",
+  "nativeCodeBundleMode": "wasm",
+  "packages": {
+    "wechatgame": {
+      "appid": "wx3ef66f850d873a67",
+      "orientation": "portrait",
+      "buildOpenDataContextTemplate": false,
+      "separateEngine": false,
+      "highPerformanceMode": false,
+      "wasmSubpackage": true
+    }
+  },
+  "splashScreen": {
+    "displayRatio": 1,
+    "totalTime": 500,
+    "logo": {
+      "type": "default",
+      "image": ""
+    },
+    "background": {
+      "type": "default",
+      "color": {
+        "x": 0.01568627450980392,
+        "y": 0.03529411764705882,
+        "z": 0.0392156862745098,
+        "w": 1
+      },
+      "image": ""
+    },
+    "watermarkLocation": "default",
+    "autoFit": true
+  }
+}

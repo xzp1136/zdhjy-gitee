@@ -1,0 +1,14 @@
+{
+  "ver": "1.2.0",
+  "importer": "directory",
+  "imported": true,
+  "uuid": "ce6b1420-6de9-44bb-a716-1347c0ec9c6f",
+  "files": [],
+  "subMetas": {},
+  "userData": {
+    "isBundle": true,
+    "bundleName": "core-ui-02",
+    "priority": 6,
+    "bundleConfigID": "zdhjy-local"
+  }
+}

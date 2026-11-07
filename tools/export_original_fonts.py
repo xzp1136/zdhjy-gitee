@@ -3,6 +3,7 @@
 Requires UnityPy; optional fontTools validates glyph coverage.
 """
 from pathlib import Path
+from asset_paths import resource_file, manifest_file
 from io import BytesIO
 import json, struct, collections, hashlib
 import UnityPy
@@ -11,9 +12,8 @@ try:
 except ImportError:
     TTFont = None
 P=Path(__file__).resolve().parents[1]
-manifest=json.loads((P/'assets/resources/original/manifest.json').read_text())
+manifest=json.loads(manifest_file().read_text())
 env=UnityPy.load(manifest['source'])
-D=P/'assets/resources/original/fonts';D.mkdir(exist_ok=True)
 fontrecords=[];maps={};fonts={}
 ui_text=''.join(path.read_text() for path in (P/'assets/scripts').glob('Flower*.ts'))
 # Current UI symbols and all CJK present in scripts, including product copy.
@@ -22,7 +22,7 @@ for o in env.objects:
     if o.type.name!='Font':continue
     f=o.read()
     if f.m_Name not in ['AlibabaPuHuiTi-2-65-Medium','ZhanKuXiaoLOGOTi-2']:continue
-    raw=bytes(f.m_FontData);out=D/(f.m_Name+'.ttf');out.write_bytes(raw)
+    raw=bytes(f.m_FontData);out=resource_file('original/fonts/'+f.m_Name+'.ttf', write=True);out.write_bytes(raw)
     record={'sourceFile':o.assets_file.name,'pathId':o.path_id,'name':f.m_Name,'bytes':len(raw),
         'resource':'original/fonts/'+f.m_Name,'sha256':hashlib.sha256(raw).hexdigest()}
     if TTFont:
@@ -32,7 +32,7 @@ for o in env.objects:
             familyNames=sorted({n.toUnicode() for n in ff['name'].names if n.nameID in (1,2,4,6)}))
     fonts[(o.assets_file.name,o.path_id)]=f.m_Name;fontrecords.append(record)
 if maps:
-    (D/'font-coverage.json').write_text(json.dumps({
+    resource_file('original/fonts/font-coverage.json', write=True).write_text(json.dumps({
         'body': ''.join(chr(c) for c in sorted(maps['AlibabaPuHuiTi-2-65-Medium'])),
         'display': ''.join(chr(c) for c in sorted(maps['ZhanKuXiaoLOGOTi-2'])),
     }, ensure_ascii=False, indent=2))

@@ -1,0 +1,14 @@
+{
+  "ver": "1.2.0",
+  "importer": "directory",
+  "imported": true,
+  "uuid": "fc065cad-bb18-4e8d-bdda-85d167929ab0",
+  "files": [],
+  "subMetas": {},
+  "userData": {
+    "isBundle": true,
+    "bundleName": "vases-03",
+    "priority": 6,
+    "bundleConfigID": "zdhjy-remote"
+  }
+}

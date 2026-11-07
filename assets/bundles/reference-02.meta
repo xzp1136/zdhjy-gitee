@@ -1,0 +1,14 @@
+{
+  "ver": "1.2.0",
+  "importer": "directory",
+  "imported": true,
+  "uuid": "d4f309c8-bcb3-4404-9d80-d5273032ee68",
+  "files": [],
+  "subMetas": {},
+  "userData": {
+    "isBundle": true,
+    "bundleName": "reference-02",
+    "priority": 6,
+    "bundleConfigID": "zdhjy-remote"
+  }
+}

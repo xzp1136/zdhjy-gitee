@@ -1,7 +1,10 @@
-import { _decorator, AudioClip, AudioSource, BlockInputEvents, Color, Component, game, Graphics, Label, Mask, Node, ResolutionPolicy, resources, Sprite, sys, tween, Tween, UITransform, UIOpacity, Vec3, view } from 'cc';
-import { createHome } from './FlowerHome';
+import { loadFlowerAsset } from './FlowerAssets';
+import { _decorator, AudioClip, AudioSource, BlockInputEvents, Color, Component, game, Graphics, Label, Mask, Node, ResolutionPolicy, Sprite, SpriteFrame, sys, tween, Tween, UITransform, UIOpacity, Vec3, view } from 'cc';
+import { createHome, HOME_FRAME_PATHS } from './FlowerHome';
 import { DEBUG } from 'cc/env';
-import { FlowerRules, FlowerEvent, FlowerOrder, FlowerPiece } from './FlowerRules';
+import { FlowerRules, FlowerEvent, FlowerLevelConfig, FlowerOrder, FlowerPiece } from './FlowerRules';
+import { FlowerLoadingView } from './FlowerLoading';
+import { runStartupTasks } from './FlowerStartup';
 import { FlowerCatalog, flowerSpritePath } from './FlowerCatalog';
 import { FlowerBouquetView, preloadBouquets } from './FlowerBouquet';
 import { FlowerPoolView } from './FlowerPool';
@@ -10,10 +13,27 @@ import { createWinResult, preloadWinResult } from './FlowerResults';
 import { createPause, preloadPause } from './FlowerPause';
 import { createFailure, preloadFailure } from './FlowerFailure';
 import { createTimeContinue, preloadContinue } from './FlowerContinue';
+import { rewardedVideo } from './FlowerRewardedVideo';
 import { fade, fittedSprite, label, loadFrame, message, panel, preloadTypography, sprite, tap, uiNode } from './FlowerUI';
-const { ccclass } = _decorator;
+const { ccclass, property } = _decorator;
 const A = 'original/';
 const ORDER_X = [-280, -98, 87, 270];
+
+/** Saved progress must always point at a board present in the shipped catalog. */
+export function normalizePlayableLevel(value: number, available: Iterable<number>): number {
+    const levels = [...available].filter(level => Number.isInteger(level) && level > 0).sort((a, b) => a - b);
+    if (!levels.length) throw new Error('当前版本没有可用关卡');
+    const requested = Number.isFinite(value) ? Math.floor(value) : levels[0];
+    let selected = levels[0];
+    for (const level of levels) { if (level > requested) break; selected = level; }
+    return selected;
+}
+
+const LEVEL_FRAME_PATHS = ['background/background', 'background/poor', 'water/water', 'background/displaystand',
+    'background/shadow', 'order/setting', 'order/time', 'order/star128', 'order/num_board', 'order/pb',
+    'order/pb_full', 'order/flower icon', 'order/commonvase', 'order/ads', 'order/quest1', 'order/quest2',
+    'order/quest3', 'order/new', 'order/plate', 'order/plate green_mask', 'order/tools bg', 'ui/itemicon/gold',
+    'ui/game/guidehand', 'ui/game/lock', 'ui/itemicon/compose', 'ui/itemicon/shuffle', 'ui/itemicon/clear'].map(path => A + path);
 
 /** Original FlowerCtr callback 44390: smooth travel, a 20% pick-up, then settle. */
 export function flowerFlightPhase(progress: number): { travel: number; pickup: number; settle: number; rotation: number } {
@@ -70,6 +90,11 @@ type OrderView = { root: Node; bouquet?: FlowerBouquetView; remaining?: Label; i
 
 @ccclass('FlowerGame')
 export class FlowerGame extends Component {
+    @property([SpriteFrame])
+    loadingFrames: SpriteFrame[] = [];
+    private startupLoading: FlowerLoadingView | null = null;
+    private startupRevision = 0;
+    private preparedLevels = new Map<number, Promise<FlowerLevelConfig>>();
     private content!: Node;
     private rules: FlowerRules | null = null;
     private sceneMode: 'home' | 'game' = 'home';
@@ -113,20 +138,43 @@ export class FlowerGame extends Component {
         this.music.volume = 0.38;
         game.on('flower-settings-changed', this.applyAudioSettings, this);
         game.on('flower-ui-sound', this.onUISound, this);
-        try { await Promise.all([preloadTypography(), this.preloadEffects()]); }
-        catch (error) { console.error('[FlowerGame] initial assets', error); return; }
-        if (!this.isValid) return;
-        const previewLevel = DEBUG && sys.isBrowser ? Number(new URLSearchParams(window.location.search).get('previewLevel')) : 0;
-        (Number.isInteger(previewLevel) && previewLevel > 0 ? this.startLevel(previewLevel) : this.showHome())
-            .then(() => {
-                // Development-only entry for exercising the real time-out flow.
-                if (DEBUG && sys.isBrowser && this.rules && new URLSearchParams(window.location.search).get('previewState') === 'time') {
-                    this.rules.tick(this.rules.remainingSeconds); this.updateHUD(); void this.endLevel();
-                }
-            })
-            .catch(e => console.error('[FlowerGame] start', e));
+        try {
+            const loading = await FlowerLoadingView.create(this.node, this.loadingFrames);
+            if (!this.isValid) { loading.dispose(); return; }
+            this.startupLoading = loading;
+            await this.loadStartup();
+        } catch (error) { console.error('[FlowerGame] startup screen', error); }
     }
-    onDestroy() { this.revision++; this.cancelAnimations(); this.pool?.dispose(); this.orderEffects?.dispose(); this.music?.stop(); game.off('flower-settings-changed', this.applyAudioSettings, this); game.off('flower-ui-sound', this.onUISound, this); }
+    private async loadStartup(): Promise<void> {
+        const attempt = ++this.startupRevision, loading = this.startupLoading;
+        const current = () => this.isValid && attempt === this.startupRevision && this.startupLoading === loading;
+        const previewLevel = DEBUG && sys.isBrowser ? Number(new URLSearchParams(window.location.search).get('previewLevel')) : 0;
+        const previewingLevel = Number.isInteger(previewLevel) && previewLevel > 0;
+        try {
+            this.catalog ??= await FlowerCatalog.load();
+            if (!current()) return;
+            const level = normalizePlayableLevel(previewingLevel ? previewLevel : this.read('level', 1), this.catalog.levels.keys());
+            if (!previewingLevel) this.write('level', level);
+            const complete = await runStartupTasks([
+                ...HOME_FRAME_PATHS.map(path => () => loadFrame(path)),
+                () => preloadTypography(), () => this.preloadEffects(), () => this.prepareLevelAssets(level),
+            ], (done, total) => loading?.setProgress(total ? done / total : 0), current,
+            () => previewingLevel ? this.startLevel(level) : this.showHome());
+            if (!complete || !current()) return;
+            if (loading && !await loading.finish()) return;
+            if (!current()) return;
+            this.startupLoading = null;
+            // Development-only entry for exercising the real time-out flow.
+            if (DEBUG && sys.isBrowser && this.rules && new URLSearchParams(window.location.search).get('previewState') === 'time') {
+                this.rules.tick(this.rules.remainingSeconds); this.updateHUD(); void this.endLevel();
+            }
+        } catch (error) {
+            if (!current()) return;
+            console.error('[FlowerGame] startup assets', error);
+            loading?.setError(() => this.loadStartup());
+        }
+    }
+    onDestroy() { this.startupRevision++; this.startupLoading?.dispose(); this.revision++; this.cancelAnimations(); this.pool?.dispose(); this.orderEffects?.dispose(); this.music?.stop(); game.off('flower-settings-changed', this.applyAudioSettings, this); game.off('flower-ui-sound', this.onUISound, this); }
     private current(rev: number): boolean { return this.isValid && this.revision === rev; }
     private cancelAnimations(): void { for (const cancel of [...this.pendingAnimations]) cancel(); this.pendingAnimations.clear(); }
     private animate(node: Node, duration: number, properties: Record<string, unknown>, easing = 'quadOut'): Promise<boolean> {
@@ -219,6 +267,7 @@ export class FlowerGame extends Component {
         if (this.content) { this.content.removeFromParent(); this.content.destroy(); }
         this.content = uiNode(this.node, 'GameContent');
         this.content.addComponent(Mask).type = Mask.Type.GRAPHICS_RECT;
+        if (this.startupLoading?.root.isValid) this.startupLoading.root.setSiblingIndex(this.node.children.length - 1);
     }
     async showHome() {
         this.clear('home');
@@ -231,7 +280,7 @@ export class FlowerGame extends Component {
     }
     private bgm(name: string) {
         const rev = this.revision;
-        resources.load(A + 'audio/' + name, AudioClip, (err, clip) => {
+        loadFlowerAsset(A + 'audio/' + name, AudioClip, (err, clip) => {
             if (err || !this.isValid || rev !== this.revision) return;
             this.music.stop(); this.music.clip = clip;
             if (sys.localStorage.getItem('zdhjy.music') !== 'off') this.music.play();
@@ -242,21 +291,53 @@ export class FlowerGame extends Component {
         const cached = this.effectsCache.get(name);
         if (cached) { this.effects.playOneShot(cached, 0.7); return; }
         const rev = this.revision;
-        resources.load(A + 'audio/' + name, AudioClip, (err, clip) => {
+        loadFlowerAsset(A + 'audio/' + name, AudioClip, (err, clip) => {
             if (!err && this.current(rev) && sys.localStorage.getItem('zdhjy.sound') !== 'off') { this.effectsCache.set(name, clip); this.effects.playOneShot(clip, 0.7); }
         });
     }
     private onUISound(name?: string): void { if (name) this.sound(name); }
     private async preloadEffects(): Promise<void> {
-        await Promise.all(['click', 'open', 'close', 'flowerstart', 'flowerhit', 'vasesuccss', 'flowerfuqi', 'level_new', 'level_checkceng'].map(name =>
+        await Promise.all(['click', 'open', 'close', 'flowerstart', 'flowerhit', 'vasesuccss', 'flowerfuqi', 'level_new', 'level_checkceng', 'bgm_home', 'bgm_level'].map(name =>
             new Promise<void>((resolve, reject) => {
-                resources.load(A + 'audio/' + name, AudioClip, (error, clip) => {
+                loadFlowerAsset(A + 'audio/' + name, AudioClip, (error, clip) => {
                     if (error) { reject(error); return; }
                     this.effectsCache.set(name, clip); resolve();
                 });
             })));
     }
+    /** Prepare the exact board before exposing the homepage's Play button. */
+    private prepareLevelAssets(level: number): Promise<FlowerLevelConfig> {
+        const cached = this.preparedLevels.get(level);
+        if (cached) return cached;
+        const task = (async () => {
+            this.catalog ??= await FlowerCatalog.load();
+            const config = this.catalog.level(level);
+            const flowers = new FlowerRules(config).flowers;
+            await Promise.all([
+                ...LEVEL_FRAME_PATHS.map(path => loadFrame(path)),
+                FlowerPoolView.preload(flowers), preloadBouquets(config.orders?.map(order => order.vaseId)),
+                FlowerEffects.preload(), preloadPause(), preloadFailure(), preloadContinue(), preloadWinResult(level),
+            ]);
+            return config;
+        })().catch(error => { this.preparedLevels.delete(level); throw error; });
+        this.preparedLevels.set(level, task);
+        return task;
+    }
     async startLevel(level = 1) {
+        const entryStarted = Date.now();
+        const previousRevision = this.revision;
+        this.busy = true;
+        let config: FlowerLevelConfig;
+        try { config = await this.prepareLevelAssets(level); }
+        catch (error) {
+            if (!this.current(previousRevision)) return;
+            this.busy = false;
+            if (this.startupLoading) throw error;
+            await message(this.content, '加载失败', '资源暂未准备好，请重试', '重试', () => { void this.startLevel(level); });
+            return;
+        }
+        if (!this.current(previousRevision)) return;
+        const buildStarted = Date.now();
         this.clear('game'); this.busy = true;
         const rev = this.revision;
         const content = this.content;
@@ -267,19 +348,8 @@ export class FlowerGame extends Component {
             return node;
         };
         try {
-            const loading = label(content, 'Loading', '正在布置花店…', 0, 0, 30, 500, '#fff3dc');
-            this.catalog ??= await FlowerCatalog.load();
-            if (!this.current(rev)) return;
-            const config = this.catalog.level(level);
             this.rules = new FlowerRules(config, this.read('coins', 0));
             this.visual = new FlowerPresentationState(this.rules);
-            const common = ['background/background','background/poor','water/water','background/displaystand','background/shadow','order/setting','order/time','order/star128','order/num_board','order/pb','order/pb_full','order/flower icon','order/commonvase','order/ads','order/quest1','order/new','order/plate','order/plate green_mask','order/tools bg','ui/itemicon/gold','ui/game/guidehand','ui/game/lock'];
-            const flowerPaths = this.rules.flowers.map(f => flowerSpritePath(f.kind, f.variant));
-            await Promise.all([
-                ...[...new Set([...common.map(p => A + p), ...flowerPaths])].map(p => loadFrame(p)),
-                ...['order/quest2', 'order/quest3'].map(path => loadFrame(A + path)),
-                preloadBouquets(config.orders?.map(order => order.vaseId)), FlowerEffects.preload(), preloadPause(), preloadFailure(), preloadContinue(), preloadWinResult(level),
-            ]);
             if (!this.current(rev)) return;
             const board = uiNode(content, 'LevelBoard');
             board.active = false;
@@ -317,13 +387,22 @@ export class FlowerGame extends Component {
             this.pool!.playEntrance();
             this.firstPlayFrame = true;
             this.ready = true; this.bgm('bgm_level'); this.updateHUD();
-            loading.destroy(); board.active = true;
+            board.active = true;
+            if (DEBUG) console.info(`[FlowerGame] level ${level} visible in ${Date.now() - entryStarted}ms (build ${Date.now() - buildStarted}ms)`);
+            if (this.catalog?.levels.has(level + 1)) void this.prepareLevelAssets(level + 1)
+                .catch(error => console.warn('[FlowerGame] next level preload', error));
             this.sound('flowerstart');
             const entrance = await Promise.all([this.waitForPoolEntrance(),
                 ...[...this.orderViews.keys()].map(slot => this.enterBouquet(slot, slot * 0.06))]);
             if (entrance.some(completed => !completed) || !this.current(rev)) return;
             if (level === 1) await this.showGuide();
-        } catch (e) { if (!this.current(rev)) return; console.error('[FlowerGame] build', e); void message(content, '关卡暂不可用', e instanceof Error ? e.message : '请返回主页后重试。', '返回主页', () => this.showHome()); this.busy = false; this.paused = true; }
+        } catch (e) {
+            if (!this.current(rev)) return;
+            this.busy = false; this.paused = true;
+            if (this.startupLoading) throw e;
+            console.error('[FlowerGame] build', e);
+            void message(content, '关卡暂不可用', e instanceof Error ? e.message : '请返回主页后重试。', '返回主页', () => this.showHome());
+        }
     }
     private async buildHUD() {
         const pause = await sprite(this.hud, 'Pause', A + 'order/setting', -334, 585, 52); tap(pause, () => this.pauseGame());
@@ -356,7 +435,7 @@ export class FlowerGame extends Component {
                 await sprite(root, 'VideoIcon', A + 'order/ads', 0, 447, 44);
                 label(root, 'UnlockText', '解锁', 0, 402, 26, 130);
                 const hit = uiNode(root, 'UnlockHit', 0, 420, 170, 200);
-                tap(hit, () => this.notice('解锁花束位', '此功能需要接入微信激励视频。当前本地版本不会播放广告或扣费。'));
+                tap(hit, () => void this.unlockOrderWithVideo(slot));
             } else if (order) {
                 view.bouquet = await FlowerBouquetView.create(root, order);
                 if (order.isNew) {
@@ -705,11 +784,38 @@ export class FlowerGame extends Component {
         try { this.write('coins', this.rules!.coins); this.sound('switch'); await this.renderTray(); }
         finally { if (this.current(rev)) this.busy = false; }
     }
+    private async unlockOrderWithVideo(slot: number) {
+        const rules = this.rules;
+        if (!rules || this.paused || this.busy || this.finished || rules.status !== 'playing' || rules.isOrderSlotUnlocked(slot)) return;
+        const rev = this.revision;
+        let requested = false;
+        this.paused = true;
+        await message(this.content, '解锁花束位', '增加一个花束位置，同时整理更多订单。', '解锁', () => {
+            if (!this.current(rev) || requested) return;
+            requested = true;
+            this.paused = false; this.busy = true;
+            void rewardedVideo.claim(`order-slot-${slot}`, async () => {
+                const events = rules.unlockOrderSlot(slot);
+                if (!events.length) return false;
+                // Clear the former lock even if the remaining order queue is empty.
+                await this.renderOrder(slot);
+                if (!this.current(rev)) return false;
+                await this.animateEvents(events, rev);
+                return true;
+            }, () => this.current(rev) && this.rules === rules && rules.status === 'playing')
+                .catch(error => { if (this.current(rev)) console.error('[FlowerGame] order slot reward', error); })
+                .then(() => {
+                    if (!this.current(rev)) return;
+                    this.busy = false;
+                    if (rules.status !== 'playing') void this.endLevel();
+                });
+        });
+    }
     private async useTool(index: number) {
         if (this.paused || this.busy || this.finished) return;
         const key = ['compose', 'shuffle', 'clear'][index];
         const count = this.read(key, 2);
-        if (count <= 0) { this.notice('道具已用完', '补充道具需要接入激励视频，当前无法领取。'); return; }
+        if (count <= 0) { await this.refillToolWithVideo(index); return; }
         this.busy = true;
         const rev = this.revision, rules = this.rules!;
         try {
@@ -736,6 +842,29 @@ export class FlowerGame extends Component {
         } finally { if (this.current(rev)) this.busy = false; }
         if (this.current(rev) && rules.status !== 'playing') void this.endLevel();
     }
+    private async refillToolWithVideo(index: number) {
+        const rules = this.rules, key = ['compose', 'shuffle', 'clear'][index], title = ['合成', '打乱', '清除'][index];
+        if (!rules || !key || this.paused || this.busy || this.finished || rules.status !== 'playing') return;
+        const rev = this.revision;
+        let requested = false;
+        this.paused = true;
+        await message(this.content, '道具已用完', `领取${title}道具 × 1`, '领取', () => {
+            if (!this.current(rev) || requested) return;
+            requested = true;
+            this.paused = false; this.busy = true;
+            void rewardedVideo.claim(`tool-${key}`, async () => {
+                const count = this.read(key, 2);
+                if (count > 0) return false;
+                // Config56047 PropInfo.num=1; PropView.AddProp42438 adds stock
+                // and refreshes UI. It does not automatically use the new prop.
+                this.write(key, count + 1);
+                await this.buildTools();
+                return true;
+            }, () => this.current(rev) && this.rules === rules && rules.status === 'playing')
+                .catch(error => { if (this.current(rev)) console.error('[FlowerGame] tool reward', error); })
+                .then(() => { if (this.current(rev)) this.busy = false; });
+        });
+    }
     private async pauseGame() {
         if (this.busy || this.paused || this.finished) return;
         this.paused = true;
@@ -751,15 +880,19 @@ export class FlowerGame extends Component {
         this.finished = true;
         const rev = this.revision, rules = this.rules, content = this.content;
         const won = rules.status === 'won'; const level = rules.level;
+        const availableLevels = this.catalog ? this.catalog.levels.keys() : [level];
+        const nextLevel = normalizePlayableLevel(level + 1, availableLevels);
         this.sound(won ? 'win' : 'lose');
         if (won) {
-            this.write('level', Math.max(this.read('level', 1), level + 1));
+            this.write('level', normalizePlayableLevel(Math.max(this.read('level', 1), nextLevel),
+                this.catalog ? this.catalog.levels.keys() : [level]));
             this.write('stars', this.read('stars', 0) + this.rules.stars);
             this.write('coins', this.rules.coins);
         }
         if (won) {
             await createWinResult(content, level, rules.stars, rules.coinReward,
-                () => { if (this.current(rev)) void this.startLevel(level + 1); }, () => { if (this.current(rev)) void this.showHome(); });
+                () => { if (this.current(rev)) void this.startLevel(nextLevel); }, () => { if (this.current(rev)) void this.showHome(); },
+                nextLevel > level ? '下一关' : '再玩一次');
         } else {
             const failure = () => this.current(rev) ? createFailure(content, rules.failureReason || 'time',
                 () => { if (this.current(rev)) void this.startLevel(level); }, () => { if (this.current(rev)) void this.showHome(); }) : Promise.resolve(null);
@@ -770,7 +903,13 @@ export class FlowerGame extends Component {
                     if (!events.length) return false;
                     this.write('coins', this.rules!.coins); this.finished = false;
                     this.sound('time_add'); this.updateHUD(); return true;
-                }, () => { void failure(); });
+                }, () => { void failure(); }, () => {
+                    if (!this.current(rev)) return false;
+                    const events = rules.reviveTimeWithReward();
+                    if (!events.length) return false;
+                    this.finished = false;
+                    this.sound('time_add'); this.updateHUD(); return true;
+                });
             } else await failure();
         }
     }

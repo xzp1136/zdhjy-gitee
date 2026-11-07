@@ -1,4 +1,5 @@
-import { JsonAsset, Node, resources, Vec3 } from 'cc';
+import { loadFlowerAsset } from './FlowerAssets';
+import { JsonAsset, Node, Vec3 } from 'cc';
 import { FlowerOrder } from './FlowerRules';
 import { flowerSpritePath } from './FlowerCatalog';
 import { loadFrame, sprite, uiNode } from './FlowerUI';
@@ -12,11 +13,12 @@ type BouquetData = [Record<string,Layout>,Record<string,Metric>,Record<string,Mo
 let data: Promise<BouquetData> | null = null;
 
 function json<T>(name: string): Promise<T> {
-    return new Promise((resolve,reject) => resources.load('original/data/'+name,JsonAsset,
+    return new Promise((resolve,reject) => loadFlowerAsset('original/data/'+name,JsonAsset,
         (err,asset) => err ? reject(err) : resolve(asset.json as T)));
 }
 export async function preloadBouquets(vaseIds: (number | undefined)[] = []): Promise<BouquetData> {
-    if (!data) data = Promise.all([json<Record<string,Layout>>('bouquet-layouts'),json<Record<string,Metric>>('flower-sprite-metrics'),json<Record<string,MotionLayout>>('order-motion-layouts')]);
+    if (!data) data = Promise.all([json<Record<string,Layout>>('bouquet-layouts'),json<Record<string,Metric>>('flower-sprite-metrics'),json<Record<string,MotionLayout>>('order-motion-layouts')])
+        .catch(error => { data = null; throw error; });
     const result = await data;
     const paths = new Set<string>();
     for (const id of vaseIds) {

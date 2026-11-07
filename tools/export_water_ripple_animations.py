@@ -7,16 +7,15 @@ FlowerImage centered UV space (Y up). Never apply the source prefab root's
 serialized scale again: CreateRippleObject overrides it with RippleTransformData.
 """
 from pathlib import Path
+from asset_paths import resource_file, manifest_file
 import json, math, re, struct, zlib, collections
 import UnityPy
 
 P = Path(__file__).resolve().parents[1]
-manifest = json.loads((P / 'assets/resources/original/manifest.json').read_text())
+manifest = json.loads(manifest_file().read_text())
 env = UnityPy.load(manifest['source'])
 objects = {(o.assets_file.name, o.path_id): o for o in env.objects}
 assets = {a['resource']: a for a in manifest['assets'] if a['type'] == 'Sprite'}
-outdir = P / 'assets/resources/original/effects/ripple'
-outdir.mkdir(parents=True, exist_ok=True)
 
 def rnd(v):
     if isinstance(v, float): return round(v, 9)
@@ -60,7 +59,7 @@ def export_sprite(file, pid):
     name=re.sub(r'[^\w.-]','_',s.m_Name)+'_'+str(pid)
     resource='original/effects/ripple/'+name
     if resource not in sprites:
-        im=s.image;im.save(outdir/(name+'.png'))
+        im=s.image;im.save(resource_file(resource+'.png', write=True))
         sprites[resource]={'sourceFile':file,'sourcePathId':pid,'sourceName':s.m_Name,
             'width':im.width,'height':im.height,'ppu':s.m_PixelsToUnits,
             'logicalSize':[s.m_Rect.width,s.m_Rect.height],
@@ -185,5 +184,5 @@ result={'version':1,'source':manifest['source'],
    'promotedToUp':'promotion at normalizedTime 0; wait clip length, release promotion then play up with random normalized phase',
    'promotedToMiddle':'middle with random normalized phase','click':'no standalone click ripple call found; ripple nodes belong to flower waterRipple child; release on remove'},
  'clips':clips,'effects':effects,'sprites':sprites,'prefabs':dict(sorted(prefabs.items()))}
-out=P/'assets/resources/original/data/water-ripple-animations.json';out.write_text(json.dumps(rnd(result),ensure_ascii=False,indent=2))
+out=resource_file('original/data/water-ripple-animations.json', write=True);out.write_text(json.dumps(rnd(result),ensure_ascii=False,indent=2))
 print(json.dumps({'prefabs':len(prefabs),'effects':list(effects),'clips':list(clips),'sprites':len(sprites),'settings':[(list(k),v) for k,v in settings.items()]},ensure_ascii=False))

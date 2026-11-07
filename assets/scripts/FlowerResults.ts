@@ -1,4 +1,5 @@
-import { Button, Color, JsonAsset, Label, Node, resources, Sprite } from 'cc';
+import { loadFlowerAsset } from './FlowerAssets';
+import { Button, Color, JsonAsset, Label, Node, Sprite } from 'cc';
 import { dismissPopup, label, loadFrame, modal, presentPopup, slicedSprite, sprite, tap, uiNode } from './FlowerUI';
 
 const A = 'original/';
@@ -24,7 +25,7 @@ interface PreviewData { level: number; bouquets: BouquetPreview[] }
 let firstLevelPreview: Promise<PreviewData> | null = null;
 function loadFirstLevelPreview(): Promise<PreviewData> {
     if (!firstLevelPreview) firstLevelPreview = new Promise<PreviewData>((resolve, reject) => {
-        resources.load(`${A}data/win-preview-level1`, JsonAsset, (error, asset) => {
+        loadFlowerAsset(`${A}data/win-preview-level1`, JsonAsset, (error, asset) => {
             if (error) { firstLevelPreview = null; reject(error); return; }
             const data = asset.json as PreviewData;
             if (data?.level !== 1 || data.bouquets?.length !== 6 || data.bouquets.some(b => !b.name || !b.layers?.length)) {
@@ -95,6 +96,7 @@ export async function createWinResult(
     coinsReward: number,
     onNext: () => void,
     onHome?: () => void,
+    nextLabel = '下一关',
 ): Promise<Node> {
     let preview: PreviewData | null = null;
     if (level === 1) {
@@ -136,7 +138,7 @@ export async function createWinResult(
     label(reward, 'StarsEarned', `+${Math.max(0, stars)}`, 104.2, -69.4, 27.8, 125, '#7b6534');
 
     const next = await slicedSprite(overlay, 'NextLevel', `${A}extras/green_button_931`, 0, screenY(1660), 370 * SCALE, 165 * SCALE);
-    label(next, 'Text', '下一关', 0, 3, 41, 250, '#548a1a');
+    label(next, 'Text', nextLabel, 0, 3, 41, 250, '#548a1a');
     let leaving = false;
     const leave = (callback: () => void) => {
         if (leaving) return;
