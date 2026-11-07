@@ -25,7 +25,7 @@ export async function preloadBouquets(vaseIds: (number | undefined)[] = []): Pro
         const layout = result[0][String(id)];
         if (layout) for (const part of [...layout.baseLayers, ...layout.foregroundLayers]) paths.add(part.resource);
     }
-    await Promise.all([...paths].map(path => loadFrame(path)));
+    await Promise.all(Array.from(paths).map(path => loadFrame(path)));
     return result;
 }
 

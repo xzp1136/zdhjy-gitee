@@ -21,7 +21,8 @@ const ORDER_X = [-280, -98, 87, 270];
 
 /** Saved progress must always point at a board present in the shipped catalog. */
 export function normalizePlayableLevel(value: number, available: Iterable<number>): number {
-    const levels = [...available].filter(level => Number.isInteger(level) && level > 0).sort((a, b) => a - b);
+    // Creator release builds assume array spreads are arrays; catalog keys are an iterator.
+    const levels = Array.from(available).filter(level => Number.isInteger(level) && level > 0).sort((a, b) => a - b);
     if (!levels.length) throw new Error('当前版本没有可用关卡');
     const requested = Number.isFinite(value) ? Math.floor(value) : levels[0];
     let selected = levels[0];
@@ -176,7 +177,7 @@ export class FlowerGame extends Component {
     }
     onDestroy() { this.startupRevision++; this.startupLoading?.dispose(); this.revision++; this.cancelAnimations(); this.pool?.dispose(); this.orderEffects?.dispose(); this.music?.stop(); game.off('flower-settings-changed', this.applyAudioSettings, this); game.off('flower-ui-sound', this.onUISound, this); }
     private current(rev: number): boolean { return this.isValid && this.revision === rev; }
-    private cancelAnimations(): void { for (const cancel of [...this.pendingAnimations]) cancel(); this.pendingAnimations.clear(); }
+    private cancelAnimations(): void { for (const cancel of Array.from(this.pendingAnimations)) cancel(); this.pendingAnimations.clear(); }
     private animate(node: Node, duration: number, properties: Record<string, unknown>, easing = 'quadOut'): Promise<boolean> {
         const rev = this.revision;
         return new Promise(resolve => {
@@ -255,7 +256,13 @@ export class FlowerGame extends Component {
         if (sys.localStorage.getItem('zdhjy.music') === 'off') this.music.stop();
         else if (this.music.clip && !this.music.playing) this.music.play();
     }
-    private read(key: string, fallback: number) { const v = Number(sys.localStorage.getItem('zdhjy.' + key)); return Number.isFinite(v) && sys.localStorage.getItem('zdhjy.' + key) !== null ? v : fallback; }
+    private read(key: string, fallback: number) {
+        const stored = sys.localStorage.getItem('zdhjy.' + key);
+        // The WeChat adapter returns an empty string for a missing storage key.
+        if (stored == null || stored === '') return fallback;
+        const value = Number(stored);
+        return Number.isFinite(value) ? value : fallback;
+    }
     private write(key: string, value: number) { sys.localStorage.setItem('zdhjy.' + key, String(value)); }
     private clear(mode: 'home' | 'game') {
         this.revision++; this.sceneMode = mode; this.paused = false; this.busy = false; this.finished = false; this.ready = false;
@@ -393,7 +400,7 @@ export class FlowerGame extends Component {
                 .catch(error => console.warn('[FlowerGame] next level preload', error));
             this.sound('flowerstart');
             const entrance = await Promise.all([this.waitForPoolEntrance(),
-                ...[...this.orderViews.keys()].map(slot => this.enterBouquet(slot, slot * 0.06))]);
+                ...Array.from(this.orderViews.keys()).map(slot => this.enterBouquet(slot, slot * 0.06))]);
             if (entrance.some(completed => !completed) || !this.current(rev)) return;
             if (level === 1) await this.showGuide();
         } catch (e) {

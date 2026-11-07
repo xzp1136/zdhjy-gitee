@@ -1,3 +1,4 @@
+const creatorProduction = require('./creator-production.cjs');
 const resourceFile = require('./resource-file.cjs');
 // Runs the real startup, catalog, rules and asset caches against an async Cocos loader.
 // Render-heavy entry points are reduced to their real asset-consuming helpers.
@@ -11,7 +12,7 @@ const project = path.join(__dirname, '..');
 const compiled = new Map();
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
-function harness() {
+function harness(options = {}) {
   const modules = new Map(), requests = [], downloads = [], bundleRequests = [], cached = new Map(), failures = new Map(), delayed = new Map(), logs = [];
   class Vec3 { constructor(x = 0, y = 0, z = 0) { Object.assign(this, {x, y, z}); } }
   class Node {
@@ -44,7 +45,7 @@ function harness() {
     Component, Node, Vec3, UITransform, SpriteFrame, Sprite, Color, Graphics, Mask, AudioSource, AudioClip, JsonAsset, Font,
     sp: {SkeletonData}, BlockInputEvents: class {}, UIOpacity: class {},
     game: {on() {}, off() {}}, Tween: {stopAllByTarget() {}},
-    sys: {isBrowser: false, platform: 'web', Platform: {WECHAT_GAME: 'wechat'}, localStorage: {getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value)}},
+    sys: {isBrowser: false, platform: 'web', Platform: {WECHAT_GAME: 'wechat'}, localStorage: {getItem: key => storage.has(key) ? storage.get(key) : Object.hasOwn(options, 'missingStorageValue') ? options.missingStorageValue : null, setItem: (key, value) => storage.set(key, value)}},
     resources: {load(resource, Type, callback) {
       requests.push(resource);
       const complete = () => {
@@ -73,9 +74,9 @@ function harness() {
   function load(name) {
     if (modules.has(name)) return modules.get(name);
     const exports = {}; modules.set(name, exports);
-    if (!compiled.has(name)) compiled.set(name, ts.transpileModule(fs.readFileSync(path.join(project, 'assets/scripts', name + '.ts'), 'utf8'), {
+    if (!compiled.has(name)) compiled.set(name, creatorProduction(ts.transpileModule(fs.readFileSync(path.join(project, 'assets/scripts', name + '.ts'), 'utf8'), {
       compilerOptions: {target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS, experimentalDecorators: true},
-    }).outputText);
+    }).outputText));
     vm.runInNewContext(compiled.get(name), {exports, console: {warn: (...args) => logs.push(args), error: (...args) => logs.push(args), info() {}}, setTimeout, clearTimeout,
       require(request) {
         if (request === 'cc') return cc;
@@ -190,6 +191,25 @@ test('saved levels normalize to real catalog entries, including old 86 and malfo
   assert.throws(() => normalizePlayableLevel(1, []), /没有可用关卡/);
 });
 
+test('saved level normalization accepts Map iterators after the Creator production spread transform', () => {
+  const source = fs.readFileSync(path.join(project, 'assets/scripts/FlowerGame.ts'), 'utf8');
+  const tree = ts.createSourceFile('FlowerGame.ts', source, ts.ScriptTarget.Latest, true);
+  const declaration = tree.statements.find(node => ts.isFunctionDeclaration(node) && node.name?.text === 'normalizePlayableLevel');
+  assert(declaration, 'the actual startup normalization function must be present');
+  const javascript = ts.transpileModule(declaration.getText(tree), {
+    compilerOptions: {target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS},
+  }).outputText;
+  // The shipped Creator build emits [].concat(iterator) for loose array spreads.
+  // Reproduce that production transform rather than only testing ES2020 source.
+  const transformed = creatorProduction(javascript);
+  const exports = {};
+  vm.runInNewContext(transformed, {exports});
+  const normalize = exports.normalizePlayableLevel;
+  assert.equal(normalize(86, new Map([[1, {}], [2, {}], [85, {}]]).keys()), 85);
+  assert.equal(normalize(NaN, new Set([85, 1, 2])), 1);
+  assert.equal(normalize(84, (function* () { yield 1; yield 3; yield 85; })()), 3);
+});
+
 test('startup repairs old over-limit progress before preparing a board and still reaches home', async () => {
   const h = harness(), prepared = []; h.storage.set('zdhjy.level', '86');
   h.game.prepareLevelAssets = async level => { prepared.push(level); return h.game.catalog.level(level); };
@@ -230,4 +250,30 @@ test('winning the last known board caps progress and offers a replay without eve
   h.game.finished = false; h.game.rules = {status:'won',level:84,stars:3,coins:10,coinReward:10};
   await h.game.endLevel();
   assert.equal(results[1][6],'下一关'); results[1][4](); assert.deepEqual(started,[85,85]);
+});
+
+
+test('WeChat empty missing storage preserves defaults and explicitly stored zero stays zero', () => {
+  for (const missingStorageValue of [null, undefined, '']) {
+    const h = harness({missingStorageValue});
+    assert.equal(h.game.read('compose', 2), 2);
+    h.storage.set('zdhjy.compose', '0'); assert.equal(h.game.read('compose', 2), 0);
+    h.storage.set('zdhjy.compose', 'not-a-number'); assert.equal(h.game.read('compose', 2), 2);
+  }
+});
+
+test('production-transformed scene cancellation and order-entry iterate every callback and slot', async () => {
+  const h = harness(), cancelled = [], entered = [];
+  h.game.pendingAnimations.add(() => cancelled.push('flight'));
+  h.game.pendingAnimations.add(() => cancelled.push('entrance'));
+  h.game.cancelAnimations(); h.game.cancelAnimations();
+  assert.deepEqual(cancelled, ['flight', 'entrance']);
+  await h.game.loadStartup();
+  h.game.renderOrders = async () => {
+    h.game.orderViews.set(0, {root: {isValid: false}});
+    h.game.orderViews.set(1, {root: {isValid: false}});
+  };
+  h.game.enterBouquet = async slot => { entered.push(slot); return true; };
+  await h.game.startLevel(1);
+  assert.deepEqual(entered, [0, 1]); assert.equal(h.game.ready, true);
 });

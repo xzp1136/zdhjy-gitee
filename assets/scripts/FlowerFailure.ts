@@ -41,7 +41,7 @@ export async function createFailure(
     await sprite(overlay, 'FlowerShopIllustration', `${A}ui/over/image8`, 0, 61 * U, 806 * U, 543.1 * U);
 
     const rawEnergy = sys.localStorage.getItem('zdhjy.energy');
-    const energy = rawEnergy === null ? 5 : Number(rawEnergy);
+    const energy = rawEnergy == null || rawEnergy === '' ? 5 : Number(rawEnergy);
     const energyBar = await sprite(overlay, 'Energy', `${A}ui/over/buttonback`, -353 * U, 711 * U, 220 * U, 100 * U);
     await sprite(energyBar, 'Heart', `${A}ui/over/output_icon_5`, -55 * U, 1.4 * U, 65 * U, 65 * U);
     label(energyBar, 'EnergyValue', String(Number.isFinite(energy) && energy >= 0 ? Math.floor(energy) : 5), 3 * U, 0, 40 * U, 75 * U);

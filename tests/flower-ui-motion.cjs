@@ -1,3 +1,4 @@
+const creatorProduction = require('./creator-production.cjs');
 // Native input dispatch and rendering still need the Cocos preview. These tests
 // exercise the actual helpers with transform/event stubs and original clip data.
 const test = require('node:test');
@@ -50,11 +51,16 @@ class UIOpacity { opacity = 255; }
 const tweens = [];
 const sounds = [];
 const storage = new Map();
+let missingStorageValue = null;
 const cc = { _decorator: {ccclass: () => value => value}, Component, Node, Vec3, UITransform, Button, Sprite, Label, Color, UIOpacity,
   game: {emit(type, value) { sounds.push([type, value]); }},
   Font: class {}, JsonAsset: class {}, SpriteFrame: class {}, BlockInputEvents: class {}, Graphics: class {rect() {} roundRect() {} fill() {}},
-  sys: {localStorage: {getItem: key => storage.get(key) ?? null, setItem: (key, value) => storage.set(key, value)}},
-  resources: {load(_path, _type, done) { done(null, {originalSize: {width: 100, height: 100}, clone() {return {destroy() {}};}}); }},
+  sys: {localStorage: {getItem: key => storage.has(key) ? storage.get(key) : missingStorageValue, setItem: (key, value) => storage.set(key, value)}},
+  resources: {load(_path, Type, done) {
+    if (_path === 'original/fonts/font-coverage') { done(null, {json: {body: '第1关𝄞', display: '开始'}}); return; }
+    if (Type === cc.Font) { done(null, new cc.Font()); return; }
+    done(null, {originalSize: {width: 100, height: 100}, clone() {return {destroy() {}};}});
+  }},
   Tween: {stopAllByTarget(target) { for (const t of tweens) if (t.target === target) t.stopped = true; }},
   tween(target) { const value = {target, steps: [], to(duration, props, options) { this.steps.push({duration, props, options}); return this; }, call(callback) {this.callback = callback; return this;}, start() {tweens.push(this); return this;}}; return value; },
 };
@@ -62,9 +68,9 @@ const cache = {};
 function load(name) {
   if (cache[name]) return cache[name];
   const exports = {}; cache[name] = exports;
-  const output = ts.transpileModule(fs.readFileSync(path.join(project, 'assets/scripts', name + '.ts'), 'utf8'), {
+  const output = creatorProduction(ts.transpileModule(fs.readFileSync(path.join(project, 'assets/scripts', name + '.ts'), 'utf8'), {
     compilerOptions: {target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS, experimentalDecorators: true},
-  }).outputText;
+  }).outputText);
   vm.runInNewContext(output, {exports, console, Map, WeakMap, Set, WeakSet, Math, Number, Date, Object, Array, Promise, require(request) {
     if (request === 'cc') return cc;
     if (request === './FlowerAssets') return {loadFlowerAsset: cc.resources.load};
@@ -226,4 +232,41 @@ test('the retained video continuation button grants 120 seconds once without cha
   staleButton.emit('start', touch()); staleButton.emit('end', touch()); stale.destroy();
   for (let i = 0; i < 5; i++) await Promise.resolve();
   assert.equal(rewards, 1, 'abandoned popup cannot grant a late direct reward');
+});
+
+
+test('homepage preserves the default energy for WeChat absent keys without replacing stored zero', async () => {
+  const {createHome} = load('FlowerHome');
+  for (const absent of [null, undefined, '']) {
+    storage.delete('zdhjy.energy'); missingStorageValue = absent;
+    const home = await createHome(new Node('Canvas'), () => {}, 1);
+    assert.equal(home.getChildByName('EnergyValue').getComponent(Label).string, '5');
+    home.destroy();
+  }
+  storage.set('zdhjy.energy', '0');
+  const home = await createHome(new Node('Canvas'), () => {}, 1);
+  assert.equal(home.getChildByName('EnergyValue').getComponent(Label).string, '0');
+  home.destroy(); storage.delete('zdhjy.energy'); missingStorageValue = null;
+});
+
+test('production-transformed font coverage checks Unicode characters individually', async () => {
+  await ui.preloadTypography();
+  const root = new Node('Canvas');
+  const supported = ui.label(root, 'Supported', '第1关𝄞', 0, 0, 24).getComponent(Label);
+  assert.equal(supported.useSystemFont, false); assert(supported.font instanceof cc.Font);
+  const fallback = ui.label(root, 'Fallback', '未收录', 0, 0, 24).getComponent(Label);
+  assert.equal(fallback.fontFamily, 'sans-serif'); root.destroy();
+});
+
+
+test('failure popup uses five hearts for missing WeChat storage and preserves stored zero', async () => {
+  const {createFailure} = load('FlowerFailure');
+  for (const [stored, expected] of [[null, '5'], [undefined, '5'], ['', '5'], ['0', '0'], ['3', '3']]) {
+    storage.set('zdhjy.energy', stored);
+    const popup = await createFailure(new Node('Canvas'), 'time', () => {}, () => {});
+    const energy = popup.getChildByName('PopupContent').getChildByName('Energy');
+    assert.equal(energy.getChildByName('EnergyValue').getComponent(Label).string, expected);
+    popup.destroy();
+  }
+  storage.delete('zdhjy.energy');
 });

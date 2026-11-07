@@ -15,7 +15,7 @@ export const HOME_FRAME_PATHS = [
 ].map(path => A + path);
 const read = (key: string, fallback: number) => {
     const stored = sys.localStorage.getItem(`zdhjy.${key}`);
-    const value = stored === null ? fallback : Number(stored);
+    const value = stored == null || stored === '' ? fallback : Number(stored);
     return Number.isFinite(value) && value >= 0 ? Math.floor(value) : fallback;
 };
 const write = (key: string, value: number) => sys.localStorage.setItem(`zdhjy.${key}`, String(value));

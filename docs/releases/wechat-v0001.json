@@ -1,10 +1,10 @@
 {
   "appid": "wx3ef66f850d873a67",
   "creator": "3.8.7",
-  "buildTask": "zdhjy-wechat-1794063852095-dec7ea",
-  "buildMeasuredAt": "2026-11-07T15:04:26.474Z",
-  "mainBytes": 3995705,
-  "localTotalBytes": 21398437,
+  "buildTask": "zdhjy-wechat-1794066785129-067554",
+  "buildMeasuredAt": "2026-11-07T15:53:28.116Z",
+  "mainBytes": 3995725,
+  "localTotalBytes": 21398457,
   "remoteBytes": 40312368,
   "remoteFiles": 2651,
   "remoteExcludedByProjectConfig": true,
@@ -20,5 +20,81 @@
       "native-png": 10
     }
   },
-  "wechatRuntimeVerified": false
+  "wechatRuntimeVerified": false,
+  "previousBuilds": [
+    {
+      "buildTask": "zdhjy-wechat-1794063852095-dec7ea",
+      "buildMeasuredAt": "2026-11-07T15:04:26.474Z",
+      "mainBytes": 3995705,
+      "localTotalBytes": 21398437,
+      "remoteBytes": 40312368,
+      "superseded": true,
+      "emittedRuntimeRegression": {
+        "passed": 4,
+        "failed": 7,
+        "note": "Checks added after the earlier source tests and build succeeded."
+      }
+    }
+  ],
+  "sourceTests": {
+    "passed": 147,
+    "failed": 0,
+    "report": "temp/wechat-runtime-fix-tests.txt"
+  },
+  "scriptDiagnostics": {
+    "errors": 0
+  },
+  "sceneValidation": {
+    "ok": false,
+    "logsCleared": false,
+    "note": "Retained historical errors and log keyword matches; not reported as passed."
+  },
+  "runtimeState": {
+    "paused": false,
+    "timeScale": 1
+  },
+  "compatibilityFixes": {
+    "iterableSpreadSites": 13,
+    "missingStorageReaders": [
+      "FlowerGame",
+      "FlowerHome",
+      "FlowerFailure"
+    ]
+  },
+  "emittedRuntimeRegression": {
+    "passed": 12,
+    "failed": 0,
+    "report": "temp/wechat-runtime-emitted.json",
+    "command": "node tools/check-wechat-runtime.cjs build/wechatgame",
+    "artifacts": [
+      {
+        "file": "src/chunks/bundle.a192c.js",
+        "sha256": "1670620bed659bc79cc6606cf3b6d1a0a3639549434a0ec461eb2441ffc95d56"
+      },
+      {
+        "file": "assets/start-scene/index.b8318.js",
+        "sha256": "7438ed4c588a9b67f0eaec45bd21817375f591991c08386480e4b6bd89697f90"
+      }
+    ],
+    "boundary": "Executes emitted minified code/helpers and reads emitted JsonAssets/config paths. cc stubs do not render or load native fonts; this is not a WeChat device or network test."
+  },
+  "cdnRebuildComparison": {
+    "at": "2026-11-07T15:53:51.415Z",
+    "remoteFilesUnchanged": true,
+    "files": 2651,
+    "oldSettingsSha256": "52f0ecbb2aa1b73aaa23a22d6a6f9b20422623619c2b2d6cbbcd15ad8e1dc6ef",
+    "newSettingsSha256": "2e29c9ecaa527d823fc51f8509f61c0a2119be81400cd3b45273591f0a252567",
+    "totalBytes": 40312368,
+    "comparison": "Every remote path, byte length and SHA-256 matches the uploaded v0001 snapshot.",
+    "reuploaded": false,
+    "prefixChanged": false,
+    "report": "temp/wechat-cdn-rebuild-comparison.json"
+  },
+  "uploadPlan": {
+    "createdAt": "2026-11-07T15:55:19.282Z",
+    "settingsSha256": "2e29c9ecaa527d823fc51f8509f61c0a2119be81400cd3b45273591f0a252567",
+    "regeneratedOnly": true,
+    "uploadRepeated": false
+  },
+  "wechatRuntimeBoundary": "Developer Tools remains at an expired login QR entry. No signed-in WeChat runtime, device rendering/font or cold-start verification has completed."
 }

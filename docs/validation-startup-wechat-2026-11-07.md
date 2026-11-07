@@ -11,7 +11,8 @@
 
 ## 自动验证
 
-- `node --test tests/flower-*.cjs tests/wechat-*.cjs`：**141/141 通过**。
+- `node --test tests/flower-*.cjs tests/wechat-*.cjs`：本轮最终 **147/147 通过**，报告 `temp/wechat-runtime-fix-tests.txt`；此前141/141是压缩产物兼容问题修复前的源码测试记录，不能证明旧产物可运行。
+- `node tools/check-wechat-runtime.cjs build/wechatgame`：对最终实际压缩产物的 VM 回归 **12/12 通过**，报告 `temp/wechat-runtime-emitted.json`，不是重新转译 TypeScript 的替代测试。
 - Funplay `run_script_diagnostics`：TypeScript **0 错误**。
 - `tools/audit-resource-bundles.cjs`：**1153 个移动文件**的 SHA-256、大小和原 UUID 一致；**1138 条路由、16 个 Bundle**配置通过。
 - `tools/audit-spine-imports.cjs`：**7/7** SkeletonData 的 atlas、纹理 UUID、Texture2D 到 PNG 的依赖链通过。
@@ -27,16 +28,33 @@
 - 开发入口 `?previewLevel=1&previewState=time` 触发真实超时面板，点击带视频图标的继续按钮后，计时从 **00:00 变为 02:00**，金币仍为 **80**。
 - 检查上述流程时，浏览器未报告新 error。原表第 3 关缺少可用订单组的 warn 按已记录的原版跳过逻辑出现。
 
-Funplay `validate_scene` 仍为 `ok:false`，包含累计的历史脚本错误和本轮迁移时的导入错误；没有清空日志，也没有将该检查记为通过。当前运行态为 `paused:false`、`timeScale:1`；类型检查、最终构建和 Spine 依赖专项分别提供当前状态的验证。
+Funplay `validate_scene` 仍为 `ok:false`，包含累计的历史脚本错误和本轮迁移时的导入错误；部分 `logErrors` 条目也匹配到测试名称中的 `errors` 关键词。没有清空日志，也没有将该检查记为通过。当前运行态为 `paused:false`、`timeScale:1`；类型检查、最终构建和 Spine 依赖专项分别提供当前状态的验证。
+
+## 生产产物兼容修复与门禁
+
+前一版构建 `zdhjy-wechat-1794063852095-dec7ea` 虽已构建成功并通过源码测试，新增实际产物 VM 检查却得到 **4通过、7失败**。Creator 的生产变换将部分 Map/Set 迭代器及字符串展开编译成 `[].concat(...)`，会破坏关卡枚举、资源集合去重、字体逐字覆盖判断和取消清理。已将13处相关展开改为明确的 `Array.from(...)`；保留普通数组展开。
+
+同时修复 Game、Home、Failure 三处数字存档读取。微信适配器直接返回 `wx.getStorageSync` 的值，缺键为 `''` 时不能当作数值0：缺失值使用默认关卡/道具/体力，显式存储的 `'0'` 仍保持0，非法数值回退默认值。
+
+最终重建后，12项产物回归均通过，覆盖真实压缩模块和 Babel helper、生产微信环境（无浏览器专属全局）、启动任务顺序、Map关卡归一与全部85关配置、空存档、首组三花订单、花篮/花池/Spine集合预加载、取消回调、字符串字体覆盖与并发奖励。工具读取本次输出的 JsonAsset 和 Bundle 路径，并记录所执行脚本的 SHA-256；它的 `cc` 接口仍为测试替身，不执行渲染或原生字体加载，不能代替微信运行验证。微信适配器可能在 `loadFont` 返回空时退回 Arial，因此“字体覆盖判断通过”也不等于设备原字体已生效。
+
+后续每次正式构建后、提交发布前执行：
+
+```sh
+node tools/build-wechat.cjs --audit build/wechatgame
+node tools/check-wechat-runtime.cjs build/wechatgame > temp/wechat-runtime-emitted.json
+```
+
+任一失败应先修复并重建，再验证最终产物；只运行源码单测不满足此门禁。
 
 ## 最终微信构建
 
-最终任务：`zdhjy-wechat-1794063852095-dec7ea`，Creator 于 2026-11-07 23:04（北京时间）报告成功，耗时约 13 秒。产物：`build/wechatgame/`。
+最终任务：`zdhjy-wechat-1794066785129-067554`，Creator 于 2026-11-07 23:53（北京时间）完成，产物：`build/wechatgame/`。它替代23:04完成的 `zdhjy-wechat-1794063852095-dec7ea`；前一版主包3,995,705字节、本地合计21,398,437字节，作为历史构建记录保留，不再作为当前发布本地包。
 
 | 项目 | 实际字节 | MiB |
 | --- | ---: | ---: |
-| 主包 | 3,995,705 | 3.81 |
-| 全部本地包（含主包） | 21,398,437 | 20.41 |
+| 主包 | 3,995,725 | 3.81 |
+| 全部本地包（含主包） | 21,398,457 | 20.41 |
 | 远程资源 | 40,312,368 | 38.44 |
 
 统计为未压缩构建文件字节，包含本地配置文件。通过主包 4 MiB、全部本地包 30 MiB 的审计阈值。6 个内容核心分包之外，Creator 另生成 2 个 Wasm 支持分包。完整原始资源体积不能直接代替构建体积。
@@ -46,15 +64,17 @@ Funplay `validate_scene` 仍为 `ok:false`，包含累计的历史脚本错误�
 ## CDN 上传与验收
 
 - 独立目录：`https://game2cdn.chujinggamefun.com/zdhjy/wechat/v0001/`。
-- 已上传 **2651 个文件、40,312,368 字节**。只上传最终产物的 `remote/`，不覆盖 NLBGW 的目录。
+- 已上传 **2651 个文件、40,312,368 字节**。最初上传来自前一版构建的 `remote/`，不覆盖 NLBGW 的目录。
 - 上传前核实该新前缀为空；逐文件使用固定清单和哈希，OSS PUT 带 Content-MD5。密钥运行时读取既有本机配置，没有复制到工程或 Git。
 - 上传后经公开 CDN **GET 抽样 30/30 通过**：10 个包各 1 个配置 JSON、1 个 import JSON、1 张 PNG，全部 HTTP 200、长度及 SHA-256 与上传清单一致，共核验 700,892 字节。没有声称对 2651 个文件逐一做过 CDN GET。
 - 微信远程包的脚本由 Creator 保留在本地，远程目录中不存在 `index.js`；校验按实际输出选择样本。
+- 本轮源码修复并重建后，对全部2651个远程文件逐路径、大小及SHA-256比较，与已上传v0001清单**完全一致**，见 `temp/wechat-cdn-rebuild-comparison.json`。因此沿用同一CDN版本，不重传、不覆盖，也不换前缀；公开GET抽样报告仍对应这些相同的远程字节。
+- 活动上传计划仅重新执行 `--plan`，更新本地 `settings` 哈希至 `2e29c9ecaa527d823fc51f8509f61c0a2119be81400cd3b45273591f0a252567`，没有再次执行上传。旧settings哈希为 `52f0ecbb2aa1b73aaa23a22d6a6f9b20422623619c2b2d6cbbcd15ad8e1dc6ef`。
 
 源配置的 server 不追加 `remote`，Creator 会自行组合 `/remote/<bundle>/...`。新发布使用新版本前缀，避免覆盖已设置长期缓存的资源。
 
 ## 微信端验证边界
 
-已打开微信开发者工具并尝试导入最终目录。当前工具为游客模式，导入页强制使用游客 AppID，故取消导入、保留工程的正确 AppID，并打开扫码登录页。正式账号登录后的开发者工具运行、该 AppID 的下载域名白名单以及手机冷启动尚待验证；本记录不将浏览器运行或构建成功当作微信真机通过。
+已打开微信开发者工具并尝试导入最终目录。工具为游客模式，导入页强制使用游客 AppID，故取消导入、保留工程的正确 AppID，并打开扫码登录页；目前二维码入口已过期，尚未完成账号登录后的运行验证。该 AppID 的下载域名白名单、原生字体效果和手机冷启动也待验证；本记录不将浏览器运行、产物VM通过或构建成功当作微信真机通过。
 
 后续以该 AppID 登录导入 `build/wechatgame/`，检查 `https://game2cdn.chujinggamefun.com` 的下载域名配置，验证首次启动、首关入场、第二关远程加载与缓存复用。首次下载本地分包和远程资源仍受网络条件影响。

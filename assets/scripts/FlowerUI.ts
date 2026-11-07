@@ -92,7 +92,7 @@ export function label(parent: Node, name: string, text: string, x: number, y: nu
     const component = node.addComponent(Label);
     // These are subset fonts. A local-only sentence with missing characters must
     // use the system fallback as a whole, including on native renderers.
-    if (typefaces[face] && [...text].every(char => /\s/u.test(char) || coverage[face].has(char))) {
+    if (typefaces[face] && Array.from(text).every(char => /\s/u.test(char) || coverage[face].has(char))) {
         component.font = typefaces[face]!;
         component.useSystemFont = false;
     } else component.fontFamily = 'sans-serif';

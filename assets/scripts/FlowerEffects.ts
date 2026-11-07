@@ -40,7 +40,7 @@ function loadEffectAssets(): Promise<EffectAssets> {
                 for (const choice of choices) paths.add(choice.resource);
             }
             const skeletons = new Map<string, sp.SkeletonData>();
-            await Promise.all([...paths].map(path => new Promise<void>((resolve, reject) => {
+            await Promise.all(Array.from(paths).map(path => new Promise<void>((resolve, reject) => {
                 loadFlowerAsset(path, sp.SkeletonData, (error, asset) => {
                     if (error) reject(error);
                     else { skeletons.set(path, asset); resolve(); }
@@ -154,14 +154,14 @@ export class FlowerEffects {
 
     update(dt: number): void {
         if (this.disposed || this.paused || !Number.isFinite(dt) || dt <= 0) return;
-        for (const effect of [...this.active]) {
+        for (const effect of Array.from(this.active)) {
             if (effect.remaining === null) continue;
             effect.remaining -= dt;
             if (effect.remaining <= 1e-8) effect.finish(true);
         }
     }
 
-    clear(): void { for (const effect of [...this.active]) effect.finish(false); }
+    clear(): void { for (const effect of Array.from(this.active)) effect.finish(false); }
 
     dispose(): void {
         if (this.disposed) return;

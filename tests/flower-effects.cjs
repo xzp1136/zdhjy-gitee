@@ -1,3 +1,4 @@
+const creatorProduction = require('./creator-production.cjs');
 // Original Spine fixtures with a small Cocos lifecycle/transform stub.
 // These tests cover ownership/timing; the real Spine renderer is verified in preview.
 const test = require('node:test');
@@ -9,9 +10,9 @@ const ts = require('/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/
 const project = path.join(__dirname, '..');
 const resourceFile = require('./resource-file.cjs');
 const manifest = JSON.parse(fs.readFileSync(resourceFile('original/data/order-spine-effects.json'), 'utf8'));
-const source = ts.transpileModule(fs.readFileSync(path.join(project, 'assets/scripts/FlowerEffects.ts'), 'utf8'), {
+const source = creatorProduction(ts.transpileModule(fs.readFileSync(path.join(project, 'assets/scripts/FlowerEffects.ts'), 'utf8'), {
   compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS },
-}).outputText;
+}).outputText);
 
 function harness(options = {}) {
   const loads = [], skeletons = [];

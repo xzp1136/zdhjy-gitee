@@ -51,7 +51,7 @@ export async function preloadWinResult(level: number): Promise<void> {
         paths.push(`${A}ui/over/tittle`, `${A}ui/over/bunchcard`, `${A}ui/over/new`);
         for (const bouquet of data.bouquets) paths.push(...bouquet.layers.map(layer => layer.resource));
     }
-    await Promise.all([...new Set(paths)].map(path => loadFrame(path)));
+    await Promise.all(Array.from(new Set(paths)).map(path => loadFrame(path)));
 }
 
 function previewBounds(layers: BouquetPreviewLayer[]) {

@@ -121,7 +121,7 @@ export class FlowerCatalog {
                 const vase = choices[Math.floor(rand() * choices.length)];
                 const needs = vase.orderInfo.map(requirement => {
                     const types = requirement.slice(0, -1), count = requirement[requirement.length - 1];
-                    const candidates = [...this.flowers.values()].filter(f => types.includes(f.type) && f.unlockLevel <= level && f.type !== 200);
+                    const candidates = Array.from(this.flowers.values()).filter(f => types.includes(f.type) && f.unlockLevel <= level && f.type !== 200);
                     if (!candidates.length) throw new Error(`花束${vase.index}没有已解锁花种`);
                     const flower = candidates[Math.floor(rand() * candidates.length)];
                     const kind = this.kind(flower);
@@ -153,7 +153,7 @@ export class FlowerCatalog {
             level, timeLimit: source.gameTime, initialUnlockedOrderSlots: level === 2 ? 4 : 2, source: 'extracted',
             layerNumber: source.layerNumber, flowerIntervalRange: source.flowerIntervalRange,
             diffRange: source.diffRange || undefined,
-            flowers: [...counts].map(([kind, count]) => ({ kind, count })), orders, specials,
+            flowers: Array.from(counts).map(([kind, count]) => ({ kind, count })), orders, specials,
             // Later-level coin rewards have not been verified; 10 is a local default.
             starsPerOrder: 1, coinsOnWin: 10,
         };

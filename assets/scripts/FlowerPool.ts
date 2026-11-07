@@ -389,7 +389,7 @@ export class FlowerPoolView {
         if (new Set(available.map(flower => flower.id)).size !== available.length) throw new Error('Pool flower IDs must be unique.');
         const pool = new FlowerPoolView(parent, level, onSelect, available.length, layerMaxCounts);
         try {
-            const paths = [...new Set(available.map(flower => pool.path(flower)))];
+            const paths = Array.from(new Set(available.map(flower => pool.path(flower))));
             if (available.some(flower => flower.specialId)) paths.push('original/butterfly/qipao');
             const [loaded, shapes, ripples, motion] = await Promise.all([
                 Promise.all(paths.map(async path => [path, await loadFrame(path)] as const)), loadClickShapes(), loadRippleData(), loadMotionData(),
@@ -441,7 +441,7 @@ export class FlowerPoolView {
         const paths = new Set(flowers.map(flower => flowerSpritePath(flower.kind, flower.variant)));
         if (flowers.some(flower => flower.specialId)) paths.add('original/butterfly/qipao');
         for (const path of Object.keys(ripples.sprites)) paths.add(path);
-        await Promise.all([...paths].map(path => loadFrame(path)));
+        await Promise.all(Array.from(paths).map(path => loadFrame(path)));
     }
 
     private path(flower: FlowerPiece): string { return flowerSpritePath(flower.kind, flower.variant); }
