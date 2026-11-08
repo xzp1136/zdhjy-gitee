@@ -80,6 +80,7 @@ function harness(options = {}) {
     vm.runInNewContext(compiled.get(name), {exports, console: {warn: (...args) => logs.push(args), error: (...args) => logs.push(args), info() {}}, setTimeout, clearTimeout,
       require(request) {
         if (request === 'cc') return cc;
+        if (request === './FlowerViewport') return require('./viewport-fixture.cjs');
         if (request === 'cc/env') return {DEBUG: false, PREVIEW: true};
         if (request === './FlowerButtonMotion') return {FlowerButtonMotion: class {}};
         if (request.startsWith('./')) return load(request.slice(2));

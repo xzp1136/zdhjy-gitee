@@ -13,7 +13,7 @@ node tools/build-wechat.cjs --audit build/wechatgame
 
 成功后按实际生成文件审计主包≤4 MiB、本地主包与分包总量≤30 MiB，并写 `temp/wechat-package-audit.json`。审计先确认生成的 `project.config.json` 明确包含 `packOptions.ignore: [{"type":"folder","value":"remote"}]`、`include` 为空且 `setting.urlCheck=true`；缺少这些配置会失败，不能仅在计算中假设远程目录被排除。分类读取生成的 `game.json` 分包根目录，排除 `remote/`，保守计入其余本地文件；这不是微信开发者工具最终上传压缩大小的测量，上传校验仍以微信工具为准。
 
-该配置写在 `build-templates/wechatgame/project.config.json`，从编辑器或脚本构建均通过官方模板融合机制应用，不依赖手工修改上一次输出。[Cocos 3.8 官方模板文档](https://docs.cocos.com/creator/3.8/manual/zh/editor/publish/custom-project-build-template.html)明确支持微信 `project.config.json` 的JSON融合；微信官方示例也使用 `packOptions.ignore` 的 `type: "folder"` / `value` 结构：[wechat-miniprogram/ai-mode-demo](https://github.com/wechat-miniprogram/ai-mode-demo/blob/master/project.config.json)。微信文档站本次无法直接访问，因此以官方示例与本机Creator的模板处理链交叉核对。模板不覆盖构建生成的AppID、包名或分包配置。
+该配置写在 `build-templates/wechatgame/project.config.json`，从编辑器或脚本构建均通过官方模板融合机制应用，不依赖手工修改上一次输出。[Cocos 3.8 官方模板文档](https://docs.cocos.com/creator/3.8/manual/zh/editor/publish/custom-project-build-template.html)明确支持微信 `project.config.json` 的JSON融合；微信官方示例也使用 `packOptions.ignore` 的 `type: "folder"` / `value` 结构：[wechat-miniprogram/ai-mode-demo](https://github.com/wechat-miniprogram/ai-mode-demo/blob/master/project.config.json)。微信文档站本次无法直接访问，因此以官方示例与本机Creator的模板处理链交叉核对。当前模板明确使用本项目 AppID `wx3ef66f850d873a67` 和项目名 `ZDHJY`，分包配置仍由构建生成；重新生成模板时须保留 `packOptions` 的远程目录排除规则。
 
 本机官方微信插件支持 `packages.wechatgame.wasmSubpackage`；当该项为 true、`separateEngine` 为 false 时设置 `WASM_SUBPACKAGE`。`server` 是可选字段，插件只给非空地址补末尾斜杠。当前使用已存在的真实 CDN 域名，不使用示例地址。
 

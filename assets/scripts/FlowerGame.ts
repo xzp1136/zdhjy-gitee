@@ -1,5 +1,7 @@
 import { loadFlowerAsset } from './FlowerAssets';
-import { _decorator, AudioClip, AudioSource, BlockInputEvents, Color, Component, game, Graphics, Label, Mask, Node, ResolutionPolicy, Sprite, SpriteFrame, sys, tween, Tween, UITransform, UIOpacity, Vec3, view } from 'cc';
+import { _decorator, AudioClip, AudioSource, BlockInputEvents, Color, Component, game, Graphics, Label, Mask, Node, Sprite, SpriteFrame, sys, tween, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
+import { bindFlowerViewport, configureFlowerViewport } from './FlowerViewport';
+import { vibrateFlowerTap } from './FlowerHaptics';
 import { createHome, HOME_FRAME_PATHS } from './FlowerHome';
 import { DEBUG } from 'cc/env';
 import { FlowerRules, FlowerEvent, FlowerLevelConfig, FlowerOrder, FlowerPiece } from './FlowerRules';
@@ -101,6 +103,9 @@ export class FlowerGame extends Component {
     private sceneMode: 'home' | 'game' = 'home';
     private paused = false;
     private busy = false;
+    private collecting = false;
+    private tapQueue: string[] = [];
+    private queuedTaps = new Set<string>();
     private revision = 0;
     private clock = 0;
     private catalog: FlowerCatalog | null = null;
@@ -111,11 +116,13 @@ export class FlowerGame extends Component {
     private trayRoot!: Node;
     private flowerRoot!: Node;
     private hud!: Node;
+    private topHud!: Node;
     private timer!: Label;
     private progressLabel!: Label;
     private score!: Label;
     private progressBar!: Node;
     private hand: Node | null = null;
+    private handTarget: Node | null = null;
     private music!: AudioSource;
     private effects!: AudioSource;
     private effectsCache = new Map<string, AudioClip>();
@@ -132,7 +139,7 @@ export class FlowerGame extends Component {
     private firstPlayFrame = false;
 
     async start() {
-        view.setDesignResolutionSize(750, 1334, ResolutionPolicy.SHOW_ALL);
+        configureFlowerViewport(this.node);
         this.music = this.node.addComponent(AudioSource);
         this.effects = this.node.addComponent(AudioSource);
         this.music.loop = true;
@@ -175,7 +182,7 @@ export class FlowerGame extends Component {
             loading?.setError(() => this.loadStartup());
         }
     }
-    onDestroy() { this.startupRevision++; this.startupLoading?.dispose(); this.revision++; this.cancelAnimations(); this.pool?.dispose(); this.orderEffects?.dispose(); this.music?.stop(); game.off('flower-settings-changed', this.applyAudioSettings, this); game.off('flower-ui-sound', this.onUISound, this); }
+    onDestroy() { this.startupRevision++; this.startupLoading?.dispose(); this.revision++; this.clearFlowerTaps(); this.cancelAnimations(); this.pool?.dispose(); this.orderEffects?.dispose(); this.music?.stop(); game.off('flower-settings-changed', this.applyAudioSettings, this); game.off('flower-ui-sound', this.onUISound, this); }
     private current(rev: number): boolean { return this.isValid && this.revision === rev; }
     private cancelAnimations(): void { for (const cancel of Array.from(this.pendingAnimations)) cancel(); this.pendingAnimations.clear(); }
     private animate(node: Node, duration: number, properties: Record<string, unknown>, easing = 'quadOut'): Promise<boolean> {
@@ -201,7 +208,7 @@ export class FlowerGame extends Component {
             this.pendingAnimations.add(cancel); this.scheduleOnce(finish, seconds);
         });
     }
-    private flyFlower(node: Node, destination: Vec3, targetScale: Vec3, targetAngle: number): Promise<boolean> {
+    private flyFlower(node: Node, destination: Vec3 | (() => Vec3), targetScale: Vec3, targetAngle: number): Promise<boolean> {
         const rev = this.revision;
         const from = new Vec3(node.position.x, node.position.y, node.position.z);
         const scale = new Vec3(node.scale.x, node.scale.y, node.scale.z);
@@ -210,11 +217,12 @@ export class FlowerGame extends Component {
         const apply = () => {
             if (!node.isValid || !this.current(rev)) return;
             const sample = flowerFlightPhase(phase.progress);
+            const target = typeof destination === 'function' ? destination() : destination;
             const axis = (initial: number, target: number) => phase.progress <= 0.2
                 ? initial * (1 + 0.25 * sample.pickup)
                 : initial * 1.25 + (target - initial * 1.25) * sample.settle;
-            node.setPosition(from.x + (destination.x - from.x) * sample.travel,
-                from.y + (destination.y - from.y) * sample.travel, from.z);
+            node.setPosition(from.x + (target.x - from.x) * sample.travel,
+                from.y + (target.y - from.y) * sample.travel, from.z);
             node.setScale(axis(scale.x, targetScale.x), axis(scale.y, targetScale.y), 1);
             node.angle = angle + turn * sample.rotation;
         };
@@ -266,14 +274,17 @@ export class FlowerGame extends Component {
     private write(key: string, value: number) { sys.localStorage.setItem('zdhjy.' + key, String(value)); }
     private clear(mode: 'home' | 'game') {
         this.revision++; this.sceneMode = mode; this.paused = false; this.busy = false; this.finished = false; this.ready = false;
+        this.clearFlowerTaps(); this.collecting = false;
         this.cancelAnimations(); this.visual = null; this.orderViews.clear(); this.trayCells = []; this.trayCapacity = 0; this.progressTarget = -1;
         this.firstPlayFrame = false;
         this.pool?.dispose(); this.pool = null;
         this.orderEffects?.dispose(); this.orderEffects = null;
-        this.rules = null; this.hand = null; this.water = null;
+        this.rules = null; this.hand = null; this.handTarget = null; this.water = null;
         if (this.content) { this.content.removeFromParent(); this.content.destroy(); }
         this.content = uiNode(this.node, 'GameContent');
         this.content.addComponent(Mask).type = Mask.Type.GRAPHICS_RECT;
+        const content = this.content;
+        bindFlowerViewport(content, viewport => content.getComponent(UITransform)!.setContentSize(viewport.width, viewport.height));
         if (this.startupLoading?.root.isValid) this.startupLoading.root.setSiblingIndex(this.node.children.length - 1);
     }
     async showHome() {
@@ -360,7 +371,7 @@ export class FlowerGame extends Component {
             if (!this.current(rev)) return;
             const board = uiNode(content, 'LevelBoard');
             board.active = false;
-            await buildSprite(board, 'FlowerShop', A + 'background/background', 0, 435, 750, 600);
+            const shop = await buildSprite(board, 'FlowerShop', A + 'background/background', 0, 435, 750, 600);
             // Original view crops the room above the wooden display stand.
             const pool = await buildSprite(board, 'WoodenPool', A + 'background/poor', 0, -277, 1000, 1160);
             const frame = pool.getComponent(Sprite)!.spriteFrame!.clone();
@@ -373,8 +384,8 @@ export class FlowerGame extends Component {
             const shape = mask.subComp as Graphics; shape.clear(); shape.roundRect(-343, -372, 686, 744, 42); shape.fill();
             this.water = await buildSprite(waterMask, 'WaterCaustics', A + 'water/water', 0, 0, 705, 770);
             fade(this.water, 172);
-            await buildSprite(board, 'DisplayStand', A + 'background/displaystand', 0, 338, 750, 72);
-            await buildSprite(board, 'OrderShadows', A + 'background/shadow', 0, 337, 705, 43);
+            const stand = await buildSprite(board, 'DisplayStand', A + 'background/displaystand', 0, 338, 750, 72);
+            const shadows = await buildSprite(board, 'OrderShadows', A + 'background/shadow', 0, 337, 705, 43);
             this.ordersRoot = uiNode(board, 'Orders');
             this.trayRoot = uiNode(board, 'TemporarySlots');
             this.flowerRoot = uiNode(board, 'FloatingFlowers');
@@ -382,7 +393,39 @@ export class FlowerGame extends Component {
             if (!this.current(rev)) { orderEffects.dispose(); return; }
             this.orderEffects = orderEffects;
             this.hud = uiNode(board, 'HUD');
+            this.topHud = uiNode(this.hud, 'TopHUD');
             this.toolsRoot = uiNode(this.hud, 'Tools');
+            // Move common anchors, keeping artwork, tap roots and pool physics
+            // in their original local units. The HUD overlay itself stays fixed.
+            bindFlowerViewport(board, viewport => {
+                if (!this.current(rev)) return;
+                const { topShift: top, bottomShift: bottom } = viewport;
+                const poolShift = Math.max(bottom, Math.min((top + bottom) / 2, top + 76));
+                this.topHud.setPosition(0, top, 0);
+                this.ordersRoot.setPosition(0, top, 0);
+                this.trayRoot.setPosition(0, top, 0);
+                this.toolsRoot.setPosition(0, bottom, 0);
+                this.flowerRoot.setPosition(0, poolShift, 0);
+                orderEffects.root.setPosition(0, top, 0);
+                const waterWidth = Math.max(1, 686 + viewport.width - 750);
+                const waterHeight = Math.max(1, 744 + top - bottom);
+                waterMask.getComponent(UITransform)!.setContentSize(waterWidth, waterHeight);
+                waterMask.setPosition(0, -175 + (top + bottom) / 2, 0);
+                shape.clear();
+                shape.roundRect(-waterWidth / 2, -waterHeight / 2, waterWidth, waterHeight, Math.min(42, waterHeight / 2, waterWidth / 2));
+                shape.fill();
+                this.water!.getComponent(UITransform)!.setContentSize(waterWidth + 19, waterHeight + 26);
+                stand.getComponent(UITransform)!.setContentSize(viewport.width, 72);
+                stand.setPosition(0, 338 + top, 0);
+                shadows.setPosition(0, 337 + top, 0);
+                const roofBottom = 135 + top;
+                const ratio = Math.max(viewport.width / 750, (viewport.height / 2 - roofBottom) / 600);
+                shop.getComponent(UITransform)!.setContentSize(750 * ratio, 600 * ratio);
+                shop.setPosition(0, roofBottom + 300 * ratio, 0);
+                pool.getComponent(UITransform)!.setContentSize(Math.max(1000, viewport.width + 250), 1160 + top - bottom);
+                pool.setPosition(0, -277 + (top + bottom) / 2, 0);
+                this.positionGuide();
+            });
             await this.buildHUD(); if (!this.current(rev)) return;
             await this.renderOrders(); if (!this.current(rev)) return;
             await this.renderTray(); if (!this.current(rev)) return;
@@ -412,19 +455,19 @@ export class FlowerGame extends Component {
         }
     }
     private async buildHUD() {
-        const pause = await sprite(this.hud, 'Pause', A + 'order/setting', -334, 585, 52); tap(pause, () => this.pauseGame());
-        label(this.hud, 'Level', `第${this.rules!.level}关`, -217, 560, 45 * 750 / 1080, 145);
-        const info = await sprite(this.hud, 'Counters', A + 'order/num_board', 0, 562, 272, 60);
+        const pause = await sprite(this.topHud, 'Pause', A + 'order/setting', -334, 585, 52); tap(pause, () => this.pauseGame());
+        label(this.topHud, 'Level', `第${this.rules!.level}关`, -217, 560, 45 * 750 / 1080, 145);
+        const info = await sprite(this.topHud, 'Counters', A + 'order/num_board', 0, 562, 272, 60);
         await sprite(info, 'Hourglass', A + 'order/time', -110, 0, 26, 38);
         this.timer = label(info, 'Time', '03:00', -45, 0, 42 * 750 / 1080, 105).getComponent(Label)!;
         await sprite(info, 'Star', A + 'order/star128', 40, 0, 42);
         this.score = label(info, 'Score', '0', 92, 0, 42 * 750 / 1080, 70).getComponent(Label)!;
-        await sprite(this.hud, 'ProgressTrack', A + 'order/pb', 7, 512, 240, 23);
-        this.progressBar = await sprite(this.hud, 'ProgressFill', A + 'order/pb_full', 7, 512, 240, 23);
+        await sprite(this.topHud, 'ProgressTrack', A + 'order/pb', 7, 512, 240, 23);
+        this.progressBar = await sprite(this.topHud, 'ProgressFill', A + 'order/pb_full', 7, 512, 240, 23);
         const fill = this.progressBar.getComponent(Sprite)!;
         fill.type = Sprite.Type.FILLED; fill.fillType = Sprite.FillType.HORIZONTAL; fill.fillStart = 0; fill.fillRange = 0;
-        this.progressLabel = label(this.hud, 'Percent', '0%', 0, 512, 42 * 750 / 1080, 160, '#ffd714').getComponent(Label)!;
-        await sprite(this.hud, 'ProgressFlower', A + 'order/flower icon', 114, 512, 38);
+        this.progressLabel = label(this.topHud, 'Percent', '0%', 0, 512, 42 * 750 / 1080, 160, '#ffd714').getComponent(Label)!;
+        await sprite(this.topHud, 'ProgressFlower', A + 'order/flower icon', 114, 512, 38);
     }
     private async renderOrders() {
         await Promise.all([0, 1, 2, 3].map(slot => this.renderOrder(slot)));
@@ -597,11 +640,22 @@ export class FlowerGame extends Component {
         const target = this.rules!.flowers.find(f => f.status === 'pool' && f.kind === this.rules!.orders[0]?.kind);
         if (!target || this.sceneMode !== 'game') return;
         const n = this.pool?.nodeMap.get(target.id); if (!n) return;
-        const hand = await sprite(this.hud, 'GuideHand', A + 'ui/game/guidehand', n.position.x + 40, n.position.y - 72, 112);
+        const point = this.mapPoint(n.parent!, n.position, this.hud);
+        const hand = await sprite(this.hud, 'GuideHand', A + 'ui/game/guidehand', point.x + 40, point.y - 72, 112);
         if (!this.current(rev) || this.busy || target.status !== 'pool' || !n.isValid) { hand.destroy(); return; }
-        this.hand = hand;
+        this.hand = hand; this.handTarget = n; this.positionGuide();
         tween(hand).repeatForever(tween().to(1 / 3, { scale: new Vec3(1.1, 1.1, 1) })
             .to(1 / 3, { scale: new Vec3(1, 1, 1) })).start();
+    }
+    private mapPoint(from: Node, point: Vec3, to: Node): Vec3 {
+        const world = from.getComponent(UITransform)!.convertToWorldSpaceAR(point);
+        return to.getComponent(UITransform)!.convertToNodeSpaceAR(world);
+    }
+    private positionGuide(): void {
+        const target = this.handTarget;
+        if (!this.hand?.isValid || !target?.isValid || !target.parent) return;
+        const point = this.mapPoint(target.parent, target.position, this.hud);
+        this.hand.setPosition(point.x + 40, point.y - 72, 0);
     }
     private async buildTools() {
         for (const n of [...this.toolsRoot.children]) { n.removeFromParent(); n.destroy(); }
@@ -623,17 +677,34 @@ export class FlowerGame extends Component {
             }
         }
     }
+    private clearFlowerTaps(): void { this.tapQueue.length = 0; this.queuedTaps.clear(); }
     private async collect(id: string) {
-        if (!this.ready || this.firstPlayFrame || this.busy || this.paused || !this.rules || this.rules.status !== 'playing') return;
-        const rev = this.revision, rules = this.rules;
-        const events = rules.select(id); if (!events.length) return;
-        this.busy = true;
-        if (this.hand) { Tween.stopAllByTarget(this.hand); this.hand.destroy(); this.hand = null; }
-        this.sound('click');
-        try { await this.animateEvents(events, rev); }
-        catch (error) { if (this.current(rev)) console.error('[FlowerGame] collect animation', error); }
-        finally { if (this.current(rev)) this.busy = false; }
-        if (this.current(rev) && rules.status !== 'playing') void this.endLevel();
+        const rules = this.rules;
+        if (!this.ready || this.firstPlayFrame || this.paused || this.finished || !rules || rules.status !== 'playing'
+            || (this.busy && !this.collecting) || this.queuedTaps.has(id)
+            || !rules.flowers.some(flower => flower.id === id && flower.status === 'pool')) return;
+        // Reserve only the input, never advance another rules event stream while
+        // its predecessor is still landing. Tools and dialogs retain the busy lock.
+        this.tapQueue.push(id); this.queuedTaps.add(id);
+        vibrateFlowerTap(); this.sound('click');
+        if (this.hand) { Tween.stopAllByTarget(this.hand); this.hand.destroy(); this.hand = null; this.handTarget = null; }
+        if (this.collecting) return;
+        const rev = this.revision;
+        this.collecting = true; this.busy = true;
+        try {
+            while (this.current(rev) && this.rules === rules && !this.paused && !this.finished
+                && rules.status === 'playing' && this.tapQueue.length) {
+                const next = this.tapQueue.shift()!;
+                const events = rules.select(next);
+                if (events.length) await this.animateEvents(events, rev);
+                if (!this.current(rev)) return;
+                this.queuedTaps.delete(next);
+            }
+        } catch (error) { if (this.current(rev)) console.error('[FlowerGame] collect animation', error); }
+        finally {
+            if (this.current(rev)) { this.clearFlowerTaps(); this.collecting = false; this.busy = false; }
+        }
+        if (this.current(rev) && this.rules === rules && !this.paused && rules.status !== 'playing') void this.endLevel();
     }
     private async animateEvents(events: FlowerEvent[], rev = this.revision) {
         const rules = this.rules!, visual = this.visual!;
@@ -659,10 +730,14 @@ export class FlowerGame extends Component {
                 visual.buffer = visual.buffer.filter(id => !event.flowerIds.includes(id));
                 await this.renderTray(); if (!this.current(rev)) return;
                 const path = `${A}flower/${event.specialId === 2000 ? 'hd_01' : 'hd_02'}`;
-                const butterfly = await fittedSprite(this.hud, 'PairedButterfly', path, -243 + event.slot * 97, 252, 54, 68);
+                const start = this.mapPoint(this.trayRoot, new Vec3(-243 + event.slot * 97, 252, 0), this.topHud);
+                const butterfly = await fittedSprite(this.topHud, 'PairedButterfly', path, start.x, start.y, 54, 68);
                 this.sound('combine');
                 if (!await this.waitFor(event.delaySeconds)) return;
-                await this.animate(butterfly, 0.32, { position: new Vec3(0, 447, 0), scale: new Vec3(1.6, 1.6, 1) }, 'sineOut');
+                // Both anchors share the top group, so a resize moves the whole
+                // butterfly path without changing the original local tween.
+                const destination = this.mapPoint(this.ordersRoot, new Vec3(0, 447, 0), this.topHud);
+                await this.animate(butterfly, 0.32, { position: destination, scale: new Vec3(1.6, 1.6, 1) }, 'sineOut');
                 butterfly.destroy(); continue;
             }
             if (event.type !== 'move') continue;
@@ -675,14 +750,17 @@ export class FlowerGame extends Component {
             const landingEffectPoint = landingOrder && landingBouquet?.landing(landingOrder)?.effectPosition;
             let node = this.pool?.take(event.flowerId) ?? this.trayRoot.getChildByName('Buffered-' + event.flowerId);
             if (!node && event.from === 'waiting') {
-                node = await fittedSprite(this.flowerRoot, 'Waiting-' + event.flowerId, flowerSpritePath(flower.kind, flower.variant), 234, -585, 54, 48);
+                const waiting = this.mapPoint(this.toolsRoot, new Vec3(234, -585, 0), this.flowerRoot);
+                node = await fittedSprite(this.flowerRoot, 'Waiting-' + event.flowerId, flowerSpritePath(flower.kind, flower.variant), waiting.x, waiting.y, 54, 48);
             }
             if (!this.current(rev)) return;
             if (node?.isValid && node.parent) {
                 if (node.parent !== this.flowerRoot) node.setParent(this.flowerRoot, true);
                 const ripple = node.getChildByName('Ripple'); if (ripple) ripple.active = false;
                 const size = node.getComponent(UITransform)!;
-                let destination = event.to === 'waiting' ? new Vec3(234, -585, 0) : new Vec3(-243 + event.slot * 97, 252, 0);
+                let destination = () => event.to === 'waiting'
+                    ? this.mapPoint(this.toolsRoot, new Vec3(234, -585, 0), this.flowerRoot)
+                    : this.mapPoint(this.trayRoot, new Vec3(-243 + event.slot * 97, 252, 0), this.flowerRoot);
                 let scale = new Vec3(54 / size.width, 54 / size.width, 1), angle = 0;
                 if (event.to === 'order') {
                     const order = visual.orders[event.slot], bouquet = this.orderViews.get(event.slot)?.bouquet;
@@ -691,12 +769,11 @@ export class FlowerGame extends Component {
                         // A flower clicked during pool entry arrives after the
                         // basket settles. Target the resting attachment, not
                         // its temporary offscreen slide position.
-                        const world = bouquet.root.parent!.getComponent(UITransform)!.convertToWorldSpaceAR(
-                            new Vec3(bouquet.basePosition.x + landing.position.x, bouquet.basePosition.y + landing.position.y, 0));
-                        destination = this.flowerRoot.getComponent(UITransform)!.convertToNodeSpaceAR(world);
+                        destination = () => this.mapPoint(bouquet.root.parent!,
+                            new Vec3(bouquet.basePosition.x + landing.position.x, bouquet.basePosition.y + landing.position.y, 0), this.flowerRoot);
                         scale = new Vec3(landing.width / size.width, landing.height / size.height, 1);
                         angle = landing.angle;
-                    } else destination = new Vec3(ORDER_X[event.slot], 443, 0);
+                    } else destination = () => this.mapPoint(this.ordersRoot, new Vec3(ORDER_X[event.slot], 443, 0), this.flowerRoot);
                 }
                 node.setSiblingIndex(this.flowerRoot.children.length - 1);
                 if (!await this.flyFlower(node, destination, scale, angle)) return;
@@ -778,6 +855,7 @@ export class FlowerGame extends Component {
     }
     private async notice(title: string, body: string) {
         if (this.paused || this.busy || this.finished) return;
+        this.clearFlowerTaps();
         this.paused = true;
         const rev = this.revision;
         await message(this.content, title, body, '知道了', () => { if (this.current(rev)) this.paused = false; });
@@ -796,6 +874,7 @@ export class FlowerGame extends Component {
         if (!rules || this.paused || this.busy || this.finished || rules.status !== 'playing' || rules.isOrderSlotUnlocked(slot)) return;
         const rev = this.revision;
         let requested = false;
+        this.clearFlowerTaps();
         this.paused = true;
         await message(this.content, '解锁花束位', '增加一个花束位置，同时整理更多订单。', '解锁', () => {
             if (!this.current(rev) || requested) return;
@@ -854,6 +933,7 @@ export class FlowerGame extends Component {
         if (!rules || !key || this.paused || this.busy || this.finished || rules.status !== 'playing') return;
         const rev = this.revision;
         let requested = false;
+        this.clearFlowerTaps();
         this.paused = true;
         await message(this.content, '道具已用完', `领取${title}道具 × 1`, '领取', () => {
             if (!this.current(rev) || requested) return;
@@ -873,7 +953,10 @@ export class FlowerGame extends Component {
         });
     }
     private async pauseGame() {
-        if (this.busy || this.paused || this.finished) return;
+        // Stop queued taps immediately; an already accepted move may finish
+        // landing behind the modal, preserving its rules/presentation ordering.
+        if ((this.busy && !this.collecting) || this.paused || this.finished || this.rules?.status !== 'playing') return;
+        this.clearFlowerTaps();
         this.paused = true;
         const rev = this.revision, level = this.rules!.level;
         await createPause(this.content, {
@@ -883,7 +966,8 @@ export class FlowerGame extends Component {
         });
     }
     private async endLevel() {
-        if (this.finished || !this.rules) return;
+        if (this.finished || this.paused || !this.rules) return;
+        this.clearFlowerTaps();
         this.finished = true;
         const rev = this.revision, rules = this.rules, content = this.content;
         const won = rules.status === 'won'; const level = rules.level;

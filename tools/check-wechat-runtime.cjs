@@ -142,6 +142,23 @@ async function checkRuntime(buildRoot = path.join(PROJECT, 'build/wechatgame')) 
         const env = runtime.load('env'); assert.equal(env.DEBUG, false); assert.equal(env.PREVIEW, false);
         assert.equal(runtime.cc.sys.platform, runtime.cc.sys.Platform.WECHAT_GAME);
     });
+    await check('compiled viewport preserves baseline and separates capsule and gesture insets', () => {
+        const calculate = load('FlowerViewport').calculateFlowerViewport;
+        const baseline = calculate(750, 1334);
+        assert.equal(baseline.topShift, 0); assert.equal(baseline.bottomShift, 0);
+        const ratio = 750 / 390, height = 844 * ratio;
+        const phone = calculate(750, height, {x: 0, y: 34 * ratio, width: 750, height: (844 - 44 - 34) * ratio}, height - 76 * ratio);
+        assert(611 + phone.topShift <= phone.safeTop);
+        assert(Math.abs(-667 + phone.bottomShift - phone.safeBottom) < 1e-6);
+        assert(phone.topShift > 0); assert(phone.bottomShift < 0);
+    });
+    await check('compiled optional haptics safely handles unavailable WeChat APIs and the saved off switch', () => {
+        const tap = load('FlowerHaptics').vibrateFlowerTap;
+        assert.doesNotThrow(tap);
+        runtime.storage.set('zdhjy.vibrate', 'off');
+        assert.doesNotThrow(tap);
+        runtime.storage.delete('zdhjy.vibrate');
+    });
     await check('compiled startup completes real jobs before finalize and reports the final count', async () => {
         const events = [], progress = [];
         const finished = await load('FlowerStartup').runStartupTasks([

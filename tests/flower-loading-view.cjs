@@ -76,7 +76,7 @@ function harness(options = {}) {
   };
   const scope = {exports: {}, Date: class extends Date { static now() { return now; } },
     setTimeout(callback, delay) { const id = ++timerId; timers.set(id, {callback, at: now + delay}); return id; },
-    clearTimeout(id) { timers.delete(id); }, require(name) { if (name === 'cc') return cc; if (name === './FlowerUI') return ui; throw new Error(name); },
+    clearTimeout(id) { timers.delete(id); }, require(name) { if (name === 'cc') return cc; if (name === './FlowerViewport') return require('./viewport-fixture.cjs'); if (name === './FlowerUI') return ui; throw new Error(name); },
   };
   vm.runInNewContext(source, scope);
   return {...scope.exports, ...cc, clock, loads, clones, pendingLoads, flush, frame};
@@ -88,16 +88,16 @@ test('scene-bound art builds before the create promise yields and preserves orig
   const root = parent.getChildByName('StartupLoading'); assert(root.getChildByName('Background'), 'cold-start art is built synchronously');
   const view = await pending; assert.equal(h.loads.length, 0); assert(root.getComponent(h.BlockInputEvents));
   const title = root.getChildByName('Title'); assert.equal(title.position.y, 337); assert.equal(title.getComponent(h.UITransform).width, 1112 * .67);
-  const back = root.getChildByName('ProgressBackground').getComponent(h.Sprite), fill = root.getChildByName('ProgressFill').getComponent(h.Sprite);
+  const back = root.getChildByName('Progress').getChildByName('ProgressBackground').getComponent(h.Sprite), fill = root.getChildByName('Progress').getChildByName('ProgressFill').getComponent(h.Sprite);
   assert.equal(back.spriteFrame.insetLeft, 35); assert.equal(fill.spriteFrame.insetLeft, 41); assert.equal(fill.spriteFrame.insetRight, 38);
   assert.deepEqual(fill.spriteFrame.originalSize, {width: 202, height: 72}, 'transparent padding is kept, not cropped to the green alpha bounds');
-  assert.equal(root.getChildByName('ProgressCaption').getComponent(h.Label).overflow, h.Label.Overflow.SHRINK);
+  assert.equal(root.getChildByName('Progress').getChildByName('ProgressCaption').getComponent(h.Label).overflow, h.Label.Overflow.SHRINK);
   view.dispose(); assert(h.clones.every(frame => frame.destroyCount === 1)); assert(frames.every(frame => frame.isValid && frame.destroyCount === 0));
 });
 
 test('progress only follows real reports, remains monotonic and cannot show 100 before finish', async () => {
   const h = harness(), view = await h.FlowerLoadingView.create(new h.Node());
-  const percent = view.root.getChildByName('ProgressText').getComponent(h.Label);
+  const percent = view.root.getChildByName('Progress').getChildByName('ProgressText').getComponent(h.Label);
   await h.clock.advance(10000); assert.equal(view.displayedProgress, 0, 'elapsed time alone creates no progress');
   view.setProgress(.4); await h.clock.advance(70); assert(view.displayedProgress > 0 && view.displayedProgress < .4);
   await h.clock.advance(300); assert.equal(percent.string, '40%');
@@ -109,8 +109,8 @@ test('progress only follows real reports, remains monotonic and cannot show 100 
 test('finish shows the exact completion text and honors the minimum display before fading', async () => {
   const h = harness(), view = await h.FlowerLoadingView.create(new h.Node(), h.LOADING_ART_PATHS.map(h.frame));
   const finished = view.finish(); assert.equal(view.finish(), finished, 'concurrent finish calls share one result');
-  await h.clock.advance(120); assert.equal(view.root.getChildByName('ProgressText').getComponent(h.Label).string, '100%');
-  assert.equal(view.root.getChildByName('ProgressCaption').getComponent(h.Label).string, '加载完成，即将进入游戏');
+  await h.clock.advance(120); assert.equal(view.root.getChildByName('Progress').getChildByName('ProgressText').getComponent(h.Label).string, '100%');
+  assert.equal(view.root.getChildByName('Progress').getChildByName('ProgressCaption').getComponent(h.Label).string, '加载完成，即将进入游戏');
   await h.clock.advance(1079); assert(view.root.isValid, 'a cached startup does not flash away');
   await h.clock.advance(1); assert.equal(await finished, true); assert.equal(h.clock.now, 1200); assert.equal(view.root.isValid, false);
   assert.equal(h.clock.timers, 0); assert.equal(h.clock.tweens, 0); assert(h.clones.every(frame => frame.destroyCount === 1));
@@ -121,10 +121,10 @@ test('errors cancel pending finish, retry once per click and restore genuine loa
   view.setProgress(.6); await h.clock.advance(300); const finishing = view.finish(); await h.clock.advance(120);
   let retries = 0; view.setError(() => { retries++; view.setProgress(.25); });
   assert.equal(await finishing, false); assert.equal(h.clock.timers, 0); assert.equal(view.root.getComponent(h.UIOpacity).opacity, 255);
-  const retry = view.root.getChildByName('RetryHit'); assert.equal(retry.getComponent(h.Button).interactable, true);
+  const retry = view.root.getChildByName('Progress').getChildByName('RetryHit'); assert.equal(retry.getComponent(h.Button).interactable, true);
   retry.emit(h.Button.EventType.CLICK); retry.emit(h.Button.EventType.CLICK); assert.equal(retries, 1);
-  assert.equal(view.root.getChildByName('ProgressCaption').getComponent(h.Label).string, '加载中...请稍后');
-  await h.clock.advance(300); assert.equal(view.root.getChildByName('ProgressText').getComponent(h.Label).string, '25%');
+  assert.equal(view.root.getChildByName('Progress').getChildByName('ProgressCaption').getComponent(h.Label).string, '加载中...请稍后');
+  await h.clock.advance(300); assert.equal(view.root.getChildByName('Progress').getChildByName('ProgressText').getComponent(h.Label).string, '25%');
   view.setError(() => Promise.reject(new Error('retry failed'))); retry.emit(h.Button.EventType.CLICK); await h.flush();
   assert.equal(retry.getComponent(h.Button).interactable, true, 'failed async retries can be attempted again'); view.dispose();
 });

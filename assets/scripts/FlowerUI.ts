@@ -1,6 +1,7 @@
 import { loadFlowerAsset } from './FlowerAssets';
 import { BlockInputEvents, Button, Color, Font, game, Graphics, JsonAsset, Label, Node, Sprite, SpriteFrame, sys, tween, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
 import { ButtonMotionOptions, FlowerButtonMotion } from './FlowerButtonMotion';
+import { bindFlowerViewport } from './FlowerViewport';
 
 const frames = new Map<string, Promise<SpriteFrame>>();
 type Typeface = 'body' | 'display';
@@ -169,6 +170,12 @@ export function fade(node: Node, opacity: number): void {
 export function modal(parent: Node, name: string, color = '#000000a8'): Node {
     const overlay = panel(parent, name, 0, 0, 750, 1334, color);
     overlay.addComponent(BlockInputEvents);
+    bindFlowerViewport(overlay, viewport => {
+        overlay.getComponent(UITransform)!.setContentSize(viewport.width, viewport.height);
+        const graphics = overlay.getComponent(Graphics)!;
+        graphics.clear(); graphics.fillColor = new Color().fromHEX(color);
+        graphics.rect(-viewport.width / 2, -viewport.height / 2, viewport.width, viewport.height); graphics.fill();
+    });
     fade(overlay, 0);
     return overlay;
 }
@@ -183,11 +190,17 @@ const popupMotion = new WeakMap<Node, PopupMotionOptions>();
 /** BaseViewUI's serialized Panel scale animation; the dimmer itself never scales. */
 export function presentPopup(overlay: Node, options: PopupMotionOptions = {}): void {
     if (!overlay.isValid) return;
-    if (overlay.getChildByName('PopupContent')) return;
+    if (overlay.getChildByName('PopupLayout')) return;
     popupMotion.set(overlay, options);
     const parts = [...overlay.children];
-    const content = uiNode(overlay, 'PopupContent');
+    const layout = uiNode(overlay, 'PopupLayout');
+    const content = uiNode(layout, 'PopupContent');
     for (const child of parts) child.setParent(content);
+    bindFlowerViewport(layout, viewport => {
+        layout.setPosition((viewport.safeLeft + viewport.safeRight) / 2, viewport.centerY, 0);
+        const scale = Math.min(1, (viewport.safeRight - viewport.safeLeft) / 750, (viewport.safeTop - viewport.safeBottom) / 1334);
+        layout.setScale(scale, scale, 1);
+    });
     content.setScale(0, 0, 1);
     fade(overlay, 255);
     if (options.openSound) game.emit('flower-ui-sound', 'open');
@@ -201,7 +214,7 @@ const closing = new WeakSet<Node>();
 export function dismissPopup(overlay: Node, onClosed?: () => void): void {
     if (!overlay.isValid || closing.has(overlay)) return;
     closing.add(overlay);
-    const content = overlay.getChildByName('PopupContent');
+    const content = overlay.getChildByName('PopupLayout')?.getChildByName('PopupContent');
     const options = popupMotion.get(overlay);
     const duration = options?.closeDuration ?? 0.4;
     if (options?.closeSound) game.emit('flower-ui-sound', 'close');

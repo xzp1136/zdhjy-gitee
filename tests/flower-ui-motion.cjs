@@ -54,7 +54,7 @@ const storage = new Map();
 let missingStorageValue = null;
 const cc = { _decorator: {ccclass: () => value => value}, Component, Node, Vec3, UITransform, Button, Sprite, Label, Color, UIOpacity,
   game: {emit(type, value) { sounds.push([type, value]); }},
-  Font: class {}, JsonAsset: class {}, SpriteFrame: class {}, BlockInputEvents: class {}, Graphics: class {rect() {} roundRect() {} fill() {}},
+  Font: class {}, JsonAsset: class {}, SpriteFrame: class {}, BlockInputEvents: class {}, Graphics: class {clear() {} rect() {} roundRect() {} fill() {}},
   sys: {platform: 'web', Platform: {WECHAT_GAME: 'wechat'}, localStorage: {getItem: key => storage.has(key) ? storage.get(key) : missingStorageValue, setItem: (key, value) => storage.set(key, value)}},
   resources: {load(_path, Type, done) {
     if (_path === 'original/fonts/font-coverage') { done(null, {json: {body: '第1关𝄞', display: '开始'}}); return; }
@@ -73,6 +73,7 @@ function load(name) {
   }).outputText);
   vm.runInNewContext(output, {exports, console, Map, WeakMap, Set, WeakSet, Math, Number, Date, Object, Array, Promise, require(request) {
     if (request === 'cc') return cc;
+    if (request === './FlowerViewport') return require('./viewport-fixture.cjs');
     if (request === './FlowerAssets') return {loadFlowerAsset: cc.resources.load};
     if (request === './FlowerPause') return {createPause: async () => {}};
     return load(request.slice(2));
@@ -80,6 +81,7 @@ function load(name) {
   return exports;
 }
 const motion = {...load('FlowerMotion'), ...load('FlowerButtonMotion'), ...load('FlowerHomeMotion')}, ui = load('FlowerUI');
+const descendant = (root, name) => root.getChildByName(name) || root.children.map(child => descendant(child, name)).find(Boolean);
 const near = (actual, expected, message) => assert(Math.abs(actual - expected) < 1e-5, `${message}: ${actual} vs ${expected}`);
 const touch = (x = 0, y = 0) => ({touch: {getLocation: () => ({x, y})}, windowId: 0});
 
@@ -95,7 +97,7 @@ test('Cocos scripts declare at most one Component per source file', () => {
 test('the final-board result visibly offers replay while retaining its home action', async () => {
   const {createWinResult} = load('FlowerResults');
   const result = await createWinResult(new Node('Canvas'), 85, 3, 10, () => {}, () => {}, '再玩一次');
-  const panel = result.getChildByName('PopupContent');
+  const panel = result.getChildByName('PopupLayout').getChildByName('PopupContent');
   const next = panel.getChildByName('NextLevelHit').getChildByName('NextLevel');
   assert.equal(next.getChildByName('Text').getComponent(Label).string, '再玩一次');
   assert.ok(panel.getChildByName('BackHomeHit'));
@@ -172,25 +174,25 @@ test('icon waits use one sampled 2–4s interval and ready-state/disable reset t
 
 test('popup uses serialized BaseView scale timing, cancellation, and optional OverUI timing', () => {
   const overlay = ui.modal(new Node(), 'Popup'); ui.uiNode(overlay, 'Paper'); ui.presentPopup(overlay);
-  const content = overlay.getChildByName('PopupContent'); near(content.scale.x, 0, 'original zero scale');
+  const content = overlay.getChildByName('PopupLayout').getChildByName('PopupContent'); near(content.scale.x, 0, 'original zero scale');
   let opening = tweens.findLast(t => t.target === content); assert.equal(opening.steps[0].duration, .4); assert.equal(opening.steps[0].options.easing, 'backOut');
   ui.dismissPopup(overlay); assert(opening.stopped); const close = tweens.findLast(t => t.target === content);
   assert.equal(close.steps[0].duration, .4); assert.equal(close.steps[0].options.easing, 'backIn');
   const over = ui.modal(new Node(), 'Over'); ui.presentPopup(over, {openDuration: .5, closeDuration: .3});
-  ui.dismissPopup(over); assert.equal(tweens.findLast(t => t.target === over.getChildByName('PopupContent')).steps[0].duration, .3);
+  ui.dismissPopup(over); assert.equal(tweens.findLast(t => t.target === over.getChildByName('PopupLayout').getChildByName('PopupContent')).steps[0].duration, .3);
 });
 
 test('home binds motion only to original illustration targets and keeps local reward labels reachable after hit wrapping', async () => {
   storage.clear();
   const home = await load('FlowerHome').createHome(new Node(), () => {}, 1);
-  const visual = name => home.getChildByName(name + 'Hit').getChildByName(name);
+  const visual = name => descendant(home, name + 'Hit').getChildByName(name);
   const daily = visual('DailyReward'), welcome = visual('WelcomeGift');
   const dailyMotion = daily.getChildByName('Illustration').getComponent(motion.FlowerHomeMotion);
   const welcomeMotion = welcome.getChildByName('Illustration').getComponent(motion.FlowerHomeMotion);
   dailyMotion.update(1 / 6); welcomeMotion.update(1 / 6);
   near(daily.getChildByName('Illustration').scale.x, 1.08, 'available daily reward animates');
   near(daily.getChildByName('Text').scale.x, 1, 'label does not squash');
-  const play = home.getChildByName('PlayHit'); play.getComponent(motion.FlowerButtonMotion).update(1.6);
+  const play = descendant(home, 'PlayHit'); play.getComponent(motion.FlowerButtonMotion).update(1.6);
   near(play.getChildByName('Play').scale.x, .94, 'home opts into original start-button idle');
   assert.equal(visual('Welfare').getChildByName('Illustration').getComponent(motion.FlowerHomeMotion), null);
   assert.equal(visual('GameCommunity').getChildByName('Illustration').getComponent(motion.FlowerHomeMotion), null);
@@ -220,7 +222,7 @@ test('the retained video continuation button grants 120 seconds once without cha
   const popup = await createTimeContinue(new Node(), 0, () => {purchases++; return false;}, () => {}, () => {
     rewards++; return rules.reviveTimeWithReward().length > 0;
   });
-  const video = popup.getChildByName('PopupContent').getChildByName('ContinueWithVideoHit');
+  const video = popup.getChildByName('PopupLayout').getChildByName('PopupContent').getChildByName('ContinueWithVideoHit');
   video.emit('start', touch()); video.emit('end', touch()); video.emit('start', touch()); video.emit('end', touch());
   for (let i = 0; i < 10; i++) await Promise.resolve();
   assert.equal(rewards, 1); assert.equal(purchases, 0); assert.equal(rules.coins, 0); assert.equal(rules.remainingSeconds, 120);
@@ -228,7 +230,7 @@ test('the retained video continuation button grants 120 seconds once without cha
   for (let i = 0; i < 3; i++) await Promise.resolve();
   assert.equal(rewards, 1, 'closing popup cannot award again');
   const stale = await createTimeContinue(new Node(), 0, () => false, () => {}, () => {rewards++; return true;});
-  const staleButton = stale.getChildByName('PopupContent').getChildByName('ContinueWithVideoHit');
+  const staleButton = stale.getChildByName('PopupLayout').getChildByName('PopupContent').getChildByName('ContinueWithVideoHit');
   staleButton.emit('start', touch()); staleButton.emit('end', touch()); stale.destroy();
   for (let i = 0; i < 5; i++) await Promise.resolve();
   assert.equal(rewards, 1, 'abandoned popup cannot grant a late direct reward');
@@ -240,12 +242,12 @@ test('homepage preserves the default energy for WeChat absent keys without repla
   for (const absent of [null, undefined, '']) {
     storage.delete('zdhjy.energy'); missingStorageValue = absent;
     const home = await createHome(new Node('Canvas'), () => {}, 1);
-    assert.equal(home.getChildByName('EnergyValue').getComponent(Label).string, '5');
+    assert.equal(descendant(home, 'EnergyValue').getComponent(Label).string, '5');
     home.destroy();
   }
   storage.set('zdhjy.energy', '0');
   const home = await createHome(new Node('Canvas'), () => {}, 1);
-  assert.equal(home.getChildByName('EnergyValue').getComponent(Label).string, '0');
+  assert.equal(descendant(home, 'EnergyValue').getComponent(Label).string, '0');
   home.destroy(); storage.delete('zdhjy.energy'); missingStorageValue = null;
 });
 
@@ -264,7 +266,7 @@ test('failure popup uses five hearts for missing WeChat storage and preserves st
   for (const [stored, expected] of [[null, '5'], [undefined, '5'], ['', '5'], ['0', '0'], ['3', '3']]) {
     storage.set('zdhjy.energy', stored);
     const popup = await createFailure(new Node('Canvas'), 'time', () => {}, () => {});
-    const energy = popup.getChildByName('PopupContent').getChildByName('Energy');
+    const energy = popup.getChildByName('PopupLayout').getChildByName('PopupContent').getChildByName('Energy');
     assert.equal(energy.getChildByName('EnergyValue').getComponent(Label).string, expected);
     popup.destroy();
   }
@@ -300,6 +302,7 @@ function typographyHarness(platform, families, {shared = false, failCoverageOnce
   }).outputText);
   vm.runInNewContext(output, {exports, console, require(name) {
     if (name === 'cc') return isolated;
+    if (name === './FlowerViewport') return require('./viewport-fixture.cjs');
     if (name === './FlowerButtonMotion') return {FlowerButtonMotion: class {}};
     if (name === './FlowerAssets') return {loadFlowerAsset(resource, Type, callback) {
       loads++;

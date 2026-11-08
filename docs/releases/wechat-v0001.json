@@ -1,10 +1,10 @@
 {
   "appid": "wx3ef66f850d873a67",
   "creator": "3.8.7",
-  "buildTask": "zdhjy-wechat-1794076222812-35129a",
-  "buildMeasuredAt": "2026-11-07T18:31:10.452Z",
-  "mainBytes": 3995995,
-  "localTotalBytes": 21398727,
+  "buildTask": "zdhjy-wechat-1794139887481-7b7285",
+  "buildMeasuredAt": "2026-11-08T12:11:39.895Z",
+  "mainBytes": 4003622,
+  "localTotalBytes": 21406354,
   "remoteBytes": 40312368,
   "remoteFiles": 2651,
   "remoteExcludedByProjectConfig": true,
@@ -65,26 +65,80 @@
         "boundary": "Executes emitted minified code/helpers and reads emitted JsonAssets/config paths. cc stubs do not render or load native fonts; this is not a WeChat device or network test."
       },
       "nativeObservations": "Signed-in Developer Tools reached loading, home and level 1; timeout continue dismissed its panel and resumed gameplay. Tiny native text prompted the subsequent font-family fix. This was not a complete acceptance test."
+    },
+    {
+      "buildTask": "zdhjy-wechat-1794076222812-35129a",
+      "buildMeasuredAt": "2026-11-07T18:31:10.452Z",
+      "mainBytes": 3995995,
+      "localTotalBytes": 21398727,
+      "remoteBytes": 40312368,
+      "sourceTests": {
+        "passed": 151,
+        "failed": 0,
+        "report": "temp/wechat-font-fix-tests.txt"
+      },
+      "emittedRuntimeRegression": {
+        "passed": 12,
+        "failed": 0,
+        "report": "temp/wechat-font-fix-emitted.json",
+        "command": "node tools/check-wechat-runtime.cjs build/wechatgame",
+        "artifacts": [
+          {
+            "file": "src/chunks/bundle.a192c.js",
+            "sha256": "1670620bed659bc79cc6606cf3b6d1a0a3639549434a0ec461eb2441ffc95d56"
+          },
+          {
+            "file": "assets/start-scene/index.2d348.js",
+            "sha256": "4ccf96ede8506300bbf3db02c8fbcddfb0aca7f969ce7ad7e2f11e28e2dfeb83"
+          }
+        ],
+        "boundary": "Executes emitted minified code/helpers and reads emitted JsonAssets/config paths. cc stubs do not render or load native fonts; this is not a WeChat device or network test."
+      },
+      "emittedFontRegression": {
+        "report": "temp/wechat-font-fix-built-fonts.json",
+        "at": "2026-11-08T10:51:59.729Z",
+        "passed": true,
+        "fontCount": 2,
+        "checks": [
+          "both emitted TTF name records are quoted and CSS-escaped by the emitted minified FlowerUI module",
+          "repeat preload retains identical family names and does not reload fonts",
+          "covered label retains requested size 46 and uses the patched font asset"
+        ],
+        "artifacts": [
+          {
+            "file": "src/chunks/bundle.a192c.js",
+            "sha256": "1670620bed659bc79cc6606cf3b6d1a0a3639549434a0ec461eb2441ffc95d56"
+          },
+          {
+            "file": "assets/start-scene/index.2d348.js",
+            "sha256": "4ccf96ede8506300bbf3db02c8fbcddfb0aca7f969ce7ad7e2f11e28e2dfeb83"
+          }
+        ],
+        "boundary": "Reads built TTF family records and executes the actual emitted JS with cc stubs. Does not call wx.loadFont or render pixels; native visual verification remains pending."
+      },
+      "superseded": true,
+      "nativeRetestCompleted": false
     }
   ],
   "sourceTests": {
-    "passed": 151,
+    "passed": 171,
     "failed": 0,
-    "report": "temp/wechat-font-fix-tests.txt"
+    "report": "temp/viewport-interaction-tests.txt"
   },
   "scriptDiagnostics": {
-    "errors": 0
+    "errors": 0,
+    "report": "temp/viewport-script-diagnostics.json"
   },
   "sceneValidation": {
     "ok": false,
     "logsCleared": false,
-    "note": "Retained historical errors and log keyword matches; not reported as passed.",
-    "report": "temp/wechat-font-fix-scene-validation.json"
+    "note": "Creator scene FlowerGame is open. Script diagnostics pass; the scene report retains 20 historical log errors and was not cleared or declared fully passed.",
+    "report": "temp/viewport-scene-validation.json"
   },
   "runtimeState": {
     "paused": false,
     "timeScale": 1,
-    "scope": "Historical Creator scene state from temp/wechat-font-fix-scene-validation.json; not the current WeChat runtime state. The later editor inspection found an untitled scene-2d active."
+    "scope": "Creator FlowerGame scene inspection during this adaptation work, not a WeChat runtime observation. See temp/viewport-scene-validation.json."
   },
   "compatibilityFixes": {
     "iterableSpreadSites": 13,
@@ -93,12 +147,15 @@
       "FlowerHome",
       "FlowerFailure"
     ],
-    "wechatFontFamily": "Quote and CSS-escape wx.loadFont family strings before Cocos composes canvas font shorthand; apply once per Font asset and only on WeChat."
+    "wechatFontFamily": "Quote and CSS-escape wx.loadFont family strings before Cocos composes canvas font shorthand; apply once per Font asset and only on WeChat.",
+    "responsiveViewport": "Full render surface with separate top, bottom and center anchors; device safe area and WeChat capsule respected.",
+    "input": "Distinct rapid taps queued and deduplicated; rules/visual events remain serial. Pause clears pending taps, and terminal states settle before menus.",
+    "haptics": "Optional light wx.vibrateShort feedback on accepted taps, 90ms throttle, existing zdhjy.vibrate preference respected."
   },
   "emittedRuntimeRegression": {
-    "passed": 12,
+    "passed": 14,
     "failed": 0,
-    "report": "temp/wechat-font-fix-emitted.json",
+    "report": "temp/viewport-emitted.json",
     "command": "node tools/check-wechat-runtime.cjs build/wechatgame",
     "artifacts": [
       {
@@ -106,31 +163,31 @@
         "sha256": "1670620bed659bc79cc6606cf3b6d1a0a3639549434a0ec461eb2441ffc95d56"
       },
       {
-        "file": "assets/start-scene/index.2d348.js",
-        "sha256": "4ccf96ede8506300bbf3db02c8fbcddfb0aca7f969ce7ad7e2f11e28e2dfeb83"
+        "file": "assets/start-scene/index.0f63f.js",
+        "sha256": "bbe50dd94aa472d4a0c117b900e5eca16d204838faf159d80c4e96fc2755b96a"
       }
     ],
     "boundary": "Executes emitted minified code/helpers and reads emitted JsonAssets/config paths. cc stubs do not render or load native fonts; this is not a WeChat device or network test."
   },
   "cdnRebuildComparison": {
-    "at": "2026-11-07T18:32:02.679Z",
+    "at": "2026-11-08T12:11:40.496Z",
     "remoteFilesUnchanged": true,
     "files": 2651,
     "oldSettingsSha256": "52f0ecbb2aa1b73aaa23a22d6a6f9b20422623619c2b2d6cbbcd15ad8e1dc6ef",
-    "newSettingsSha256": "0042eb251c8cbb800ee1871c63b7218055cebb5ee02339e65540d78be57cc622",
+    "newSettingsSha256": "465659c847add34b499dc4ca430692c34db1d80398e2050b619183931242d558",
     "totalBytes": 40312368,
     "comparison": "Every remote path, byte length and SHA-256 matches the uploaded v0001 snapshot.",
     "reuploaded": false,
     "prefixChanged": false,
-    "report": "temp/wechat-font-fix-cdn-comparison.json"
+    "report": "temp/viewport-cdn-comparison.json"
   },
   "uploadPlan": {
-    "createdAt": "2026-11-07T18:32:26.021Z",
-    "settingsSha256": "0042eb251c8cbb800ee1871c63b7218055cebb5ee02339e65540d78be57cc622",
+    "createdAt": "2026-11-08T12:11:40.446Z",
+    "settingsSha256": "465659c847add34b499dc4ca430692c34db1d80398e2050b619183931242d558",
     "regeneratedOnly": true,
     "uploadRepeated": false
   },
-  "wechatRuntimeBoundary": "Developer Tools login and import succeeded; previous 067554 reached loading, home and level 1. Current 35129a files were detected and compiled. The 19:03:21 download-domain rejection is historical: in the project cache modified at 19:22:17, both attr.network.DownloadDomain and runtimeAttr.network.DownloadDomain in the local project cache include the CDN, and the user confirms the same backend AppID and a normal level-2 picture. This is user feedback, not agent-operated native verification. Subsequent Copy file failed messages and a read-only sandbox check show inconsistent persistent cache state: 43 flower files referenced by a 56-file index are missing. Later loads may fail once and require a retry, while the already-loaded level remains usable according to the user. A stale queue after clearing cache or recompiling is consistent with the evidence but not fully proven. Native font rendering, entry latency, exact rewards and the remaining earlier console errors are not fully verified; completed WeChat acceptance is not claimed.",
+  "wechatRuntimeBoundary": "Developer Tools login and import succeeded; previous 067554 reached loading, home and level 1. Earlier 35129a files were detected and compiled; no native verification is claimed for the new responsive/input build. The 19:03:21 download-domain rejection is historical: in the project cache modified at 19:22:17, both attr.network.DownloadDomain and runtimeAttr.network.DownloadDomain in the local project cache include the CDN, and the user confirms the same backend AppID and a normal level-2 picture. This is user feedback, not agent-operated native verification. Subsequent Copy file failed messages and a read-only sandbox check show inconsistent persistent cache state: 43 flower files referenced by a 56-file index are missing. Later loads may fail once and require a retry, while the already-loaded level remains usable according to the user. A stale queue after clearing cache or recompiling is consistent with the evidence but not fully proven. Native font rendering, entry latency, exact rewards and the remaining earlier console errors are not fully verified; completed WeChat acceptance is not claimed.",
   "wechatRuntimeEvidence": {
     "report": "docs/validation-wechat-runtime-2026-11-08.md",
     "developerToolsVersion": "2.02.2608060",
@@ -143,39 +200,17 @@
     "fontCauseConfirmedWithNativeCanvas": true,
     "unexplainedConsoleErrorCount": 30,
     "deviceVerified": false,
-    "currentBuildDetectedByFileWatcher": true,
-    "currentBuildAutomaticCompileObserved": true,
-    "fileWatcherEvidence": {
+    "currentBuildDetectedByFileWatcher": null,
+    "currentBuildAutomaticCompileObserved": null,
+    "userReportedLevel2Normal": true,
+    "agentVerifiedLevel2": false,
+    "previousBuildFileWatcherEvidence": {
       "profileRelativeLog": "WeappLog/logs/2026-11-08-00-00-38-801.log",
       "newSceneScriptLine": 24088,
       "newChunkLine": 35938,
       "compileCacheWindow": "2026-11-08 02:31:19-02:31:30 Asia/Shanghai",
       "boundary": "File detection and compilation activity only; no native visual verification."
-    },
-    "userReportedLevel2Normal": true,
-    "agentVerifiedLevel2": false
-  },
-  "emittedFontRegression": {
-    "report": "temp/wechat-font-fix-built-fonts.json",
-    "at": "2026-11-08T10:51:59.729Z",
-    "passed": true,
-    "fontCount": 2,
-    "checks": [
-      "both emitted TTF name records are quoted and CSS-escaped by the emitted minified FlowerUI module",
-      "repeat preload retains identical family names and does not reload fonts",
-      "covered label retains requested size 46 and uses the patched font asset"
-    ],
-    "artifacts": [
-      {
-        "file": "src/chunks/bundle.a192c.js",
-        "sha256": "1670620bed659bc79cc6606cf3b6d1a0a3639549434a0ec461eb2441ffc95d56"
-      },
-      {
-        "file": "assets/start-scene/index.2d348.js",
-        "sha256": "4ccf96ede8506300bbf3db02c8fbcddfb0aca7f969ce7ad7e2f11e28e2dfeb83"
-      }
-    ],
-    "boundary": "Reads built TTF family records and executes the actual emitted JS with cc stubs. Does not call wx.loadFont or render pixels; native visual verification remains pending."
+    }
   },
   "localNetworkRetestBlocker": {
     "observedLogWindow": "2026-11-08 18:25-18:26 Asia/Shanghai",
@@ -195,7 +230,8 @@
       138,
       352,
       639
-    ]
+    ],
+    "laterUserReportedResolved": true
   },
   "cdnFeedbackVerification": {
     "report": "temp/wechat-cdn-feedback-verification.json",
@@ -302,5 +338,21 @@
       "remainingBundleDirectories": "Only the vase 01/02 bundle directories were present.",
       "filesModified": false
     }
-  }
+  },
+  "browserResponsiveValidation": {
+    "report": "docs/validation-responsive-input-2026-11-08.md",
+    "scope": "temp/responsive-validation-scope.json",
+    "sizes": [
+      "375x667",
+      "390x844 simulated safe area and WeChat capsule",
+      "360x800",
+      "768x1024"
+    ],
+    "levelsWithRapidTapAndPause": [
+      1,
+      2
+    ],
+    "boundary": "Isolated Creator browser preview contexts. Native rendering, phone performance and physical vibration are not verified."
+  },
+  "wechatRuntimeStatus": "Responsive viewport, safe-area anchors, water coverage, queued rapid taps and optional haptics are built and checked. Source tests 171/171, emitted-code checks 14/14, Creator browser layout/interaction checks pass. The current build has not received complete native WeChat acceptance; physical vibration remains unverified. Historical domain/cache observations below are retained."
 }
