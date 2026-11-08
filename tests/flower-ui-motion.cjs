@@ -55,7 +55,7 @@ let missingStorageValue = null;
 const cc = { _decorator: {ccclass: () => value => value}, Component, Node, Vec3, UITransform, Button, Sprite, Label, Color, UIOpacity,
   game: {emit(type, value) { sounds.push([type, value]); }},
   Font: class {}, JsonAsset: class {}, SpriteFrame: class {}, BlockInputEvents: class {}, Graphics: class {rect() {} roundRect() {} fill() {}},
-  sys: {localStorage: {getItem: key => storage.has(key) ? storage.get(key) : missingStorageValue, setItem: (key, value) => storage.set(key, value)}},
+  sys: {platform: 'web', Platform: {WECHAT_GAME: 'wechat'}, localStorage: {getItem: key => storage.has(key) ? storage.get(key) : missingStorageValue, setItem: (key, value) => storage.set(key, value)}},
   resources: {load(_path, Type, done) {
     if (_path === 'original/fonts/font-coverage') { done(null, {json: {body: '第1关𝄞', display: '开始'}}); return; }
     if (Type === cc.Font) { done(null, new cc.Font()); return; }
@@ -269,4 +269,82 @@ test('failure popup uses five hearts for missing WeChat storage and preserves st
     popup.destroy();
   }
   storage.delete('zdhjy.energy');
+});
+
+function originalFamily(filename) {
+  const bytes = fs.readFileSync(path.join(project, 'assets/bundles/core-effects/original/fonts', filename));
+  let table;
+  for (let i = 0; i < bytes.readUInt16BE(4); i++) {
+    const offset = 12 + i * 16;
+    if (bytes.toString('ascii', offset, offset + 4) === 'name') table = bytes.readUInt32BE(offset + 8);
+  }
+  const strings = table + bytes.readUInt16BE(table + 4);
+  for (let i = 0; i < bytes.readUInt16BE(table + 2); i++) {
+    const offset = table + 6 + i * 12;
+    if (bytes.readUInt16BE(offset) === 3 && bytes.readUInt16BE(offset + 6) === 1) {
+      const data = bytes.subarray(strings + bytes.readUInt16BE(offset + 10), strings + bytes.readUInt16BE(offset + 10) + bytes.readUInt16BE(offset + 8));
+      return Buffer.from(data).swap16().toString('utf16le');
+    }
+  }
+  throw Error('The original Windows font-family record is missing');
+}
+
+function typographyHarness(platform, families, {shared = false, failCoverageOnce = false} = {}) {
+  const fonts = families.map(family => Object.assign(new cc.Font(), {_nativeAsset: family}));
+  if (shared) fonts[1] = fonts[0];
+  let failed = false, loads = 0;
+  const isolated = {...cc, sys: {...cc.sys, platform}};
+  const exports = {};
+  const output = creatorProduction(ts.transpileModule(fs.readFileSync(path.join(project, 'assets/scripts/FlowerUI.ts'), 'utf8'), {
+    compilerOptions: {target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS},
+  }).outputText);
+  vm.runInNewContext(output, {exports, console, require(name) {
+    if (name === 'cc') return isolated;
+    if (name === './FlowerButtonMotion') return {FlowerButtonMotion: class {}};
+    if (name === './FlowerAssets') return {loadFlowerAsset(resource, Type, callback) {
+      loads++;
+      if (resource.endsWith('font-coverage')) {
+        if (failCoverageOnce && !failed) { failed = true; callback(null, {json: null}); }
+        else callback(null, {json: {body: '关卡', display: '关卡'}});
+      } else callback(null, fonts[resource.includes('Alibaba') ? 0 : 1]);
+    }};
+    throw Error(name);
+  }});
+  return {...exports, fonts, get loads() { return loads; }};
+}
+
+test('WeChat quotes both original font families and CSS-escapes the LOGO backslash and control character', async () => {
+  const body = originalFamily('AlibabaPuHuiTi-2-65-Medium.ttf'), display = originalFamily('ZhanKuXiaoLOGOTi-2.ttf');
+  assert(body.includes('?') && body.includes('2.0 65 Medium'));
+  assert(display.includes('\\') && display.includes('\u000f'));
+  const view = typographyHarness('wechat', [body, display]); await view.preloadTypography();
+  assert.equal(view.fonts[0]._nativeAsset, '"' + body + '"');
+  assert.equal(view.fonts[1]._nativeAsset, '"' + display.replace('\\', '\\5c ').replace('\u000f', '\\f ') + '"');
+  const label = view.label(new Node(), 'Level', '关卡', 0, 0, 46).getComponent(Label);
+  assert.equal(label.fontSize, 46); assert.equal(label.lineHeight, 46 * 1.22); assert.equal(label.useSystemFont, false);
+});
+
+test('WeChat native family quoting handles CSS quotes, whitespace controls and ordinary font names', async () => {
+  const view = typographyHarness('wechat', ['Family"\\\n\r\t\f\u007f9', 'Arial']); await view.preloadTypography();
+  assert.equal(view.fonts[0]._nativeAsset, '"Family\\22 \\5c \\a \\d \\9 \\c \\7f 9"');
+  assert.equal(view.fonts[1]._nativeAsset, '"Arial"');
+});
+
+test('absent native families stay absent, and platforms other than WeChat preserve the loaded family verbatim', async () => {
+  for (const families of [[null, undefined], ['', 'Arial']]) {
+    const view = typographyHarness('wechat', families); await view.preloadTypography();
+    assert.equal(view.fonts[0]._nativeAsset, families[0]);
+    assert.equal(view.fonts[1]._nativeAsset, families[1] === 'Arial' ? '"Arial"' : families[1]);
+  }
+  const families = ['Name 2.0 Medium', 'Name\\\u000f'];
+  const browser = typographyHarness('web', families); await browser.preloadTypography();
+  assert.deepEqual(browser.fonts.map(font => font._nativeAsset), families);
+});
+
+test('font quoting is idempotent for shared assets, repeated preloads and retries after coverage data fails', async () => {
+  const view = typographyHarness('wechat', ['Name 2.0', 'unused'], {shared: true, failCoverageOnce: true});
+  await assert.rejects(view.preloadTypography());
+  await view.preloadTypography(); await view.preloadTypography();
+  assert.equal(view.fonts[0]._nativeAsset, '"Name 2.0"'); assert.equal(view.fonts[1], view.fonts[0]);
+  assert.equal(view.loads, 6);
 });

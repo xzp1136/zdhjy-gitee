@@ -1,5 +1,5 @@
 import { loadFlowerAsset } from './FlowerAssets';
-import { BlockInputEvents, Button, Color, Font, game, Graphics, JsonAsset, Label, Node, Sprite, SpriteFrame, tween, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
+import { BlockInputEvents, Button, Color, Font, game, Graphics, JsonAsset, Label, Node, Sprite, SpriteFrame, sys, tween, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
 import { ButtonMotionOptions, FlowerButtonMotion } from './FlowerButtonMotion';
 
 const frames = new Map<string, Promise<SpriteFrame>>();
@@ -7,6 +7,18 @@ type Typeface = 'body' | 'display';
 const typefaces: Partial<Record<Typeface, Font>> = {};
 let coverage: Record<Typeface, Set<string>> = {body: new Set(), display: new Set()};
 let typography: Promise<void> | null = null;
+const quotedWechatFonts = new WeakSet<Font>();
+
+function quoteWechatFontFamily(font: Font): void {
+    if (sys.platform !== sys.Platform.WECHAT_GAME || quotedWechatFonts.has(font)) return;
+    const family = font._nativeAsset;
+    if (typeof family !== 'string' || !family) return;
+    // WeChat returns the native family verbatim; Cocos inserts it into the
+    // canvas font shorthand. CSS quoting preserves punctuation and controls.
+    font._nativeAsset = `"${family.replace(/["\\\x00-\x1f\x7f]/g,
+        character => '\\' + character.charCodeAt(0).toString(16) + ' ')}"`;
+    quotedWechatFonts.add(font);
+}
 
 /** Load the two embedded original fonts before constructing any visible UI. */
 export function preloadTypography(): Promise<void> {
@@ -18,6 +30,7 @@ export function preloadTypography(): Promise<void> {
         new Promise<JsonAsset>((resolve, reject) => loadFlowerAsset('original/fonts/font-coverage', JsonAsset,
             (error, asset) => error ? reject(error) : resolve(asset))),
     ]).then(([body, display, chars]) => {
+        quoteWechatFontFamily(body); quoteWechatFontFamily(display);
         typefaces.body = body; typefaces.display = display;
         const data = chars.json as Record<Typeface, string>;
         coverage = {body: new Set(data.body), display: new Set(data.display)};

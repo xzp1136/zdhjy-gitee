@@ -1,10 +1,10 @@
 {
   "appid": "wx3ef66f850d873a67",
   "creator": "3.8.7",
-  "buildTask": "zdhjy-wechat-1794066785129-067554",
-  "buildMeasuredAt": "2026-11-07T15:53:28.116Z",
-  "mainBytes": 3995725,
-  "localTotalBytes": 21398457,
+  "buildTask": "zdhjy-wechat-1794076222812-35129a",
+  "buildMeasuredAt": "2026-11-07T18:31:10.452Z",
+  "mainBytes": 3995995,
+  "localTotalBytes": 21398727,
   "remoteBytes": 40312368,
   "remoteFiles": 2651,
   "remoteExcludedByProjectConfig": true,
@@ -34,12 +34,43 @@
         "failed": 7,
         "note": "Checks added after the earlier source tests and build succeeded."
       }
+    },
+    {
+      "buildTask": "zdhjy-wechat-1794066785129-067554",
+      "buildMeasuredAt": "2026-11-07T15:53:28.116Z",
+      "mainBytes": 3995725,
+      "localTotalBytes": 21398457,
+      "remoteBytes": 40312368,
+      "superseded": true,
+      "sourceTests": {
+        "passed": 147,
+        "failed": 0,
+        "report": "temp/wechat-runtime-fix-tests.txt"
+      },
+      "emittedRuntimeRegression": {
+        "passed": 12,
+        "failed": 0,
+        "report": "temp/wechat-runtime-emitted.json",
+        "command": "node tools/check-wechat-runtime.cjs build/wechatgame",
+        "artifacts": [
+          {
+            "file": "src/chunks/bundle.a192c.js",
+            "sha256": "1670620bed659bc79cc6606cf3b6d1a0a3639549434a0ec461eb2441ffc95d56"
+          },
+          {
+            "file": "assets/start-scene/index.b8318.js",
+            "sha256": "7438ed4c588a9b67f0eaec45bd21817375f591991c08386480e4b6bd89697f90"
+          }
+        ],
+        "boundary": "Executes emitted minified code/helpers and reads emitted JsonAssets/config paths. cc stubs do not render or load native fonts; this is not a WeChat device or network test."
+      },
+      "nativeObservations": "Signed-in Developer Tools reached loading, home and level 1; timeout continue dismissed its panel and resumed gameplay. Tiny native text prompted the subsequent font-family fix. This was not a complete acceptance test."
     }
   ],
   "sourceTests": {
-    "passed": 147,
+    "passed": 151,
     "failed": 0,
-    "report": "temp/wechat-runtime-fix-tests.txt"
+    "report": "temp/wechat-font-fix-tests.txt"
   },
   "scriptDiagnostics": {
     "errors": 0
@@ -47,11 +78,13 @@
   "sceneValidation": {
     "ok": false,
     "logsCleared": false,
-    "note": "Retained historical errors and log keyword matches; not reported as passed."
+    "note": "Retained historical errors and log keyword matches; not reported as passed.",
+    "report": "temp/wechat-font-fix-scene-validation.json"
   },
   "runtimeState": {
     "paused": false,
-    "timeScale": 1
+    "timeScale": 1,
+    "scope": "Historical Creator scene state from temp/wechat-font-fix-scene-validation.json; not the current WeChat runtime state. The later editor inspection found an untitled scene-2d active."
   },
   "compatibilityFixes": {
     "iterableSpreadSites": 13,
@@ -59,12 +92,13 @@
       "FlowerGame",
       "FlowerHome",
       "FlowerFailure"
-    ]
+    ],
+    "wechatFontFamily": "Quote and CSS-escape wx.loadFont family strings before Cocos composes canvas font shorthand; apply once per Font asset and only on WeChat."
   },
   "emittedRuntimeRegression": {
     "passed": 12,
     "failed": 0,
-    "report": "temp/wechat-runtime-emitted.json",
+    "report": "temp/wechat-font-fix-emitted.json",
     "command": "node tools/check-wechat-runtime.cjs build/wechatgame",
     "artifacts": [
       {
@@ -72,29 +106,93 @@
         "sha256": "1670620bed659bc79cc6606cf3b6d1a0a3639549434a0ec461eb2441ffc95d56"
       },
       {
-        "file": "assets/start-scene/index.b8318.js",
-        "sha256": "7438ed4c588a9b67f0eaec45bd21817375f591991c08386480e4b6bd89697f90"
+        "file": "assets/start-scene/index.2d348.js",
+        "sha256": "4ccf96ede8506300bbf3db02c8fbcddfb0aca7f969ce7ad7e2f11e28e2dfeb83"
       }
     ],
     "boundary": "Executes emitted minified code/helpers and reads emitted JsonAssets/config paths. cc stubs do not render or load native fonts; this is not a WeChat device or network test."
   },
   "cdnRebuildComparison": {
-    "at": "2026-11-07T15:53:51.415Z",
+    "at": "2026-11-07T18:32:02.679Z",
     "remoteFilesUnchanged": true,
     "files": 2651,
     "oldSettingsSha256": "52f0ecbb2aa1b73aaa23a22d6a6f9b20422623619c2b2d6cbbcd15ad8e1dc6ef",
-    "newSettingsSha256": "2e29c9ecaa527d823fc51f8509f61c0a2119be81400cd3b45273591f0a252567",
+    "newSettingsSha256": "0042eb251c8cbb800ee1871c63b7218055cebb5ee02339e65540d78be57cc622",
     "totalBytes": 40312368,
     "comparison": "Every remote path, byte length and SHA-256 matches the uploaded v0001 snapshot.",
     "reuploaded": false,
     "prefixChanged": false,
-    "report": "temp/wechat-cdn-rebuild-comparison.json"
+    "report": "temp/wechat-font-fix-cdn-comparison.json"
   },
   "uploadPlan": {
-    "createdAt": "2026-11-07T15:55:19.282Z",
-    "settingsSha256": "2e29c9ecaa527d823fc51f8509f61c0a2119be81400cd3b45273591f0a252567",
+    "createdAt": "2026-11-07T18:32:26.021Z",
+    "settingsSha256": "0042eb251c8cbb800ee1871c63b7218055cebb5ee02339e65540d78be57cc622",
     "regeneratedOnly": true,
     "uploadRepeated": false
   },
-  "wechatRuntimeBoundary": "Developer Tools remains at an expired login QR entry. No signed-in WeChat runtime, device rendering/font or cold-start verification has completed."
+  "wechatRuntimeBoundary": "Developer Tools login and import with the correct AppID succeeded. The previous 067554 build reached loading, home and level 1. Developer Tools detected current 35129a files and triggered compilation, but native visual retesting is incomplete; level-2 CDN loading, exact first-entry latency and reward amounts remain unverified. Thirty observed midnight console errors remain unexplained. Native UI automation is unavailable. Later 18:25-18:26 network requests failed against an enabled but unserved local proxy at 127.0.0.1:7892; no causal link to the midnight errors has been established. This is no longer a login blocker.",
+  "wechatRuntimeEvidence": {
+    "report": "docs/validation-wechat-runtime-2026-11-08.md",
+    "developerToolsVersion": "2.02.2608060",
+    "baseLibraryVersion": "3.17.6",
+    "signedIn": true,
+    "importedAppid": "wx3ef66f850d873a67",
+    "urlCheck": true,
+    "observedBuildTask": "zdhjy-wechat-1794066785129-067554",
+    "currentBuildNativeRetestCompleted": false,
+    "fontCauseConfirmedWithNativeCanvas": true,
+    "unexplainedConsoleErrorCount": 30,
+    "deviceVerified": false,
+    "currentBuildDetectedByFileWatcher": true,
+    "currentBuildAutomaticCompileObserved": true,
+    "fileWatcherEvidence": {
+      "profileRelativeLog": "WeappLog/logs/2026-11-08-00-00-38-801.log",
+      "newSceneScriptLine": 24088,
+      "newChunkLine": 35938,
+      "compileCacheWindow": "2026-11-08 02:31:19-02:31:30 Asia/Shanghai",
+      "boundary": "File detection and compilation activity only; no native visual verification."
+    }
+  },
+  "emittedFontRegression": {
+    "report": "temp/wechat-font-fix-built-fonts.json",
+    "at": "2026-11-08T10:51:59.729Z",
+    "passed": true,
+    "fontCount": 2,
+    "checks": [
+      "both emitted TTF name records are quoted and CSS-escaped by the emitted minified FlowerUI module",
+      "repeat preload retains identical family names and does not reload fonts",
+      "covered label retains requested size 46 and uses the patched font asset"
+    ],
+    "artifacts": [
+      {
+        "file": "src/chunks/bundle.a192c.js",
+        "sha256": "1670620bed659bc79cc6606cf3b6d1a0a3639549434a0ec461eb2441ffc95d56"
+      },
+      {
+        "file": "assets/start-scene/index.2d348.js",
+        "sha256": "4ccf96ede8506300bbf3db02c8fbcddfb0aca7f969ce7ad7e2f11e28e2dfeb83"
+      }
+    ],
+    "boundary": "Reads built TTF family records and executes the actual emitted JS with cc stubs. Does not call wx.loadFont or render pixels; native visual verification remains pending."
+  },
+  "localNetworkRetestBlocker": {
+    "observedLogWindow": "2026-11-08 18:25-18:26 Asia/Shanghai",
+    "error": "ECONNREFUSED",
+    "proxyEndpoint": "127.0.0.1:7892",
+    "systemProxyEnabledFor": [
+      "HTTP",
+      "HTTPS",
+      "SOCKS"
+    ],
+    "listenerFoundByLsof": false,
+    "globalProxySettingsModified": false,
+    "boundary": "Current local networking blocker for Developer Tools retesting. It occurred at a different time from the midnight console errors and does not establish their cause.",
+    "profileRelativeLog": "WeappLog/logs/2026-11-08-03-47-05-778.log",
+    "logLines": [
+      19,
+      138,
+      352,
+      639
+    ]
+  }
 }
