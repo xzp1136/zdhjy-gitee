@@ -130,7 +130,7 @@
     "regeneratedOnly": true,
     "uploadRepeated": false
   },
-  "wechatRuntimeBoundary": "Developer Tools login and import with the correct AppID succeeded; previous 067554 reached loading, home and level 1. Current 35129a files were detected and compiled, but native font rendering, level-2 loading, entry latency and exact rewards remain unverified. User evidence at 19:03:21 identifies this batch of flowers-02/03/04/05 downloads as rejected by the effective downloadFile domain list. A backend screenshot already includes the CDN domain but omits its AppID, so the current issue is a mismatch between that screenshot and the list effective in Developer Tools. The earlier 30 console errors cannot all be attributed to this batch, or to the separate 18:25-18:26 proxy failures. Neither backend configuration changes nor completed WeChat acceptance are claimed.",
+  "wechatRuntimeBoundary": "Developer Tools login and import succeeded; previous 067554 reached loading, home and level 1. Current 35129a files were detected and compiled. The 19:03:21 download-domain rejection is historical: in the project cache modified at 19:22:17, both attr.network.DownloadDomain and runtimeAttr.network.DownloadDomain in the local project cache include the CDN, and the user confirms the same backend AppID and a normal level-2 picture. This is user feedback, not agent-operated native verification. Subsequent Copy file failed messages and a read-only sandbox check show inconsistent persistent cache state: 43 flower files referenced by a 56-file index are missing. Later loads may fail once and require a retry, while the already-loaded level remains usable according to the user. A stale queue after clearing cache or recompiling is consistent with the evidence but not fully proven. Native font rendering, entry latency, exact rewards and the remaining earlier console errors are not fully verified; completed WeChat acceptance is not claimed.",
   "wechatRuntimeEvidence": {
     "report": "docs/validation-wechat-runtime-2026-11-08.md",
     "developerToolsVersion": "2.02.2608060",
@@ -151,7 +151,9 @@
       "newChunkLine": 35938,
       "compileCacheWindow": "2026-11-08 02:31:19-02:31:30 Asia/Shanghai",
       "boundary": "File detection and compilation activity only; no native visual verification."
-    }
+    },
+    "userReportedLevel2Normal": true,
+    "agentVerifiedLevel2": false
   },
   "emittedFontRegression": {
     "report": "temp/wechat-font-fix-built-fonts.json",
@@ -229,7 +231,9 @@
         "downloadFile"
       ],
       "appIdVisible": false,
-      "matchesProjectAppIdConfirmed": false
+      "matchesProjectAppIdConfirmed": false,
+      "laterUserConfirmedMatchingAppId": true,
+      "confirmationBoundary": "AppID was absent from the screenshot; the user subsequently confirmed wx3ef66f850d873a67."
     },
     "localAppIdVerification": {
       "appId": "wx3ef66f850d873a67",
@@ -240,15 +244,63 @@
       "privateConfigHasAppId": false,
       "urlCheck": true
     },
-    "diagnosis": "Backend screenshot and the domain list currently effective in Developer Tools disagree; do not infer that the backend lacks the domain.",
+    "diagnosis": "At 19:03:21 the screenshot and effective domain list differed. In the project cache modified at 19:22:17, both local project-cache domain fields include the CDN; the user confirms the matching backend AppID and normal level-2 display. Do not continue to treat the historical missing-domain list as the current blocker.",
     "nextSteps": [
-      "Confirm the backend account in the screenshot has AppID wx3ef66f850d873a67.",
-      "In Developer Tools, open Details > Domain information, refresh project configuration, and recompile.",
-      "Retest level 2 and its remote bundle downloads with urlCheck enabled."
+      "Fully close and reopen the project, then compile once to rebuild the cache queue and check whether Copy file failed recurs. This has been suggested but not executed or verified.",
+      "Complete native font, exact reward, entry-latency and resource-cache reuse checks."
     ],
     "backendModified": false,
-    "cacheOrSaveDataCleared": false,
     "urlCheckDisabled": false,
-    "boundary": "The directory-already-exists warnings are not established blockers. This identifies the reported 19:03:21 download failures only, not all earlier console errors; native font and reward checks remain pending."
+    "boundary": "Historical domain-list errors are retained. Domain recovery and the user report do not explain all earlier console errors or complete native font/reward acceptance. No backend changes, cache disabling, storage deletion or code fix were performed for the latest cache-copy feedback.",
+    "status": "Effective domain restored in local project cache; user reports level 2 displays normally.",
+    "domainRecovery": {
+      "source": "Read-only inspection of local Developer Tools project cache",
+      "fieldsContainingCdn": [
+        "attr.network.DownloadDomain",
+        "runtimeAttr.network.DownloadDomain"
+      ],
+      "cdnOrigin": "https://game2cdn.chujinggamefun.com",
+      "backendAppIdConfirmedByUser": "wx3ef66f850d873a67",
+      "level2NormalReportedByUser": true,
+      "level2VerifiedByAgent": false,
+      "projectCacheModifiedAt": "2026-11-08 19:22:17 Asia/Shanghai",
+      "timestampBoundary": "File modification time, not the exact successful domain-fetch time."
+    },
+    "cacheOrSaveDataClearedByAgent": false
+  },
+  "wechatCacheCopyFeedback": {
+    "source": "User attachment and follow-up confirmation",
+    "attachmentLines": 22074,
+    "completeCopyFileFailedEntries": 45,
+    "truncatedCopyFileFailedEntries": 1,
+    "missingSourcePattern": "Most entries refer to missing http://tmp source paths.",
+    "missingDestinationEntries": 11,
+    "missingDestinationPattern": "http://usr/gamecaches/flowers-*",
+    "userReportedTrigger": "Appeared after clearing cache or recompiling.",
+    "userReportedLevel2State": "Displays normally.",
+    "sourceCodeObservation": "For ordinary ENOENT, _cache removes the failed queue entry and schedules the next item after 500 ms. The evidence does not establish an infinite retry of the same item. Initialization trusts cacheList.json. Reading a missing cachedFiles entry removes it and returns the read error without immediately downloading it again.",
+    "impact": "The index still references missing persistent files, so a later resource load may fail once and need a retry rather than merely run slower. The already-loaded level remains usable according to the user.",
+    "hypothesis": "Stale queued paths after cache clearing are consistent with the symptoms, but the cause is not fully proven.",
+    "suggestedNextAction": "Fully close and reopen the project, compile once to rebuild the queue, and observe whether the failures recur.",
+    "suggestedActionExecuted": false,
+    "suggestedActionVerified": false,
+    "codeChanged": false,
+    "cacheDisabled": false,
+    "saveDataDeleted": false,
+    "cacheIndexReadback": {
+      "scope": "Read-only inspection of the current AppID sandbox",
+      "sandboxRelativeIndex": "usr/gamecaches/cacheList.json",
+      "indexedFiles": 56,
+      "missingIndexedFlowerFiles": 43,
+      "affectedBundles": [
+        "flowers-01",
+        "flowers-02",
+        "flowers-03",
+        "flowers-04",
+        "flowers-05"
+      ],
+      "remainingBundleDirectories": "Only the vase 01/02 bundle directories were present.",
+      "filesModified": false
+    }
   }
 }
