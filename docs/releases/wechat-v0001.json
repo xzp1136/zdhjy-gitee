@@ -130,7 +130,7 @@
     "regeneratedOnly": true,
     "uploadRepeated": false
   },
-  "wechatRuntimeBoundary": "Developer Tools login and import with the correct AppID succeeded. The previous 067554 build reached loading, home and level 1. Developer Tools detected current 35129a files and triggered compilation, but native visual retesting is incomplete; level-2 CDN loading, exact first-entry latency and reward amounts remain unverified. Thirty observed midnight console errors remain unexplained. Native UI automation is unavailable. Later 18:25-18:26 network requests failed against an enabled but unserved local proxy at 127.0.0.1:7892; no causal link to the midnight errors has been established. This is no longer a login blocker.",
+  "wechatRuntimeBoundary": "Developer Tools login and import with the correct AppID succeeded; previous 067554 reached loading, home and level 1. Current 35129a files were detected and compiled, but native font rendering, level-2 loading, entry latency and exact rewards remain unverified. User evidence at 19:03:21 identifies this batch of flowers-02/03/04/05 downloads as rejected by the effective downloadFile domain list. A backend screenshot already includes the CDN domain but omits its AppID, so the current issue is a mismatch between that screenshot and the list effective in Developer Tools. The earlier 30 console errors cannot all be attributed to this batch, or to the separate 18:25-18:26 proxy failures. Neither backend configuration changes nor completed WeChat acceptance are claimed.",
   "wechatRuntimeEvidence": {
     "report": "docs/validation-wechat-runtime-2026-11-08.md",
     "developerToolsVersion": "2.02.2608060",
@@ -186,7 +186,7 @@
     ],
     "listenerFoundByLsof": false,
     "globalProxySettingsModified": false,
-    "boundary": "Current local networking blocker for Developer Tools retesting. It occurred at a different time from the midnight console errors and does not establish their cause.",
+    "boundary": "Observed local networking blocker at 18:25-18:26. It occurred at a different time from the midnight console errors and the later 19:03:21 domain-list failures; no common cause has been established, and this does not establish the current proxy status.",
     "profileRelativeLog": "WeappLog/logs/2026-11-08-03-47-05-778.log",
     "logLines": [
       19,
@@ -194,5 +194,61 @@
       352,
       639
     ]
+  },
+  "cdnFeedbackVerification": {
+    "report": "temp/wechat-cdn-feedback-verification.json",
+    "completedAt": "2026-11-08T10:59:47.893Z",
+    "checked": 30,
+    "passed": 30,
+    "failed": 0,
+    "types": {
+      "config": 10,
+      "import-json": 10,
+      "native-png": 10
+    },
+    "boundary": "Public CDN GET sampling only; does not validate the effective WeChat downloadFile domain list."
+  },
+  "wechatDomainFeedback": {
+    "observedAt": "2026-11-08 19:03:21 Asia/Shanghai",
+    "source": "User-provided Developer Tools errors and backend domain screenshot",
+    "error": "downloadFile:fail createDownloadTask:fail url not in domain list",
+    "affectedBundles": [
+      "flowers-02",
+      "flowers-03",
+      "flowers-04",
+      "flowers-05"
+    ],
+    "requestedOrigin": "https://game2cdn.chujinggamefun.com",
+    "effectiveDownloadFileDomainsShown": [
+      "https://tcb-api.tencentcloudapi.com"
+    ],
+    "backendScreenshot": {
+      "cdnPresentIn": [
+        "request",
+        "uploadFile",
+        "downloadFile"
+      ],
+      "appIdVisible": false,
+      "matchesProjectAppIdConfirmed": false
+    },
+    "localAppIdVerification": {
+      "appId": "wx3ef66f850d873a67",
+      "files": [
+        "build-configs/wechatgame.json",
+        "build/wechatgame/project.config.json"
+      ],
+      "privateConfigHasAppId": false,
+      "urlCheck": true
+    },
+    "diagnosis": "Backend screenshot and the domain list currently effective in Developer Tools disagree; do not infer that the backend lacks the domain.",
+    "nextSteps": [
+      "Confirm the backend account in the screenshot has AppID wx3ef66f850d873a67.",
+      "In Developer Tools, open Details > Domain information, refresh project configuration, and recompile.",
+      "Retest level 2 and its remote bundle downloads with urlCheck enabled."
+    ],
+    "backendModified": false,
+    "cacheOrSaveDataCleared": false,
+    "urlCheckDisabled": false,
+    "boundary": "The directory-already-exists warnings are not established blockers. This identifies the reported 19:03:21 download failures only, not all earlier console errors; native font and reward checks remain pending."
   }
 }
