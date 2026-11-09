@@ -107,6 +107,7 @@ export class FlowerGame extends Component {
     private tapQueue: { id: string; events: FlowerEvent[]; stars: number }[] = [];
     private queuedTaps = new Set<string>();
     private earlyFlights = new Map<string, { node: Node; done: Promise<boolean> }>();
+    private completionTasks = new Map<number, Promise<boolean>>();
     private revision = 0;
     private clock = 0;
     private catalog: FlowerCatalog | null = null;
@@ -275,7 +276,7 @@ export class FlowerGame extends Component {
     private write(key: string, value: number) { sys.localStorage.setItem('zdhjy.' + key, String(value)); }
     private clear(mode: 'home' | 'game') {
         this.revision++; this.sceneMode = mode; this.paused = false; this.busy = false; this.finished = false; this.ready = false;
-        this.clearFlowerTaps(); this.collecting = false;
+        this.clearFlowerTaps(); this.completionTasks.clear(); this.collecting = false;
         this.cancelAnimations(); this.visual = null; this.orderViews.clear(); this.trayCells = []; this.trayCapacity = 0; this.progressTarget = -1;
         this.firstPlayFrame = false;
         this.pool?.dispose(); this.pool = null;
@@ -744,10 +745,19 @@ export class FlowerGame extends Component {
             }
             if (event.type === 'order-completed') {
                 visual.complete(event.order, starsPerCompletion); this.updateHUD(); this.sound('vasesuccss');
-                if (!await this.removeBouquet(event.order.slot)) return;
+                // Do not hold the collection stream on the basket's celebration.
+                // The clicked flower flight is already running; only a replacement
+                // order in this same slot needs to wait for the old view to leave.
+                const completion = this.removeBouquet(event.order.slot);
+                this.completionTasks.set(event.order.slot, completion);
+                void completion.then(() => undefined, () => undefined).then(() => {
+                    if (this.completionTasks.get(event.order.slot) === completion) this.completionTasks.delete(event.order.slot);
+                });
                 continue;
             }
             if (event.type === 'order-added') {
+                // The old slot animation may still be fading. Rebuild the slot
+                // immediately so the collection stream cannot stall on it.
                 visual.add(event.order); await this.renderOrder(event.order.slot, true);
                 continue;
             }

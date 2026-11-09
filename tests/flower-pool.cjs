@@ -86,7 +86,8 @@ test('the last delayed difficulty flower floats to an empty surface without anot
 });
 
 test('idle promotion respects its clock and surface overflow limit', async () => {
- const p=await Pool.create(new Node(),layeredFlowers([2,5,5,5]),3,()=>{},[2,5,5,5]);
+ const flowers=[]; for(let layer=0;layer<4;layer++)for(let i=0;i<[2,5,5,5][layer];i++)flowers.push({id:`idle-${layer}-${i}`,kind:'dy_zmj',variant:1,status:'pool',initialLayer:layer});
+ const p=await Pool.create(new Node(),flowers,3,()=>{},[2,5,5,5]);
  p.motionRandom=()=>0;
  p.nextAutoPromotion=p.clock+5.2;
  p.update(5);assert.equal(p.inLayer(0).length,2);

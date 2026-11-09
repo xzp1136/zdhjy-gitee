@@ -15,6 +15,7 @@ const LAYER_ALPHA = [255, 150, 95, 0];
 // One pixel-to-design conversion preserves the size differences between the
 // original flower sprites, instead of fitting every species to the same box.
 const FLOWER_PIXEL_SCALE = 0.5;
+const SURFACE_FILL_RATIO = 0.68;
 const NEAR_RADIUS = 190;
 const MOTION_RESPONSE = 9;
 const SHUFFLE_GATHER_TIME = 0.28;
@@ -257,6 +258,7 @@ type PoolEntry = {
     entranceAt: number | null;
     promotion: PromotionMotion | null;
     floatResume: number;
+    revealPending: boolean;
 };
 
 function seedOf(text: string): number {
@@ -354,6 +356,18 @@ export class FlowerPoolView {
         return ids;
     }
     get layerCounts(): readonly number[] { return [0, 1, 2, 3].map(layer => this.inLayer(layer).length); }
+
+    private flowerArea(entry: PoolEntry): number {
+        return entry.width * entry.height * Math.max(0.01, entry.scale * entry.scale) * 0.48;
+    }
+
+    private surfaceCapacity(): number {
+        return (RIGHT - LEFT) * (TOP - BOTTOM) * SURFACE_FILL_RATIO;
+    }
+
+    private surfaceArea(extra?: PoolEntry): number {
+        return this.inLayer(0).reduce((sum, entry) => sum + this.flowerArea(entry), extra ? this.flowerArea(extra) : 0);
+    }
 
     /** Original SpawnFlower: 3–4 pieces per .05s batch, four layers round-robin. */
     playEntrance(): number {
@@ -503,6 +517,10 @@ export class FlowerPoolView {
         entry.node.setPosition(entry.x, entry.y);
         this.ordered.push(entry);
         this.entries.set(flower.id, entry); this.nodes.set(flower.id, entry.node);
+        // A released difficulty flower uses the same vacancy rule as a click:
+        // if the surface has room by occupied area, it rises into the visible
+        // layer immediately and keeps the original promotion animation.
+        entry.revealPending = true;
         this.refreshBands();
         // SpawnDiffFlower calls the same animated SpawnOneFlower path.
         entry.entranceAt = this.clock; entry.scale = 0; entry.alpha = LAYER_ALPHA[2];
@@ -547,7 +565,7 @@ export class FlowerPoolView {
             rippleProfile: this.ripples.prefabs[this.path(flower)], rippleStage: 'none', rippleBand: 3, rippleStart: 0, ripplePlayers: [],
             width, height, anchorX: 0, anchorY: 0, x: 0, y: 0,
             phase: random() * Math.PI * 2, angle, band: 0, displayedBand: -1, visualBand: 0, layerOrder: 0, alpha: 0, scale: 1, lift: 0,
-            bornAt: this.clock, entranceAt: null, promotion: null, floatResume: -Infinity,
+            bornAt: this.clock, entranceAt: null, promotion: null, floatResume: -Infinity, revealPending: false,
         };
         node.angle = angle;
         return entry;
@@ -662,7 +680,7 @@ export class FlowerPoolView {
             entry.opacity.opacity = entry.alpha;
             entry.node.setScale(entry.scale, entry.scale, 1);
         }
-        // Render all three active layers; Down remains inactive. Do not truncate
+        // // Render all three active layers; Down remains inactive. Do not truncate
         // an initial layer when butterfly insertion takes it over its refill cap.
         let sibling = 0;
         for (const layer of [3, 2, 1, 0]) {
@@ -698,8 +716,14 @@ export class FlowerPoolView {
         return this.ordered.filter(entry => entry.band === layer).sort((a, b) => a.layerOrder - b.layerOrder);
     }
 
-    private canReceive(layer: number): boolean {
-        return layer === 3 || (this.layerMaxCounts[layer] > 0 && this.inLayer(layer).length < this.layerMaxCounts[layer]);
+    private canReceive(layer: number, candidate?: PoolEntry): boolean {
+        if (layer === 3) return true;
+        // The serialized count is the initial fill target. Surface admission is
+        // governed by occupied area so a small flower can replace a vacancy even
+        // when the target count has already been reached.
+        if (layer === 0) return this.layerMaxCounts[0] > 0 && (!candidate || this.surfaceArea(candidate) <= this.surfaceCapacity());
+        if (this.layerMaxCounts[layer] <= 0 || this.inLayer(layer).length >= this.layerMaxCounts[layer]) return false;
+        return true;
     }
 
     private firstAvailable(layer: number): PoolEntry | undefined {
@@ -730,6 +754,7 @@ export class FlowerPoolView {
         }
         entry.promotion = animate && from !== layer ? this.promotionMotion(entry, from) : null;
         if (layer === 0) this.nudgeNeighbors(entry);
+        if (layer === 0) this.repackSurface();
     }
 
     private promotionMotion(entry: PoolEntry, from: number): PromotionMotion {
@@ -795,6 +820,7 @@ export class FlowerPoolView {
             candidate = this.nearestAvailable(2, point) ?? this.firstAvailable(2) ?? this.firstAvailable(3);
         } else candidate = this.firstAvailable(3);
         if (!candidate) return;
+        if (layer === 0 && !this.canReceive(0, candidate)) return;
         const from = candidate.band;
         const sourcePosition = { x: candidate.anchorX, y: candidate.anchorY };
         this.moveToLayer(candidate, layer, point, true);
@@ -815,6 +841,34 @@ export class FlowerPoolView {
         }
     }
 
+    /** Relax top-layer rectangles after a removal/promotion so the board uses
+     * the water area evenly and no flower is left as a tiny exposed fragment. */
+    private repackSurface(): void {
+        const entries = this.inLayer(0);
+        if (entries.length < 2) return;
+        for (let iteration = 0; iteration < 8; iteration++) {
+            for (let i = 0; i < entries.length; i++) {
+                const a = entries[i];
+                for (let j = i + 1; j < entries.length; j++) {
+                    const b = entries[j];
+                    let dx = b.anchorX - a.anchorX, dy = b.anchorY - a.anchorY;
+                    let distance = Math.hypot(dx, dy);
+                    if (distance < 0.001) { dx = Math.cos(a.phase); dy = Math.sin(a.phase); distance = 1; }
+                    const target = Math.max(72, (Math.min(a.width, a.height) + Math.min(b.width, b.height)) * 0.42);
+                    if (distance >= target) continue;
+                    const push = (target - distance) * 0.5 / distance;
+                    const ax = this.limit(a, a.anchorX - dx * push, a.anchorY - dy * push, a.angle);
+                    const bx = this.limit(b, b.anchorX + dx * push, b.anchorY + dy * push, b.angle);
+                    a.anchorX = ax.x; a.anchorY = ax.y; b.anchorX = bx.x; b.anchorY = bx.y;
+                }
+            }
+        }
+        for (const entry of entries) {
+            entry.x += (entry.anchorX - entry.x) * 0.35;
+            entry.y += (entry.anchorY - entry.y) * 0.35;
+        }
+    }
+
     private scheduleAutoPromotion(): void {
         const settings = this.motion.flowerManager.values;
         this.nextAutoPromotion = this.clock + settings.autoPromoteIntervalMin
@@ -825,23 +879,13 @@ export class FlowerPoolView {
         if (this.entering || this.firstLevel || this.scatterTargets.size) return;
         const available = (layer: number) => this.inLayer(layer).find(entry =>
             entry.flower.status === 'pool' && !entry.promotion && entry.entranceAt === null && this.clock >= entry.bornAt);
-        // Delayed difficulty flowers can arrive after the last surface flower
-        // was removed. Fill that vacancy without requiring another click.
-        if (this.canReceive(0)) {
-            const entry = available(1) ?? available(2) ?? available(3);
-            if (entry) {
-                const from = entry.band, point = { x: entry.anchorX, y: entry.anchorY };
-                this.moveToLayer(entry, 0, point, true);
-                this.refillVacancy(from, point); this.refreshBands();
-            }
-        }
         if (this.clock < this.nextAutoPromotion) return;
         this.scheduleAutoPromotion();
         const settings = this.motion.flowerManager.values;
         if (this.inLayer(0).length >= this.layerMaxCounts[0] + settings.middleAutoUpExtraLimit
             || this.motionRandom() >= settings.autoPromoteChance) return;
         const entry = available(1) ?? available(2);
-        if (!entry) return;
+        if (!entry || !this.canReceive(0, entry)) return;
         const from = entry.band, point = { x: entry.anchorX, y: entry.anchorY };
         this.moveToLayer(entry, 0, point, true);
         this.refillVacancy(from, point); this.refreshBands();
@@ -862,7 +906,15 @@ export class FlowerPoolView {
                 entry.node.active = true;
                 const progress = clamp((this.clock - entry.entranceAt!) / this.motion.spawn.visibleScaleIn.duration, 0, 1);
                 entry.scale = LAYER_SCALE[entry.band] * (1 - Math.pow(1 - progress, 3));
-                if (progress === 1) entry.entranceAt = null;
+                if (progress === 1) {
+                    entry.entranceAt = null;
+                    if (entry.revealPending && entry.band === 2 && this.canReceive(0, entry)) {
+                        entry.revealPending = false;
+                        const target = this.choosePosition(entry, this.inLayer(0), this.motionRandom);
+                        this.moveToLayer(entry, 0, target, true);
+                        this.refreshBands();
+                    }
+                }
             }
             const hadPromotion = !!entry.promotion;
             const promotionAngle = this.updatePromotion(entry);
