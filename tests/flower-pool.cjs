@@ -6,7 +6,7 @@ const path = require('node:path');
 const fs = require('fs');
 const vm = require('vm');
 const assert = require('assert/strict');
-const ts = require('/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/Resources/resources/3d/engine/node_modules/typescript');
+const ts = require('./typescript.cjs');
 const project = path.join(__dirname, '..');
 class Node {
   static EventType = { NODE_DESTROYED: 'destroyed', TOUCH_START:'touch-start', TOUCH_END:'touch-end' };
@@ -65,6 +65,35 @@ function layeredFlowers(counts) {
  for(let layer=0;layer<counts.length;layer++)for(let i=0;i<counts[layer];i++)flowers.push({id:`layer-${layer}-${i}`,kind:['cdcs_jyc','cdy_lxq','dy_zmj'][i%3],variant:i%3+1,status:'pool',initialLayer:layer});
  return flowers;
 }
+
+test('sprite dimensions preserve variant differences and submerged flowers remain visible', async () => {
+ const flowers=[1,2,3].map(variant=>({id:'size-'+variant,kind:'cdy_lxq',variant,status:'pool',initialLayer:variant-1}));
+ const p=await Pool.create(new Node(),flowers,2,()=>{},[1,1,1,0]);
+ const entries=p.ordered;
+ assert.equal(entries[0].width/entries[1].width,300/259);
+ assert(entries[0].width<200);assert(entries[1].alpha>=128);assert(entries[2].alpha>=90);
+ p.dispose();
+});
+
+test('the last delayed difficulty flower floats to an empty surface without another tap', async () => {
+ const flower={id:'last-hidden',kind:'dy_zmj',variant:1,status:'hidden',initialLayer:2};
+ const p=await Pool.create(new Node(),[flower],3,()=>{},[21,16,16,0]);
+ flower.status='pool';await p.reveal(flower);
+ for(let i=0;i<150;i++)p.update(1/60);
+ const entry=p.entries.get(flower.id);assert.equal(entry.band,0);assert.equal(entry.visualBand,0);
+ assert.equal(entry.opacity.opacity,255);assert.equal(entry.node.active,true);
+ p.take(flower.id);p.update(10);assert.equal(p.nodeMap.size,0);p.dispose();
+});
+
+test('idle promotion respects its clock and surface overflow limit', async () => {
+ const p=await Pool.create(new Node(),layeredFlowers([2,5,5,5]),3,()=>{},[2,5,5,5]);
+ p.motionRandom=()=>0;
+ p.nextAutoPromotion=p.clock+5.2;
+ p.update(5);assert.equal(p.inLayer(0).length,2);
+ p.update(.21);assert.equal(p.inLayer(0).length,3);
+ for(let i=0;i<3000;i++)p.update(1/60);
+ assert.equal(p.inLayer(0).length,5,'no more than the original three extra surface flowers');p.dispose();
+});
 function snapshot(pool) {
  return pool.ordered.map(e=>({id:e.flower.id,x:e.node.position.x,y:e.node.position.y,angle:e.node.angle,scale:e.node.scale.x,alpha:e.alpha,rippleAngle:e.ripple.angle}));
 }

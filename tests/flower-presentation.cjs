@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
-const ts = require('/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/Resources/app.asar.unpacked/node_modules/typescript');
+const ts = require('./typescript.cjs');
 const root = path.join(__dirname, '..');
 class Vec3 { constructor(x = 0, y = 0, z = 0) { Object.assign(this, { x, y, z }); } }
 class Node {
@@ -21,6 +21,7 @@ class Node {
   off(event, callback) { const list = this.events.get(event); list?.delete(callback); if (!list?.size) this.events.delete(event); }
   emit(event) { for (const callback of [...(this.events.get(event) || [])]) callback(); }
   removeFromParent() { if (this.parent) this.parent.children.splice(this.parent.children.indexOf(this), 1); this.parent = null; }
+  setParent(parent) { this.removeFromParent(); parent.addChild(this); }
   destroy() { if (!this.isValid) return; this.isValid = false; this.emit(Node.EventType.NODE_DESTROYED); for (const child of [...this.children]) child.destroy(); }
 }
 class UITransform {
@@ -352,6 +353,24 @@ function queuedGame(config) {
 }
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
+test('three rapid taps launch three flights before the first presentation commit', async () => {
+  const {game, rules, pending} = queuedGame();
+  game.flowerRoot = uiNode(game.content, 'Flights');
+  game.ordersRoot = uiNode(game.content, 'Orders');
+  game.trayRoot = uiNode(game.content, 'Tray');
+  const taken = [], flights = [];
+  game.pool = { take(id) { taken.push(id); return uiNode(game.content, id, 0, 0, 100, 150); } };
+  game.flyFlower = (node, destination) => { flights.push({node, destination}); return Promise.resolve(true); };
+  const flowers = rules.flowers.filter(flower => flower.kind === 'cdy_lxq');
+  const work = game.collect(flowers[0].id);
+  await game.collect(flowers[1].id); await game.collect(flowers[2].id); await game.collect(flowers[1].id);
+  assert.deepEqual(taken, Array.from(flowers, flower => flower.id));
+  assert.equal(flights.length, 3); assert.equal(game.visual.collected, 0);
+  assert.equal(game.earlyFlights.size, 3);
+  for (let i = 0; i < 3; i++) { pending.shift()(); await flush(); }
+  await work; assert.equal(game.visual.collected, 3); assert.equal(game.visual.stars, rules.stars);
+});
+
 test('rapid distinct flower taps queue immediately, reject duplicates and finish rule streams in FIFO order', async () => {
   const session = queuedGame(), {game, rules, pending, started, sounds} = session;
   const flowers = rules.flowers.filter(flower => flower.kind === 'cdy_lxq');
@@ -360,7 +379,7 @@ test('rapid distinct flower taps queue immediately, reject duplicates and finish
   await game.collect(flowers[0].id); await game.collect(flowers[1].id);
   assert.equal(hapticTaps - before, 3); assert.equal(sounds.length, 3);
   assert.deepEqual(started, [flowers[0].id]);
-  assert.equal(rules.orders[0].filled, 1); assert.equal(game.visual.orders[0].filled, 0);
+  assert.equal(rules.stars, 1, 'all taps reserve their rule destinations immediately'); assert.equal(game.visual.orders[0].filled, 0);
   assert.equal(game.tapQueue.length, 2); assert.equal(game.busy, true);
   await game.useTool(0); assert.equal(started.length, 1, 'tools cannot interleave with the queued rule stream');
   for (let i = 0; i < flowers.length; i++) { pending.shift()(); await flush(); }
@@ -385,16 +404,17 @@ test('a full buffer ends once and discards queued taps without overwriting its l
   assert.equal(game.tapQueue.length, 0); assert.equal(game.queuedTaps.size, 0);
 });
 
-test('pause accepts a click during a playing collection and drops pending taps while the current flower lands', async () => {
+test('pause blocks new input while all already accepted flights finish committing', async () => {
   const session = queuedGame(), {game, rules, pending, started} = session;
   const flowers = rules.flowers.filter(flower => flower.kind === 'cdy_lxq');
   const work = game.collect(flowers[0].id); await game.collect(flowers[1].id);
   const before = pauseDialogs.length;
   await game.pauseGame();
-  assert.equal(pauseDialogs.length, before + 1); assert.equal(game.paused, true); assert.equal(game.tapQueue.length, 0);
-  pending.shift()(); await work;
-  assert.equal(started.length, 1); assert.equal(game.busy, false); assert.equal(session.ended, 0);
-  assert.equal(game.visual.orders[0].filled, 1);
+  assert.equal(pauseDialogs.length, before + 1); assert.equal(game.paused, true); assert.equal(game.tapQueue.length, 1);
+  await game.collect(flowers[2].id); assert.equal(game.tapQueue.length, 1);
+  pending.shift()(); await flush(); pending.shift()(); await work;
+  assert.equal(started.length, 2); assert.equal(game.busy, false); assert.equal(session.ended, 0);
+  assert.equal(game.visual.orders[0].filled, 2);
   pauseDialogs.at(-1).onResume(); game.update(0);
   assert.equal(session.ended, 0); assert.equal(game.paused, false);
 });
@@ -432,14 +452,14 @@ test('scene replacement cancels queued taps and the old collector cannot unlock 
   assert.equal(game.tapQueue.length, 0); assert.equal(game.queuedTaps.size, 0); assert.equal(session.ended, 0);
 });
 
-test('a queued flower that is no longer available is skipped, while non-collection busy states reject input', async () => {
+test('unavailable flowers and non-collection busy states reject input before reservation', async () => {
   const {game, rules, pending, started} = queuedGame();
   const flowers = rules.flowers.filter(flower => flower.kind === 'cdy_lxq');
   const before = hapticTaps; game.busy = true;
   await game.collect(flowers[0].id); assert.equal(hapticTaps, before); assert.equal(game.tapQueue.length, 0);
   game.busy = false;
-  const work = game.collect(flowers[0].id); await game.collect(flowers[1].id);
   flowers[1].status = 'hidden';
+  const work = game.collect(flowers[0].id); await game.collect(flowers[1].id);
   pending.shift()(); await work;
   assert.equal(started.length, 1); assert.equal(game.busy, false); assert.equal(game.queuedTaps.size, 0);
 });

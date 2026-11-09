@@ -104,8 +104,9 @@ export class FlowerGame extends Component {
     private paused = false;
     private busy = false;
     private collecting = false;
-    private tapQueue: string[] = [];
+    private tapQueue: { id: string; events: FlowerEvent[]; stars: number }[] = [];
     private queuedTaps = new Set<string>();
+    private earlyFlights = new Map<string, { node: Node; done: Promise<boolean> }>();
     private revision = 0;
     private clock = 0;
     private catalog: FlowerCatalog | null = null;
@@ -677,28 +678,33 @@ export class FlowerGame extends Component {
             }
         }
     }
-    private clearFlowerTaps(): void { this.tapQueue.length = 0; this.queuedTaps.clear(); }
+    private clearFlowerTaps(): void { this.tapQueue.length = 0; this.queuedTaps.clear(); this.earlyFlights.clear(); }
     private async collect(id: string) {
         const rules = this.rules;
         if (!this.ready || this.firstPlayFrame || this.paused || this.finished || !rules || rules.status !== 'playing'
             || (this.busy && !this.collecting) || this.queuedTaps.has(id)
             || !rules.flowers.some(flower => flower.id === id && flower.status === 'pool')) return;
-        // Reserve only the input, never advance another rules event stream while
-        // its predecessor is still landing. Tools and dialogs retain the busy lock.
-        this.tapQueue.push(id); this.queuedTaps.add(id);
+        // Accept each tap synchronously and launch its flight immediately. Only
+        // presentation commits are serialized, so an old basket animation cannot
+        // hold the next flower in the water or reserve the same destination twice.
+        const orders = rules.orders.map(order => order ? cloneOrder(order) : null);
+        const stars = rules.stars;
+        const events = rules.select(id);
+        if (!events.length) return;
+        this.tapQueue.push({ id, events, stars: rules.stars - stars }); this.queuedTaps.add(id);
+        const firstMove = events.find(event => event.type === 'move' && event.flowerId === id);
+        if (firstMove?.type === 'move') this.launchEarlyFlight(firstMove, orders[firstMove.slot]);
         vibrateFlowerTap(); this.sound('click');
         if (this.hand) { Tween.stopAllByTarget(this.hand); this.hand.destroy(); this.hand = null; this.handTarget = null; }
         if (this.collecting) return;
         const rev = this.revision;
         this.collecting = true; this.busy = true;
         try {
-            while (this.current(rev) && this.rules === rules && !this.paused && !this.finished
-                && rules.status === 'playing' && this.tapQueue.length) {
+            while (this.current(rev) && this.rules === rules && !this.finished && this.tapQueue.length) {
                 const next = this.tapQueue.shift()!;
-                const events = rules.select(next);
-                if (events.length) await this.animateEvents(events, rev);
+                await this.animateEvents(next.events, rev, next.stars);
                 if (!this.current(rev)) return;
-                this.queuedTaps.delete(next);
+                this.queuedTaps.delete(next.id);
             }
         } catch (error) { if (this.current(rev)) console.error('[FlowerGame] collect animation', error); }
         finally {
@@ -706,10 +712,29 @@ export class FlowerGame extends Component {
         }
         if (this.current(rev) && this.rules === rules && !this.paused && rules.status !== 'playing') void this.endLevel();
     }
-    private async animateEvents(events: FlowerEvent[], rev = this.revision) {
+    private launchEarlyFlight(event: Extract<FlowerEvent, { type: 'move' }>, order: FlowerOrder | null): void {
+        if (event.from !== 'pool' || !this.pool || !this.flowerRoot) return;
+        const node = this.pool.take(event.flowerId);
+        if (!node?.isValid) return;
+        node.setParent(this.flowerRoot, true);
+        const size = node.getComponent(UITransform)!;
+        let destination = () => this.mapPoint(this.trayRoot, new Vec3(-243 + event.slot * 97, 252), this.flowerRoot);
+        let scale = new Vec3(54 / size.width, 54 / size.width, 1), angle = 0;
+        if (event.to === 'order' && order) {
+            const bouquet = this.visual?.orders[event.slot]?.id === order.id ? this.orderViews.get(event.slot)?.bouquet : undefined;
+            const landing = bouquet?.landing(order);
+            if (bouquet && landing) {
+                destination = () => this.mapPoint(this.ordersRoot,
+                    new Vec3(bouquet.basePosition.x + landing.position.x, bouquet.basePosition.y + landing.position.y), this.flowerRoot);
+                scale = new Vec3(landing.width / size.width, landing.height / size.height, 1); angle = landing.angle;
+            } else destination = () => this.mapPoint(this.ordersRoot, new Vec3(ORDER_X[event.slot], 443), this.flowerRoot);
+        }
+        this.earlyFlights.set(event.flowerId, { node, done: this.flyFlower(node, destination, scale, angle) });
+    }
+    private async animateEvents(events: FlowerEvent[], rev = this.revision, earnedStars?: number) {
         const rules = this.rules!, visual = this.visual!;
         const completionCount = events.filter(event => event.type === 'order-completed').length;
-        const starsPerCompletion = completionCount ? (rules.stars - visual.stars) / completionCount : 0;
+        const starsPerCompletion = completionCount ? (earnedStars ?? (rules.stars - visual.stars)) / completionCount : 0;
         for (const event of events) {
             if (!this.current(rev)) return;
             if (event.type === 'flower-revealed') {
@@ -748,7 +773,8 @@ export class FlowerGame extends Component {
             const completesGroup = !!group && group.filled + 1 === group.required;
             const landingBouquet = event.to === 'order' ? this.orderViews.get(event.slot)?.bouquet : undefined;
             const landingEffectPoint = landingOrder && landingBouquet?.landing(landingOrder)?.effectPosition;
-            let node = this.pool?.take(event.flowerId) ?? this.trayRoot.getChildByName('Buffered-' + event.flowerId);
+            const early = event.from === 'pool' ? this.earlyFlights.get(event.flowerId) : undefined;
+            let node = early?.node ?? this.pool?.take(event.flowerId) ?? this.trayRoot.getChildByName('Buffered-' + event.flowerId);
             if (!node && event.from === 'waiting') {
                 const waiting = this.mapPoint(this.toolsRoot, new Vec3(234, -585, 0), this.flowerRoot);
                 node = await fittedSprite(this.flowerRoot, 'Waiting-' + event.flowerId, flowerSpritePath(flower.kind, flower.variant), waiting.x, waiting.y, 54, 48);
@@ -776,7 +802,16 @@ export class FlowerGame extends Component {
                     } else destination = () => this.mapPoint(this.ordersRoot, new Vec3(ORDER_X[event.slot], 443, 0), this.flowerRoot);
                 }
                 node.setSiblingIndex(this.flowerRoot.children.length - 1);
-                if (!await this.flyFlower(node, destination, scale, angle)) return;
+                if (early) {
+                    if (!await early.done || !this.current(rev)) return;
+                    this.earlyFlights.delete(event.flowerId);
+                    // A newly added order may not have existed when this flight
+                    // started. Settle into its now available attachment slot.
+                    const target = destination();
+                    if (Math.hypot(node.position.x - target.x, node.position.y - target.y) > 1) {
+                        if (!await this.animate(node, 0.1, { position: target, scale, angle })) return;
+                    }
+                } else if (!await this.flyFlower(node, destination, scale, angle)) return;
             }
             if (!this.current(rev)) return;
             // Swap the flight for the permanent flower at exactly the same slot.
@@ -953,10 +988,9 @@ export class FlowerGame extends Component {
         });
     }
     private async pauseGame() {
-        // Stop queued taps immediately; an already accepted move may finish
-        // landing behind the modal, preserving its rules/presentation ordering.
+        // Accepted flights must finish committing behind the modal. New input
+        // is blocked by paused; restart/home cancel all work via the revision.
         if ((this.busy && !this.collecting) || this.paused || this.finished || this.rules?.status !== 'playing') return;
-        this.clearFlowerTaps();
         this.paused = true;
         const rev = this.revision, level = this.rules!.level;
         await createPause(this.content, {

@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 const source = path.join(__dirname, '../assets/scripts/FlowerRules.ts');
-const typescript = require('/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/Resources/app.asar.unpacked/node_modules/typescript');
+const typescript = require('./typescript.cjs');
 const exportsObject = {};
 if (fs.existsSync(source)) {
   const compiled = typescript.transpileModule(fs.readFileSync(source, 'utf8'), {

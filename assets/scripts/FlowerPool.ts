@@ -11,7 +11,10 @@ const DESIGN_SCALE = 750 / 1052;
 const WHITE = new Color(255, 255, 255, 255);
 const UNDERWATER = new Color(208, 225, 225, 255);
 const LAYER_SCALE = [1, 0.9, 0.8, 0.7];
-const LAYER_ALPHA = [255, 92, 42, 0];
+const LAYER_ALPHA = [255, 150, 95, 0];
+// One pixel-to-design conversion preserves the size differences between the
+// original flower sprites, instead of fitting every species to the same box.
+const FLOWER_PIXEL_SCALE = 0.5;
 const NEAR_RADIUS = 190;
 const MOTION_RESPONSE = 9;
 const SHUFFLE_GATHER_TIME = 0.28;
@@ -299,6 +302,8 @@ export class FlowerPoolView {
     private readonly configuredLayers: boolean;
     private readonly layerMaxCounts: number[];
     private nextLayerOrder = 0;
+    private nextAutoPromotion = 0;
+    private motionRandom = randomGenerator(seedOf('flower-pool-motion'));
     private surfaceListener: ((flower: FlowerPiece) => void) | null = null;
     private readonly touchStart = () => {};
     private readonly touchEnd = (event: EventTouch) => {
@@ -399,6 +404,8 @@ export class FlowerPoolView {
             pool.shapes = shapes;
             pool.ripples = ripples;
             pool.motion = motion;
+            pool.motionRandom = randomGenerator(seedOf(`flower-pool:${level}:motion`));
+            pool.scheduleAutoPromotion();
             for (const [path, frame] of frames) pool.loadedFrames.set(path, frame);
             await Promise.all(Object.keys(ripples.sprites).map(async path => pool.loadedFrames.set(path, await loadFrame(path))));
             if (!parent.isValid) throw new Error('The flower pool parent was destroyed while loading water frames.');
@@ -518,8 +525,8 @@ export class FlowerPoolView {
         if (!(original.width > 0 && original.height > 0)) throw new Error(`Invalid flower dimensions: ${flower.kind}`);
         const hitShape = this.shapes[this.path(flower)];
         if (!hitShape) throw new Error(`Missing original flower click shape: ${this.path(flower)}`);
-        const width = flower.specialId ? 126 : Math.min(flower.kind === 'cdy_lxq' ? 200 : 176, 245 * original.width / original.height);
-        const height = flower.specialId ? 132 : width * original.height / original.width;
+        const width = flower.specialId ? 126 : original.width * FLOWER_PIXEL_SCALE;
+        const height = flower.specialId ? 132 : original.height * FLOWER_PIXEL_SCALE;
         const node = uiNode(this.root, `Flower-${flower.id}`, 0, 0, width, height);
         const ripple = uiNode(node, 'Ripple', 0, 0, width, height);
         if (flower.specialId && bubbleFrame) {
@@ -612,6 +619,7 @@ export class FlowerPoolView {
     /** Best-candidate sampling makes each layer irregular but evenly spread. */
     private choosePosition(entry: PoolEntry, existing: PoolEntry[], random: () => number): Point {
         let best: Point = { x: 0, y: -195 }, bestScore = -Infinity;
+        const foreground = this.ordered.filter(other => other !== entry && other.band < entry.band && other.band < 3);
         for (let trial = 0; trial < 48; trial++) {
             const candidate = this.limit(entry, LEFT + random() * (RIGHT - LEFT), BOTTOM + random() * (TOP - BOTTOM), entry.angle);
             let score = Infinity;
@@ -620,8 +628,15 @@ export class FlowerPoolView {
                 const radius = (Math.min(entry.width, entry.height) + Math.min(other.width, other.height)) * 0.5;
                 score = Math.min(score, (dx * dx + dy * dy) / (radius * radius));
             }
+            // Place submerged flowers in visible gaps as well as spacing them
+            // within their own layer. A softer radius still permits depth overlap.
+            for (const other of foreground) {
+                const dx = candidate.x - other.anchorX, dy = candidate.y - other.anchorY;
+                const radius = (Math.min(entry.width, entry.height) + Math.min(other.width, other.height)) * 0.3;
+                score = Math.min(score, (dx * dx + dy * dy) / (radius * radius));
+            }
             // Tie-breaking is also seeded, including an empty layer's first point.
-            if (!existing.length) score = random();
+            if (!existing.length && !foreground.length) score = random();
             if (score > bestScore) { bestScore = score; best = candidate; }
         }
         return best;
@@ -800,6 +815,38 @@ export class FlowerPoolView {
         }
     }
 
+    private scheduleAutoPromotion(): void {
+        const settings = this.motion.flowerManager.values;
+        this.nextAutoPromotion = this.clock + settings.autoPromoteIntervalMin
+            + this.motionRandom() * (settings.autoPromoteIntervalMax - settings.autoPromoteIntervalMin);
+    }
+
+    private promoteIdleFlowers(): void {
+        if (this.entering || this.firstLevel || this.scatterTargets.size) return;
+        const available = (layer: number) => this.inLayer(layer).find(entry =>
+            entry.flower.status === 'pool' && !entry.promotion && entry.entranceAt === null && this.clock >= entry.bornAt);
+        // Delayed difficulty flowers can arrive after the last surface flower
+        // was removed. Fill that vacancy without requiring another click.
+        if (this.canReceive(0)) {
+            const entry = available(1) ?? available(2) ?? available(3);
+            if (entry) {
+                const from = entry.band, point = { x: entry.anchorX, y: entry.anchorY };
+                this.moveToLayer(entry, 0, point, true);
+                this.refillVacancy(from, point); this.refreshBands();
+            }
+        }
+        if (this.clock < this.nextAutoPromotion) return;
+        this.scheduleAutoPromotion();
+        const settings = this.motion.flowerManager.values;
+        if (this.inLayer(0).length >= this.layerMaxCounts[0] + settings.middleAutoUpExtraLimit
+            || this.motionRandom() >= settings.autoPromoteChance) return;
+        const entry = available(1) ?? available(2);
+        if (!entry) return;
+        const from = entry.band, point = { x: entry.anchorX, y: entry.anchorY };
+        this.moveToLayer(entry, 0, point, true);
+        this.refillVacancy(from, point); this.refreshBands();
+    }
+
     update(dt: number): void {
         if (this.disposed || !Number.isFinite(dt) || dt <= 0) return;
         const previousTime = this.clock;
@@ -821,7 +868,8 @@ export class FlowerPoolView {
             const promotionAngle = this.updatePromotion(entry);
             const top = entry.visualBand === 0;
             const driftWeight = entry.promotion ? 0 : clamp((this.clock - entry.floatResume) / 0.2, 0, 1);
-            const amplitude = (top ? 5.5 : 2) * driftWeight;
+            const amplitude = (top ? 8 : 4) * driftWeight;
+            const speed = 0.75 + (Math.sin(entry.phase * 2.3) + 1) * 0.3;
             const scatter = this.scatterTargets.get(entry);
             let positionBlend = blend;
             if (scatter && scatter.at <= this.clock) {
@@ -843,10 +891,10 @@ export class FlowerPoolView {
                 if (!appearing) entry.scale += (LAYER_SCALE[entry.band] - entry.scale) * blend;
             }
             entry.lift *= 1 - blend;
-            const angle = entry.promotion ? promotionAngle! : entry.angle + Math.sin(this.clock * 0.31 + entry.phase) * (top ? 3.5 : 1.4) * driftWeight;
+            const angle = entry.promotion ? promotionAngle! : entry.angle + Math.sin(this.clock * 0.65 * speed + entry.phase) * (top ? 4.5 : 2.5) * driftWeight;
             const position = this.limit(entry,
-                entry.x + Math.sin(this.clock * 0.37 + entry.phase) * amplitude,
-                entry.y + Math.cos(this.clock * 0.43 + entry.phase) * amplitude + entry.lift, angle, this.framePosition);
+                entry.x + Math.sin(this.clock * 0.7 * speed + entry.phase) * amplitude,
+                entry.y + Math.cos(this.clock * 0.85 * speed + entry.phase) * amplitude + entry.lift, angle, this.framePosition);
             entry.node.setPosition(position.x, position.y);
             entry.node.angle = angle;
             entry.node.setScale(entry.scale, entry.scale, 1);
@@ -856,6 +904,7 @@ export class FlowerPoolView {
                 entry.image.node.setScale(0.78 + 0.20 * Math.sin(this.clock * 6 + entry.phase), 1, 1);
             }
         }
+        this.promoteIdleFlowers();
     }
 
     /** Returns seconds until the final batch has settled; the caller owns busy state. */
