@@ -21,6 +21,10 @@ export interface OriginalLevel {
 interface OrderGroup { index: number; orderList: number[] }
 interface Tables { [key: string]: unknown[] }
 const flowerVariants = new Map<string, string[]>();
+const flowerSizes = new Map<string, number>();
+
+/** Original ItemDataConfig size multiplier, applied only to the pool sprite. */
+export function flowerLocalSize(kind: string): number { return flowerSizes.get(kind) ?? 1; }
 
 /** Some original species reuse their first image in their second/third slot. */
 export function flowerSpritePath(kind: string, variant = 1): string {
@@ -60,6 +64,7 @@ export class FlowerCatalog {
             result.flowers.set(flower.index, flower);
             result.flowersByKind.set(result.kind(flower), flower);
             flowerVariants.set(result.kind(flower), flower.flowerPrefabPath);
+            flowerSizes.set(result.kind(flower), flower.flowerSize);
         }
         for (const vase of catalog.tables.VaseInfoConfig as OriginalVase[]) result.vases.set(vase.index, vase);
         for (const row of catalog.tables.OrderLevelConfigB as OrderGroup[]) result.groups.set(row.index, row);

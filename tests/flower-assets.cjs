@@ -85,3 +85,9 @@ test('WeChat without a configured CDN reports the missing server while local cor
   const preview = harness({wechat: true, preview: true}); await preview.load('original/flower/a/spriteFrame');
   assert.deepEqual(preview.bundleRequests, ['flowers-01']);
 });
+
+ test('texture sub-assets use their parent bundle route and preserve the Texture2D request', async () => {
+ const h=harness({preview:true}),Texture2D=class Texture2D {};
+ const value=await h.load('original/flower/a/texture',Texture2D);
+ assert.equal(value.owner,'flowers-01');assert.equal(value.resource,'original/flower/a/texture');assert.equal(value.type,Texture2D);
+ });

@@ -1,0 +1,75 @@
+func 42817 locals []
+global.get 0
+i32.const 16
+i32.sub
+local.tee 1
+global.set 0
+i32.const 4366262
+i32.load8_u offset=0
+i32.eqz
+if -64
+i32.const 3359836
+call 2180
+i32.const 3395032
+call 2180
+i32.const 4366262
+i32.const 1
+i32.store8 offset=0
+end
+i32.const 3359836
+i32.load offset=0
+local.tee 0
+i32.load offset=116
+if -1
+local.get 0
+else
+local.get 0
+call 60460
+i32.const 3359836
+i32.load offset=0
+end
+i32.load offset=92
+i32.load offset=8
+local.get 1
+i32.const 12
+i32.add
+i32.const 3395032
+i32.load offset=0
+call 45693
+block -64
+local.get 1
+i32.load offset=12
+local.tee 0
+i32.const 6
+i32.lt_s
+br_if 0
+local.get 0
+i32.const 1
+i32.and
+br_if 0
+i32.const 4367037
+i32.load8_u offset=0
+i32.eqz
+if -64
+i32.const 3361232
+call 2180
+i32.const 4367037
+i32.const 1
+i32.store8 offset=0
+end
+i32.const 3361232
+i32.load offset=0
+i32.load offset=92
+i32.load offset=0
+local.tee 0
+i32.eqz
+br_if 0
+local.get 0
+i32.const 0
+call 43282
+end
+local.get 1
+i32.const 16
+i32.add
+global.set 0
+end

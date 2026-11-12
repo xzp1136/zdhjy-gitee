@@ -13,6 +13,7 @@ const compiled = new Map();
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
 function harness(options = {}) {
+  const viewportBindings = [];
   const modules = new Map(), requests = [], downloads = [], bundleRequests = [], cached = new Map(), failures = new Map(), delayed = new Map(), logs = [];
   class Vec3 { constructor(x = 0, y = 0, z = 0) { Object.assign(this, {x, y, z}); } }
   class Node {
@@ -80,7 +81,9 @@ function harness(options = {}) {
     vm.runInNewContext(compiled.get(name), {exports, console: {warn: (...args) => logs.push(args), error: (...args) => logs.push(args), info() {}}, setTimeout, clearTimeout,
       require(request) {
         if (request === 'cc') return cc;
-        if (request === './FlowerViewport') return require('./viewport-fixture.cjs');
+        if (request === './FlowerWater') return require('./water-fixture.cjs');
+        if (request === './FlowerViewport') return {...require('./viewport-fixture.cjs'),
+          bindFlowerViewport(owner, callback) {viewportBindings.push({owner, callback});callback(require('./viewport-fixture.cjs').getFlowerViewport());return () => {};}};
         if (request === 'cc/env') return {DEBUG: false, PREVIEW: true};
         if (request === './FlowerButtonMotion') return {FlowerButtonMotion: class {}};
         if (request.startsWith('./')) return load(request.slice(2));
@@ -112,6 +115,7 @@ function harness(options = {}) {
     setError(retry) { this.errors++; this.retry = retry; }, dispose() { this.disposed = true; this.root.destroy(); }};
   game.startupLoading = loading;
   return {game, loading, homeState, load, requests, downloads, bundleRequests, cached, failures, delayed, dialogs, logs, Node, storage,
+    resize(viewport) { for(const {owner,callback} of viewportBindings) if(owner.isValid) callback(viewport); },
     release(resource) { const jobs = delayed.get(resource); delayed.delete(resource); jobs.forEach(callback => queueMicrotask(callback)); }};
 }
 
@@ -277,4 +281,21 @@ test('production-transformed scene cancellation and order-entry iterate every ca
   h.game.enterBouquet = async slot => { entered.push(slot); return true; };
   await h.game.startLevel(1);
   assert.deepEqual(entered, [0, 1]); assert.equal(h.game.ready, true);
+});
+
+
+test('resizing short, tall and tablet views preserves world pool, flower and order geometry', async () => {
+  const h=harness();await h.game.loadStartup();await h.game.startLevel(2);
+  assert(h.game.ready,h.logs.flat().map(String).join('\n'));
+  const find=(root,name)=>root.name===name?root:root.children.map(child=>find(child,name)).find(Boolean);
+  const names=['WaterSurface','WaterCaustics','WoodenPool','FloatingFlowers','Orders','TemporarySlots','DisplayStand','OrderShadows'];
+  const snapshot=()=>names.map(name=>{const node=find(h.game.node,name);assert(node,name);return {name,y:node.position.y,height:node.components.find(c=>'width' in c)?.height};});
+  const baseline=snapshot(),rules=h.game.rules,flowers=JSON.stringify(rules.flowers),time=rules.remainingSeconds;
+  for(const [width,height] of [[750,1334],[750,844/390*750],[750,800/360*750],[1334*768/1024,1334]]){
+    h.resize({width,height,safeLeft:-width/2,safeRight:width/2,safeTop:height/2,safeBottom:-height/2,topShift:(height-1334)/2,bottomShift:(1334-height)/2,centerY:0});
+    assert.deepEqual(snapshot(),baseline,'viewport only changes backdrop width/cover and edge HUD');
+    assert.equal(h.game.rules,rules);assert.equal(JSON.stringify(rules.flowers),flowers);assert.equal(rules.remainingSeconds,time);
+  }
+  const water=find(h.game.node,'WaterSurface'),geometry=h.load('FlowerPool').ORIGINAL_POOL_GEOMETRY;
+  assert.equal(water.position.y,geometry.waterY);assert.equal(water.components.find(c=>'width' in c).width,geometry.waterWidth);
 });

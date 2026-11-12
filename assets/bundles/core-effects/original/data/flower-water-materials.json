@@ -1,0 +1,155 @@
+{
+  "source": "/Users/a7/Desktop/真的好解压_wx38b4f3dff4fbedf0/runtime-cache/d83724c5931a26b5.webgl.data.unityweb.bin",
+  "sourceSha256": "3f74128bbe4c7b8490e2b012f52c5b928dce1a940fff80eb5ade91571fb644b6",
+  "half": {
+    "waterCut": 0.5,
+    "cutSoftness": 0.004,
+    "cutTilt": 0.0,
+    "curveStrength": -0.050000001,
+    "curveCenter": 0.5,
+    "curveWidth": 0.949999988,
+    "curvePower": 1.5,
+    "waveStrength": 0.004,
+    "waveSpeed": 0.349999994,
+    "waveDensity": 1.799999952
+  },
+  "water": {
+    "sourceRendererPathId": 299,
+    "sourceMaterialPathId": 49,
+    "material": "WMat",
+    "floats": {
+      "_BaseDistortion": 0.032000002,
+      "_BumpScale": 1.0,
+      "_Cutoff": 0.5,
+      "_DetailNormalMapScale": 1.0,
+      "_DetailStrength": 0.649999976,
+      "_DstBlend": 0.0,
+      "_EdgeAlphaFloat": 0.649999976,
+      "_EdgeFloatStrength": 0.899999976,
+      "_EdgeProtectWidth": 0.050000001,
+      "_FlowTimeScale": 0.680000007,
+      "_GlossMapScale": 1.0,
+      "_Glossiness": 0.5,
+      "_GlossyReflections": 1.0,
+      "_HighlightSoftness": 0.100000001,
+      "_HighlightStrength": 0.039999999,
+      "_HighlightThreshold": 0.779999971,
+      "_Metallic": 0.0,
+      "_Mode": 0.0,
+      "_OcclusionStrength": 1.0,
+      "_Parallax": 0.02,
+      "_Perspective": 0.159999996,
+      "_ShowUnderWater": 0.0,
+      "_SmoothnessTextureChannel": 0.0,
+      "_SourceAlphaMax": 0.600000024,
+      "_SpecularHighlights": 1.0,
+      "_SrcBlend": 1.0,
+      "_UVSec": 0.0,
+      "_UnderWaterAlpha": 0.819999993,
+      "_UnderWaterWaveDensity": 9.0,
+      "_UnderWaterWaveSpeed": 0.800000012,
+      "_UnderWaterWaveStrength": 0.003,
+      "_UseReflectionDistort": 1.0,
+      "_WaterAlpha": 0.860000014,
+      "_WaterCut": 0.5,
+      "_WaterFloatScale": 2.0,
+      "_WaterFloatSpeed": 0.239999995,
+      "_WaterFloatStrength": 0.006,
+      "_WaterLineSoftness": 0.008,
+      "_ZWrite": 1.0
+    },
+    "colors": {
+      "_Color": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 0.713725507
+      },
+      "_DetailSpeed": {
+        "r": -0.017000001,
+        "g": 0.014,
+        "b": 0.0,
+        "a": 0.0
+      },
+      "_DetailTiling": {
+        "r": 2.400000095,
+        "g": 3.0,
+        "b": 0.0,
+        "a": 0.0
+      },
+      "_EmissionColor": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 0.0,
+        "a": 1.0
+      },
+      "_FlowSpeed": {
+        "r": 0.022,
+        "g": 0.007,
+        "b": 0.0,
+        "a": 0.0
+      },
+      "_FlowTiling": {
+        "r": 1.0,
+        "g": 1.200000048,
+        "b": 0.0,
+        "a": 0.0
+      },
+      "_HighlightColor": {
+        "r": 0.333333343,
+        "g": 0.729411781,
+        "b": 0.87843138,
+        "a": 1.0
+      },
+      "_SpriteUVRect": {
+        "r": 0.0,
+        "g": 0.0,
+        "b": 1.0,
+        "a": 1.0
+      },
+      "_UnderWaterTint": {
+        "r": 0.600000024,
+        "g": 0.879999995,
+        "b": 0.949999988,
+        "a": 1.0
+      },
+      "_WaterColor": {
+        "r": 1.0,
+        "g": 1.0,
+        "b": 1.0,
+        "a": 1.0
+      }
+    },
+    "keywords": [
+      "USE_REFLECTION_DISTORT"
+    ],
+    "mainTextureSize": [
+      996,
+      1077
+    ],
+    "spriteRect": {
+      "x": 0.0,
+      "y": 0.0,
+      "width": 996.0,
+      "height": 1077.0
+    },
+    "textures": {
+      "_DetailTex": {
+        "resource": "original/materials/water-detail",
+        "sourcePathId": 703,
+        "name": "Perlin",
+        "wrapU": 0,
+        "wrapV": 0,
+        "filter": 1
+      },
+      "_FlowTex": {
+        "resource": "original/materials/water-flow",
+        "sourcePathId": 537,
+        "name": "DisplacementDetail2",
+        "wrapU": 0,
+        "wrapV": 0,
+        "filter": 1
+      }
+    }
+  }
+}

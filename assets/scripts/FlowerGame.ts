@@ -9,7 +9,7 @@ import { FlowerLoadingView } from './FlowerLoading';
 import { runStartupTasks } from './FlowerStartup';
 import { FlowerCatalog, flowerSpritePath } from './FlowerCatalog';
 import { FlowerBouquetView, preloadBouquets } from './FlowerBouquet';
-import { FlowerPoolBounds, FlowerPoolView } from './FlowerPool';
+import { ORIGINAL_POOL_GEOMETRY, FlowerPoolView } from './FlowerPool';
 import { FlowerEffectHandle, FlowerEffects } from './FlowerEffects';
 import { createWinResult, preloadWinResult } from './FlowerResults';
 import { createPause, preloadPause } from './FlowerPause';
@@ -111,12 +111,12 @@ export class FlowerGame extends Component {
     private clock = 0;
     private catalog: FlowerCatalog | null = null;
     private pool: FlowerPoolView | null = null;
-    private poolBounds: FlowerPoolBounds | null = null;
     private orderEffects: FlowerEffects | null = null;
     private toolsRoot!: Node;
     private ordersRoot!: Node;
     private trayRoot!: Node;
     private flowerRoot!: Node;
+    private belowWaterRoot!: Node;
     private hud!: Node;
     private topHud!: Node;
     private timer!: Label;
@@ -176,6 +176,12 @@ export class FlowerGame extends Component {
             if (!current()) return;
             this.startupLoading = null;
             // Development-only entry for exercising the real time-out flow.
+            if (DEBUG && sys.isBrowser && this.rules && new URLSearchParams(window.location.search).get('previewState') === 'win') {
+                // Presentation-only preview: no wallet/progress/reward mutations.
+                this.paused = true;
+                await createWinResult(this.content,level,level === 2 ? 105 : 3,10,
+                    () => { void this.startLevel(level + 1); });
+            }
             if (DEBUG && sys.isBrowser && this.rules && new URLSearchParams(window.location.search).get('previewState') === 'time') {
                 this.rules.tick(this.rules.remainingSeconds); this.updateHUD(); void this.endLevel();
             }
@@ -384,17 +390,19 @@ export class FlowerGame extends Component {
             board.active = false;
             const shop = await buildSprite(board, 'FlowerShop', A + 'background/background', 0, 435, 750, 600);
             // Original view crops the room above the wooden display stand.
-            const pool = await buildSprite(board, 'WoodenPool', A + 'background/poor', 0, -277, 1000, 1160);
+            const geometry = ORIGINAL_POOL_GEOMETRY;
+            const pool = await buildSprite(board, 'WoodenPool', A + 'background/poor', 0, geometry.woodY, geometry.woodWidth, geometry.woodHeight);
             const frame = pool.getComponent(Sprite)!.spriteFrame!.clone();
             frame.insetLeft = 155; frame.insetRight = 155; frame.insetTop = 110; frame.insetBottom = 314;
             pool.getComponent(Sprite)!.spriteFrame = frame;
             pool.getComponent(Sprite)!.type = Sprite.Type.SLICED;
             pool.on(Node.EventType.NODE_DESTROYED, () => frame.destroy());
-            const waterMask = uiNode(board, 'WaterSurface', 0, -175, 686, 744);
+            this.belowWaterRoot=uiNode(board,'UnderwaterFlowers');
+            const waterMask = uiNode(board, 'WaterSurface', 0, geometry.waterY, geometry.waterWidth, geometry.waterHeight);
             const mask = waterMask.addComponent(Mask); mask.type = Mask.Type.GRAPHICS_STENCIL;
-            const shape = mask.subComp as Graphics; shape.clear(); shape.roundRect(-343, -372, 686, 744, 42); shape.fill();
-            this.water = await buildSprite(waterMask, 'WaterCaustics', A + 'water/water', 0, 0, 705, 770);
-            fade(this.water, 172);
+            const shape = mask.subComp as Graphics; shape.clear(); shape.roundRect(-geometry.waterWidth / 2, -geometry.waterHeight / 2, geometry.waterWidth, geometry.waterHeight, 42); shape.fill();
+            this.water = await buildSprite(waterMask, 'WaterCaustics', A + 'water/water', 0, 0, geometry.waterWidth, geometry.waterHeight);
+            // Original WMat shader supplies alpha/color; no extra opacity tween.
             const stand = await buildSprite(board, 'DisplayStand', A + 'background/displaystand', 0, 338, 750, 72);
             const shadows = await buildSprite(board, 'OrderShadows', A + 'background/shadow', 0, 337, 705, 43);
             this.ordersRoot = uiNode(board, 'Orders');
@@ -406,42 +414,26 @@ export class FlowerGame extends Component {
             this.hud = uiNode(board, 'HUD');
             this.topHud = uiNode(this.hud, 'TopHUD');
             this.toolsRoot = uiNode(this.hud, 'Tools');
-            // Move common anchors, keeping artwork, tap roots and pool physics
-            // in their original local units. The HUD overlay itself stays fixed.
+            // World artwork/anchors stay fixed as in CameraWidthAdapter. Only
+            // edge HUD and room backdrop adapt; viewport size never changes density.
             bindFlowerViewport(board, viewport => {
                 if (!this.current(rev)) return;
                 const { topShift: top, bottomShift: bottom } = viewport;
-                const poolShift = Math.max(bottom, Math.min((top + bottom) / 2, top + 76));
                 // Keep the counters above the tallest fitted bouquet, while the
                 // pause button remains inside the notch/capsule safe boundary.
                 this.topHud.setPosition(0, top + Math.min(40, Math.max(0, viewport.safeTop - top - 611)), 0);
-                this.ordersRoot.setPosition(0, top, 0);
-                this.trayRoot.setPosition(0, top, 0);
+                this.ordersRoot.setPosition(0, 0, 0);
+                this.trayRoot.setPosition(0, 0, 0);
                 this.toolsRoot.setPosition(0, bottom, 0);
-                this.flowerRoot.setPosition(0, poolShift, 0);
-                orderEffects.root.setPosition(0, top, 0);
-                const waterWidth = Math.max(1, 686 + viewport.width - 750);
-                const waterHeight = Math.max(1, 744 + top - bottom);
-                waterMask.getComponent(UITransform)!.setContentSize(waterWidth, waterHeight);
-                waterMask.setPosition(0, -175 + (top + bottom) / 2, 0);
-                const waterY = waterMask.position.y - poolShift;
-                this.poolBounds = {left: -waterWidth / 2 + 12, right: waterWidth / 2 - 12,
-                    bottom: Math.max(waterY - waterHeight / 2 + 12, -585 + bottom - poolShift + 76),
-                    top: waterY + waterHeight / 2 - 12};
-                this.pool?.setBounds(this.poolBounds);
-                shape.clear();
-                shape.roundRect(-waterWidth / 2, -waterHeight / 2, waterWidth, waterHeight, Math.min(42, waterHeight / 2, waterWidth / 2));
-                shape.fill();
-                this.water!.getComponent(UITransform)!.setContentSize(waterWidth + 19, waterHeight + 26);
+                this.flowerRoot.setPosition(0, 0, 0);
+                orderEffects.root.setPosition(0, 0, 0);
                 stand.getComponent(UITransform)!.setContentSize(viewport.width, 72);
-                stand.setPosition(0, 338 + top, 0);
-                shadows.setPosition(0, 337 + top, 0);
-                const roofBottom = 135 + top;
+                stand.setPosition(0, 338, 0);
+                shadows.setPosition(0, 337, 0);
+                const roofBottom = 135;
                 const ratio = Math.max(viewport.width / 750, (viewport.height / 2 - roofBottom) / 600);
                 shop.getComponent(UITransform)!.setContentSize(750 * ratio, 600 * ratio);
                 shop.setPosition(0, roofBottom + 300 * ratio, 0);
-                pool.getComponent(UITransform)!.setContentSize(Math.max(1000, viewport.width + 250), 1160 + top - bottom);
-                pool.setPosition(0, -277 + (top + bottom) / 2, 0);
                 this.positionGuide();
             });
             await this.buildHUD(); if (!this.current(rev)) return;
@@ -650,9 +642,9 @@ export class FlowerGame extends Component {
     private async spawnFlowers() {
         const rev = this.revision, rules = this.rules!;
         const pool = await FlowerPoolView.create(this.flowerRoot, rules.flowers, rules.level,
-            id => { if (this.current(rev)) void this.collect(id); }, rules.layerMaxCounts);
+            id => { if (this.current(rev)) void this.collect(id); }, rules.layerMaxCounts, this.belowWaterRoot);
         if (!this.current(rev)) { pool.dispose(); return; }
-        if (this.poolBounds) pool.setBounds(this.poolBounds);
+        pool.setWaterSurface(this.water!.getComponent(Sprite)!);
         pool.setSurfaceListener(flower => {
             if (!this.current(rev)) return;
             const name = this.catalog?.flowersByKind.get(flower.kind)?.playUpSound;
@@ -845,13 +837,16 @@ export class FlowerGame extends Component {
             node?.destroy();
             if (event.from === 'buffer' || event.to === 'buffer' || event.to === 'waiting') await this.renderTray();
             this.updateHUD();
-            if (event.to === 'order' && landingBouquet && landingEffectPoint) {
-                // Original DelayPlayFlowerSpineEffect yields one frame. Do not
-                // delay the group pulse or attach this effect to the flying PNG.
+            if (event.to === 'order' && landingBouquet && landingEffectPoint && this.orderEffects) {
+                // Capture before the next event can replace/destroy this vase.
+                // Original one-frame-delayed landing FX are independent objects.
+                const effects = this.orderEffects;
+                const point = this.mapPoint(landingBouquet.root,
+                    new Vec3(landingEffectPoint.x, landingEffectPoint.y, 0), effects.root);
                 void this.waitFor(0).then(current => {
-                    if (!current || !landingBouquet.root.isValid) return;
+                    if (!current || effects !== this.orderEffects) return;
                     this.sound('flowerhit');
-                    this.orderEffects?.play('landing', landingBouquet.root, landingEffectPoint);
+                    effects.playAt('landing', point);
                 });
             }
             if (completesGroup) {
@@ -892,7 +887,7 @@ export class FlowerGame extends Component {
         this.clock += dt;
         const entering = this.pool?.entering;
         this.pool?.update(dt);
-        if (this.water) { this.water.setPosition(Math.sin(this.clock * 0.22) * 5, Math.cos(this.clock * 0.18) * 5); this.water.getComponent(UIOpacity)!.opacity = 168 + Math.sin(this.clock * 0.7) * 9; }
+        if (this.hand?.isValid) this.positionGuide();
         if (entering && !this.pool?.entering) this.finishEntrance?.();
         // GamePlay.MoveNext (41073) yields one frame, then starts the countdown
         // while the flower creation coroutine is still playing.

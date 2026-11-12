@@ -1,30 +1,39 @@
+import { FlowerPhysics } from './FlowerPhysics';
+import { FlowerWaterRenderer } from './FlowerWater';
 import { loadFlowerAsset } from './FlowerAssets';
 import { Color, EventTouch, JsonAsset, Node, Sprite, SpriteFrame, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
 import { FlowerPiece } from './FlowerRules';
-import { flowerSpritePath } from './FlowerCatalog';
+import { flowerLocalSize, flowerSpritePath } from './FlowerCatalog';
 import { loadFrame, uiNode } from './FlowerUI';
 
-const LEFT = -325, RIGHT = 325, BOTTOM = -520, TOP = 130;
+// Unity CameraWidthAdapter: 10.8 world units across the 750-unit reference view.
+// level2/BackGround: Water (996x1077 @ 100 PPU), walls' INNER edges,
+// and pool (877x1024 @ 61.072422 PPU). These never resize with the viewport.
+const WORLD_UNIT = 750 / 10.8;
+export const ORIGINAL_POOL_GEOMETRY = Object.freeze({
+    waterWidth: 9.96 * WORLD_UNIT, waterHeight: 10.77 * WORLD_UNIT, waterY: -2.51 * WORLD_UNIT,
+    woodWidth: 877 / 61.07242202758789 * WORLD_UNIT,
+    woodHeight: 1024 / 61.07242202758789 * WORLD_UNIT, woodY: -4.06 * WORLD_UNIT,
+    left: -4.25 * WORLD_UNIT, right: 4.25 * WORLD_UNIT,
+    bottom: (-2.51 - 4.64) * WORLD_UNIT, top: (-2.51 + 4.64) * WORLD_UNIT,
+});
 const SURFACE_COUNT = 21;
 const PREVIEW_COUNT = 16;
 const DESIGN_SCALE = 750 / 1052;
 const WHITE = new Color(255, 255, 255, 255);
-const UNDERWATER = new Color(208, 225, 225, 255);
 const LAYER_SCALE = [1, 0.9, 0.8, 0.7];
-const LAYER_ALPHA = [255, 150, 95, 0];
+const LAYER_ALPHA = [255, 255, 255, 0];
 // One pixel-to-design conversion preserves the size differences between the
 // original flower sprites, instead of fitting every species to the same box.
-const FLOWER_PIXEL_SCALE = 0.6;
-const SURFACE_FILL_RATIO = 0.68;
-const NEAR_RADIUS = 190;
+const FLOWER_PIXEL_SCALE = WORLD_UNIT / 100;
+const NEAR_RADIUS = 1.3 * WORLD_UNIT;
 const MOTION_RESPONSE = 9;
 const SHUFFLE_GATHER_TIME = 0.28;
 const SHUFFLE_BATCH_INTERVAL = 0.05;
 const SHUFFLE_SETTLE_TIME = 0.35;
 
 type Point = { x: number; y: number };
-export type FlowerPoolBounds = { left: number; right: number; bottom: number; top: number };
-type ScatterTarget = Point & { at: number };
+type ScatterTarget = Point & { at: number; fromX?: number; fromY?: number };
 type MotionData = {
     flowerManager: { values: Record<string, number> };
     spawn: { batchSizeMinInclusive: number; batchSizeMaxExclusive: number; batchInterval: number;
@@ -191,13 +200,14 @@ export type FlowerClickShape =
     | { type: 'polygon'; paths: number[][][] }
     | { type: 'ellipse'; center: number[]; axisX: number[]; axisY: number[] };
 type FlowerClickShapes = Record<string, FlowerClickShape>;
-let clickShapes: Promise<FlowerClickShapes> | null = null;
+type ClickShapeData = { shapes: FlowerClickShapes };
+let clickShapes: Promise<ClickShapeData> | null = null;
 
-function loadClickShapes(): Promise<FlowerClickShapes> {
+function loadClickShapes(): Promise<ClickShapeData> {
     if (!clickShapes) clickShapes = new Promise((resolve, reject) => {
         loadFlowerAsset('original/data/flower-click-shapes', JsonAsset, (error, asset) => {
             if (error) { clickShapes = null; reject(error); }
-            else resolve((asset.json as { shapes: FlowerClickShapes }).shapes);
+            else resolve(asset.json as ClickShapeData);
         });
     });
     return clickShapes;
@@ -240,6 +250,9 @@ type PoolEntry = {
     rippleStart: number;
     ripplePlayers: { player: RipplePlayer; phase: number; speed: number }[];
     hitShape: FlowerClickShape;
+    physicalScale: number;
+    initialImpulse: Point;
+    physicsResumeAt: number;
     width: number;
     height: number;
     anchorX: number;
@@ -254,11 +267,9 @@ type PoolEntry = {
     layerOrder: number;
     alpha: number;
     scale: number;
-    lift: number;
     bornAt: number;
     entranceAt: number | null;
     promotion: PromotionMotion | null;
-    floatResume: number;
     revealPending: boolean;
 };
 
@@ -290,6 +301,8 @@ export class FlowerPoolView {
     private readonly pendingReveals = new Map<string, { promise: Promise<Node | null>; allowCollected: boolean }>();
     private readonly takenIds = new Set<string>();
     private shapes: FlowerClickShapes = {};
+    private physics!: FlowerPhysics;
+    private waterRenderer!: FlowerWaterRenderer;
     private ripples!: RippleData;
     private motion!: MotionData;
     private ordered: PoolEntry[] = [];
@@ -299,14 +312,12 @@ export class FlowerPoolView {
     private entranceStarted = false;
     private entranceUntil = 0;
     private scatterTargets = new Map<PoolEntry, ScatterTarget>();
-    private readonly framePosition: Point = { x: 0, y: 0 };
     private readonly surfaceCount: number;
     private readonly firstLevel: boolean;
     private readonly configuredLayers: boolean;
     private readonly layerMaxCounts: number[];
     private nextLayerOrder = 0;
     private nextAutoPromotion = 0;
-    private bounds: FlowerPoolBounds = {left: LEFT, right: RIGHT, bottom: BOTTOM, top: TOP};
     private motionRandom = randomGenerator(seedOf('flower-pool-motion'));
     private surfaceListener: ((flower: FlowerPiece) => void) | null = null;
     private readonly touchStart = () => {};
@@ -337,8 +348,11 @@ export class FlowerPoolView {
         // Limit the listener to the water, so it cannot intercept the older
         // order-slot buttons above it. HUD and modal siblings remain in front.
         const transform = this.root.getComponent(UITransform)!;
-        transform.setContentSize(RIGHT - LEFT, TOP - BOTTOM);
-        transform.setAnchorPoint(-LEFT / (RIGHT - LEFT), -BOTTOM / (TOP - BOTTOM));
+        // Flowers can extend past a physical wall by their visible petals. Route
+        // input over the entire water, independently of the wall-body envelope.
+        const geometry = ORIGINAL_POOL_GEOMETRY;
+        transform.setContentSize(geometry.waterWidth, geometry.waterHeight);
+        transform.setAnchorPoint(0.5, 0.5 - geometry.waterY / geometry.waterHeight);
         this.root.on(Node.EventType.TOUCH_START, this.touchStart);
         this.root.on(Node.EventType.TOUCH_END, this.touchEnd);
         this.firstLevel = level === 1 && count <= 9;
@@ -358,47 +372,6 @@ export class FlowerPoolView {
         return ids;
     }
     get layerCounts(): readonly number[] { return [0, 1, 2, 3].map(layer => this.inLayer(layer).length); }
-
-    /** The water stretches on tall phones/tablets; input, packing and capacity
-     * must use that same rectangle rather than a fixed square in its center. */
-    setBounds(bounds: FlowerPoolBounds): void {
-        if (this.disposed || !Object.values(bounds).every(Number.isFinite)
-            || bounds.right - bounds.left < 300 || bounds.top - bounds.bottom < 300) return;
-        const old = this.bounds;
-        if (Object.keys(bounds).every(key => bounds[key] === old[key])) return;
-        const mapX = (x: number) => bounds.left + (x - old.left) / (old.right - old.left) * (bounds.right - bounds.left);
-        const mapY = (y: number) => bounds.bottom + (y - old.bottom) / (old.top - old.bottom) * (bounds.top - bounds.bottom);
-        this.bounds = {...bounds};
-        for (const entry of this.ordered) {
-            const target = this.limit(entry, mapX(entry.anchorX), mapY(entry.anchorY), entry.angle);
-            entry.anchorX = target.x; entry.anchorY = target.y;
-            const current = this.limit(entry, mapX(entry.x), mapY(entry.y), entry.angle);
-            entry.x = current.x; entry.y = current.y; entry.node.setPosition(entry.x, entry.y);
-            if (entry.promotion) {
-                entry.promotion.fromX = mapX(entry.promotion.fromX);
-                entry.promotion.fromY = mapY(entry.promotion.fromY);
-            }
-            const scatter = this.scatterTargets.get(entry);
-            if (scatter) { scatter.x = mapX(scatter.x); scatter.y = mapY(scatter.y); }
-        }
-        const transform = this.root.getComponent(UITransform)!;
-        transform.setContentSize(bounds.right - bounds.left, bounds.top - bounds.bottom);
-        transform.setAnchorPoint(-bounds.left / (bounds.right - bounds.left), -bounds.bottom / (bounds.top - bounds.bottom));
-    }
-
-    private flowerArea(entry: PoolEntry): number {
-        // Reserve the resting surface size, including flowers still scaling in
-        // or rising from .8/.9 depth scale. Animation must not create capacity.
-        return entry.width * entry.height * 0.48;
-    }
-
-    private surfaceCapacity(): number {
-        return (this.bounds.right - this.bounds.left) * (this.bounds.top - this.bounds.bottom) * SURFACE_FILL_RATIO;
-    }
-
-    private surfaceArea(extra?: PoolEntry): number {
-        return this.inLayer(0).reduce((sum, entry) => sum + this.flowerArea(entry), extra ? this.flowerArea(extra) : 0);
-    }
 
     /** Original SpawnFlower: 3–4 pieces per .05s batch, four layers round-robin. */
     playEntrance(): number {
@@ -434,19 +407,21 @@ export class FlowerPoolView {
         return duration;
     }
 
-    static async create(parent: Node, flowers: FlowerPiece[], level: number, onSelect: (id: string) => void, layerMaxCounts?: number[]): Promise<FlowerPoolView> {
+    static async create(parent: Node, flowers: FlowerPiece[], level: number, onSelect: (id: string) => void, layerMaxCounts?: number[], belowWater?: Node): Promise<FlowerPoolView> {
         const available = flowers.filter(flower => flower.status === 'pool');
         if (new Set(available.map(flower => flower.id)).size !== available.length) throw new Error('Pool flower IDs must be unique.');
         const pool = new FlowerPoolView(parent, level, onSelect, available.length, layerMaxCounts);
         try {
             const paths = Array.from(new Set(available.map(flower => pool.path(flower))));
             if (available.some(flower => flower.specialId)) paths.push('original/butterfly/qipao');
-            const [loaded, shapes, ripples, motion] = await Promise.all([
-                Promise.all(paths.map(async path => [path, await loadFrame(path)] as const)), loadClickShapes(), loadRippleData(), loadMotionData(),
+            const [loaded, shapes, ripples, motion, physics] = await Promise.all([
+                Promise.all(paths.map(async path => [path, await loadFrame(path)] as const)), loadClickShapes(), loadRippleData(), loadMotionData(), FlowerPhysics.preload(),
             ]);
             if (!parent.isValid) throw new Error('The flower pool parent was destroyed while loading.');
             const frames = new Map<string, SpriteFrame>(loaded);
-            pool.shapes = shapes;
+            pool.shapes = shapes.shapes;
+            pool.physics = new FlowerPhysics(parent,physics,randomGenerator(seedOf(`flower-physics:${level}`)));
+            pool.waterRenderer = await FlowerWaterRenderer.create(belowWater ?? uiNode(parent,'BelowWater'));
             pool.ripples = ripples;
             pool.motion = motion;
             pool.motionRandom = randomGenerator(seedOf(`flower-pool:${level}:motion`));
@@ -471,27 +446,13 @@ export class FlowerPoolView {
                 entry.layerOrder = pool.nextLayerOrder++;
                 const nearby = pool.inLayer(entry.band);
                 const position = observed ?? pool.choosePosition(entry, nearby, random);
-                const bounded = pool.limit(entry, position.x, position.y, entry.angle);
-                entry.x = entry.anchorX = bounded.x;
-                entry.y = entry.anchorY = bounded.y;
+                entry.x = entry.anchorX = position.x;
+                entry.y = entry.anchorY = position.y;
                 entry.node.setPosition(entry.x, entry.y);
                 pool.ordered.push(entry);
                 pool.entries.set(flower.id, entry);
                 pool.nodes.set(flower.id, entry.node);
-            }
-            if (!pool.firstLevel) {
-                // Input order interleaves layers. Lay out the complete foreground
-                // first so every submerged flower can avoid its actual cover.
-                for (const layer of [0, 1, 2, 3]) {
-                    const placed: PoolEntry[] = [];
-                    for (const entry of pool.inLayer(layer)) {
-                        const point = pool.choosePosition(entry, placed, random);
-                        entry.x = entry.anchorX = point.x; entry.y = entry.anchorY = point.y;
-                        entry.node.setPosition(point.x, point.y);
-                        placed.push(entry);
-                    }
-                }
-                pool.repackSurface();
+                pool.addPhysics(entry);
             }
             pool.refreshBands(true);
             return pool;
@@ -503,7 +464,7 @@ export class FlowerPoolView {
 
     /** Warm the original shapes, motion tracks and frames without creating nodes. */
     static async preload(flowers: readonly FlowerPiece[]): Promise<void> {
-        const [ripples] = await Promise.all([loadRippleData(), loadClickShapes(), loadMotionData()]);
+        const [ripples] = await Promise.all([loadRippleData(), loadClickShapes(), loadMotionData(), FlowerPhysics.preload(), FlowerWaterRenderer.preload()]);
         const paths = new Set(flowers.map(flower => flowerSpritePath(flower.kind, flower.variant)));
         if (flowers.some(flower => flower.specialId)) paths.add('original/butterfly/qipao');
         for (const path of Object.keys(ripples.sprites)) paths.add(path);
@@ -557,13 +518,13 @@ export class FlowerPoolView {
         entry.band = 2; entry.displayedBand = 3;
         entry.layerOrder = this.nextLayerOrder++;
         const position = this.choosePosition(entry, this.inLayer(2), random);
-        const bounded = this.limit(entry, position.x, position.y, entry.angle);
-        entry.x = entry.anchorX = bounded.x; entry.y = entry.anchorY = bounded.y;
+        entry.x = entry.anchorX = position.x; entry.y = entry.anchorY = position.y;
         entry.node.setPosition(entry.x, entry.y);
         this.ordered.push(entry);
         this.entries.set(flower.id, entry); this.nodes.set(flower.id, entry.node);
+        this.addPhysics(entry);
         // A released difficulty flower uses the same vacancy rule as a click:
-        // if the surface has room by occupied area, it rises into the visible
+        // if the surface has room under its configured count, it rises into the visible
         // layer immediately and keeps the original promotion animation.
         entry.revealPending = true;
         this.refreshBands();
@@ -588,8 +549,12 @@ export class FlowerPoolView {
         if (!(original.width > 0 && original.height > 0)) throw new Error(`Invalid flower dimensions: ${flower.kind}`);
         const hitShape = this.shapes[this.path(flower)];
         if (!hitShape) throw new Error(`Missing original flower click shape: ${this.path(flower)}`);
-        const width = flower.specialId ? 126 : original.width * FLOWER_PIXEL_SCALE;
-        const height = flower.specialId ? 132 : original.height * FLOWER_PIXEL_SCALE;
+        // SetFlower (44354): species size * Random.Range(.92, 1.08).
+        // Separate seed keeps the existing layout/motion random stream stable.
+        const sizeRandom = randomGenerator(seedOf(`flower-size:${this.level}:${flower.id}`));
+        const pixelScale = FLOWER_PIXEL_SCALE * flowerLocalSize(flower.kind) * (0.92 + sizeRandom() * 0.16);
+        const width = flower.specialId ? 126 : original.width * pixelScale;
+        const height = flower.specialId ? 132 : original.height * pixelScale;
         const node = uiNode(this.root, `Flower-${flower.id}`, 0, 0, width, height);
         const ripple = uiNode(node, 'Ripple', 0, 0, width, height);
         if (flower.specialId && bubbleFrame) {
@@ -604,13 +569,14 @@ export class FlowerPoolView {
         const opacity = art.addComponent(UIOpacity);
         image.sizeMode = Sprite.SizeMode.CUSTOM;
         image.spriteFrame = frame;
-        const angle = flower.kind === 'cdcs_jyc' ? [-12, -48, 18][flower.variant - 1] : (random() - 0.5) * 24;
+        const angle = this.firstLevel ? (flower.kind === 'cdcs_jyc' ? [-12, -48, 18][flower.variant - 1] : (random()-.5)*24)
+            : -180 + random()*360; // Original SetFlower / 44354 quaternion Z rotation.
         const entry: PoolEntry = {
-            flower, node, image, opacity, ripple, hitShape,
+            flower, node, image, opacity, ripple, hitShape, physicalScale: pixelScale/FLOWER_PIXEL_SCALE, initialImpulse: {x:0,y:0}, physicsResumeAt: 0,
             rippleProfile: this.ripples.prefabs[this.path(flower)], rippleStage: 'none', rippleBand: 3, rippleStart: 0, ripplePlayers: [],
             width, height, anchorX: 0, anchorY: 0, x: 0, y: 0,
-            phase: random() * Math.PI * 2, angle, band: 0, displayedBand: -1, visualBand: 0, layerOrder: 0, alpha: 0, scale: 1, lift: 0,
-            bornAt: this.clock, entranceAt: null, promotion: null, floatResume: -Infinity, revealPending: false,
+            phase: random() * Math.PI * 2, angle, band: 0, displayedBand: -1, visualBand: 0, layerOrder: 0, alpha: 0, scale: 1,
+            bornAt: this.clock, entranceAt: null, promotion: null, revealPending: false,
         };
         node.angle = angle;
         return entry;
@@ -669,42 +635,16 @@ export class FlowerPoolView {
             (this.clock - entry.rippleStart) * instance.speed + instance.phase);
     }
 
-    private limit(entry: PoolEntry, x: number, y: number, angle: number, out: Point = { x: 0, y: 0 }): Point {
-        const radians = angle * Math.PI / 180;
-        const cosine = Math.abs(Math.cos(radians)), sine = Math.abs(Math.sin(radians));
-        const halfWidth = (cosine * entry.width + sine * entry.height) / 2 + 12;
-        const halfHeight = (sine * entry.width + cosine * entry.height) / 2 + 12;
-        out.x = clamp(x, this.bounds.left + halfWidth, this.bounds.right - halfWidth);
-        out.y = clamp(y, this.bounds.bottom + halfHeight, this.bounds.top - halfHeight);
-        return out;
+    private addPhysics(entry: PoolEntry): void {
+        this.physics.add(entry.flower.id,this.path(entry.flower),entry.x,entry.y,entry.angle,entry.physicalScale,entry.band,entry.initialImpulse);
     }
+    setWaterSurface(sprite: Sprite): void { this.waterRenderer.applySurface(sprite); }
 
-    /** Best-candidate sampling makes each layer irregular but evenly spread. */
-    private choosePosition(entry: PoolEntry, existing: PoolEntry[], random: () => number): Point {
-        let best: Point = { x: 0, y: -195 }, bestScore = -Infinity;
-        const foreground = this.ordered.filter(other => other !== entry && other.band < entry.band && other.band < 3);
-        for (let trial = 0; trial < 48; trial++) {
-            const bounds = this.bounds;
-            const candidate = this.limit(entry, bounds.left + random() * (bounds.right - bounds.left),
-                bounds.bottom + random() * (bounds.top - bounds.bottom), entry.angle);
-            let score = Infinity;
-            for (const other of existing) {
-                const dx = candidate.x - other.anchorX, dy = candidate.y - other.anchorY;
-                const radius = (Math.min(entry.width, entry.height) + Math.min(other.width, other.height)) * 0.5;
-                score = Math.min(score, (dx * dx + dy * dy) / (radius * radius));
-            }
-            // Place submerged flowers in visible gaps as well as spacing them
-            // within their own layer. A softer radius still permits depth overlap.
-            for (const other of foreground) {
-                const dx = candidate.x - other.anchorX, dy = candidate.y - other.anchorY;
-                const radius = (Math.min(entry.width, entry.height) + Math.min(other.width, other.height)) * 0.3;
-                score = Math.min(score, (dx * dx + dy * dy) / (radius * radius));
-            }
-            // Tie-breaking is also seeded, including an empty layer's first point.
-            if (!existing.length && !foreground.length) score = random();
-            if (score > bestScore) { bestScore = score; best = candidate; }
-        }
-        return best;
+    /** Original 41043 + 44354 spawn rectangle and circular jitter. No farthest-
+     * point spreading, PNG wall clamps or hand-written neighbour repacking. */
+    private choosePosition(entry: PoolEntry, _existing: PoolEntry[], _random: () => number): Point {
+        const spawn=this.physics.spawn();entry.initialImpulse=spawn.impulse;
+        return {x:spawn.x,y:spawn.y};
     }
 
     private refreshBands(initial = false): void {
@@ -715,8 +655,8 @@ export class FlowerPoolView {
             if (!entry.promotion) entry.visualBand = band;
             entry.node.active = band < 3 && (entry.entranceAt === null || this.clock >= entry.entranceAt)
                 && (!entry.promotion || entry.promotion.sourceBand !== 3 || this.clock >= entry.promotion.start);
-            entry.image.grayscale = entry.visualBand !== 0;
-            entry.image.color = entry.visualBand === 0 ? WHITE : UNDERWATER;
+            entry.image.grayscale = false;
+            entry.image.color = WHITE;
             if (initial || (previous !== band && !entry.promotion)) this.startRipple(entry, initial);
             if (initial) {
                 entry.alpha = LAYER_ALPHA[band];
@@ -743,6 +683,8 @@ export class FlowerPoolView {
         const index = this.ordered.indexOf(entry);
         this.ordered.splice(index, 1);
         this.entries.delete(id); this.nodes.delete(id);
+        this.physics.remove(id);
+        this.waterRenderer.take(id,entry.image);
         this.scatterTargets.delete(entry);
         this.takenIds.add(id);
         Tween.stopAllByTarget(entry.node);
@@ -753,7 +695,6 @@ export class FlowerPoolView {
         this.releaseRipple(entry);
         const bubble = entry.node.getChildByName('Bubble'); if (bubble) bubble.active = false;
         this.refillVacancy(removedLayer, { x: entry.anchorX, y: entry.anchorY });
-        if (removedLayer === 0) this.repackSurface();
         this.refreshBands();
         // Keep ownership and coordinates stable for the caller's flight tween.
         entry.node.setSiblingIndex(this.root.children.length - 1);
@@ -764,19 +705,15 @@ export class FlowerPoolView {
         return this.ordered.filter(entry => entry.band === layer).sort((a, b) => a.layerOrder - b.layerOrder);
     }
 
-    private canReceive(layer: number, candidate?: PoolEntry): boolean {
-        if (layer === 3) return true;
-        // The serialized count is the initial fill target. Surface admission is
-        // governed by occupied area so a small flower can replace a vacancy even
-        // when the target count has already been reached.
-        if (layer === 0) return this.layerMaxCounts[0] > 0 && this.surfaceArea(candidate) <= this.surfaceCapacity();
-        if (this.layerMaxCounts[layer] <= 0 || this.inLayer(layer).length >= this.layerMaxCounts[layer]) return false;
-        return true;
+    private canReceive(layer: number): boolean {
+        // Original CanLayerReceive (44407): count limits, not image area.
+        return layer === 3 || (this.layerMaxCounts[layer] > 0
+            && this.inLayer(layer).length < this.layerMaxCounts[layer]);
     }
 
     private firstAvailable(layer: number, targetLayer?: number): PoolEntry | undefined {
         return this.inLayer(layer).find(entry => entry.flower.status === 'pool' && this.clock >= entry.bornAt
-            && (targetLayer !== 0 || this.canReceive(0, entry)));
+            && (targetLayer !== 0 || this.canReceive(0)));
     }
 
     private nearestAvailable(layer: number, point: Point, targetLayer?: number): PoolEntry | undefined {
@@ -785,7 +722,7 @@ export class FlowerPoolView {
             // Original flowers join the manager only when their batch spawns.
             // Down is inactive even after birth, so active alone cannot tell.
             if (entry.flower.status !== 'pool' || this.clock < entry.bornAt) continue;
-            if (targetLayer === 0 && !this.canReceive(0, entry)) continue;
+            if (targetLayer === 0 && !this.canReceive(0)) continue;
             const dx = entry.anchorX - point.x, dy = entry.anchorY - point.y;
             const nextDistance = dx * dx + dy * dy;
             if (nextDistance <= distance) { nearest = entry; distance = nextDistance; }
@@ -799,12 +736,9 @@ export class FlowerPoolView {
         // Unity re-registers a promoted object at the end of its new layer list.
         entry.layerOrder = this.nextLayerOrder++;
         if (point) {
-            const target = this.limit(entry, point.x, point.y, entry.angle);
-            entry.anchorX = target.x; entry.anchorY = target.y;
+            entry.anchorX = point.x; entry.anchorY = point.y;
         }
         entry.promotion = animate && from !== layer ? this.promotionMotion(entry, from) : null;
-        if (layer === 0) this.nudgeNeighbors(entry);
-        if (layer === 0) this.repackSurface();
     }
 
     private promotionMotion(entry: PoolEntry, from: number): PromotionMotion {
@@ -847,15 +781,15 @@ export class FlowerPoolView {
         const angle = motion.fromAngle + (motion.toAngle - motion.fromAngle) * (1 - Math.pow(1 - progress, 2));
         if (!motion.switched && progress >= motion.switchProgress) {
             motion.switched = true; entry.visualBand = entry.band;
-            entry.image.grayscale = entry.band !== 0; entry.image.color = entry.band === 0 ? WHITE : UNDERWATER;
+            entry.image.grayscale = false; entry.image.color = WHITE;
             this.startRipple(entry, false, motion.start + motion.duration * motion.switchProgress);
             if (entry.band === 0) this.surfaceListener?.(entry.flower);
         }
         const alphaProgress = clamp((progress - motion.switchProgress) / (1 - motion.switchProgress), 0, 1);
         entry.alpha = motion.fromAlpha + (LAYER_ALPHA[entry.band] - motion.fromAlpha) * (1 - Math.pow(1 - alphaProgress, 3));
         if (progress === 1) {
-            entry.angle = motion.toAngle; entry.floatResume = motion.start + motion.duration;
-            entry.promotion = null;
+            entry.angle = motion.toAngle;
+            entry.promotion = null;entry.physicsResumeAt=motion.start+motion.duration;
         }
         return angle;
     }
@@ -870,57 +804,11 @@ export class FlowerPoolView {
             candidate = this.nearestAvailable(2, point) ?? this.firstAvailable(2) ?? this.firstAvailable(3);
         } else candidate = this.firstAvailable(3);
         if (!candidate) return;
-        if (layer === 0 && !this.canReceive(0, candidate)) return;
+        if (layer === 0 && !this.canReceive(0)) return;
         const from = candidate.band;
         const sourcePosition = { x: candidate.anchorX, y: candidate.anchorY };
         this.moveToLayer(candidate, layer, point, true);
         this.refillVacancy(from, sourcePosition);
-    }
-
-    private nudgeNeighbors(rising: PoolEntry): void {
-        for (const entry of this.inLayer(0)) {
-            if (entry === rising) continue;
-            let dx = entry.anchorX - rising.anchorX, dy = entry.anchorY - rising.anchorY;
-            const length = Math.sqrt(dx * dx + dy * dy);
-            if (length >= 190) continue;
-            if (length < 0.01) { dx = Math.cos(entry.phase); dy = Math.sin(entry.phase); }
-            const divisor = Math.max(1, length);
-            const push = (1 - length / 190) * 20;
-            const position = this.limit(entry, entry.anchorX + dx / divisor * push, entry.anchorY + dy / divisor * push, entry.angle);
-            entry.anchorX = position.x; entry.anchorY = position.y;
-        }
-    }
-
-    /** Separate rotated flower silhouettes rather than their shortest dimension:
-     * a long flower needs room along its length as well as across its head. */
-    private repackSurface(): void {
-        const entries = this.inLayer(0);
-        if (entries.length < 2) return;
-        const radius = (entry: PoolEntry, dx: number, dy: number) => {
-            const angle = entry.angle * Math.PI / 180;
-            const x = dx * Math.cos(angle) + dy * Math.sin(angle);
-            const y = -dx * Math.sin(angle) + dy * Math.cos(angle);
-            return Math.hypot(entry.width * 0.46 * x, entry.height * 0.46 * y);
-        };
-        for (let iteration = 0; iteration < 16; iteration++) {
-            for (let i = 0; i < entries.length; i++) {
-                const a = entries[i];
-                for (let j = i + 1; j < entries.length; j++) {
-                    const b = entries[j];
-                    let dx = b.anchorX - a.anchorX, dy = b.anchorY - a.anchorY;
-                    let distance = Math.hypot(dx, dy);
-                    if (distance < 0.001) { dx = Math.cos(a.phase); dy = Math.sin(a.phase); distance = 1; }
-                    const target = Math.max(72, radius(a, dx / distance, dy / distance) + radius(b, dx / distance, dy / distance));
-                    if (distance >= target) continue;
-                    const push = (target - distance) * 0.5 / distance;
-                    const ax = this.limit(a, a.anchorX - dx * push, a.anchorY - dy * push, a.angle);
-                    const bx = this.limit(b, b.anchorX + dx * push, b.anchorY + dy * push, b.angle);
-                    a.anchorX = ax.x; a.anchorY = ax.y; b.anchorX = bx.x; b.anchorY = bx.y;
-                }
-            }
-        }
-        // Only anchors move here. The frame-time motion blends toward them, so
-        // a click cannot cause an instantaneous jump in neighbouring flowers.
     }
 
     private scheduleAutoPromotion(): void {
@@ -932,15 +820,14 @@ export class FlowerPoolView {
     private promoteIdleFlowers(): void {
         if (this.entering || this.firstLevel || this.scatterTargets.size) return;
         const available = (layer: number) => this.inLayer(layer).find(entry =>
-            entry.flower.status === 'pool' && !entry.promotion && entry.entranceAt === null && this.clock >= entry.bornAt
-            && this.canReceive(0, entry));
+            entry.flower.status === 'pool' && !entry.promotion && entry.entranceAt === null && this.clock >= entry.bornAt);
         if (this.clock < this.nextAutoPromotion) return;
         this.scheduleAutoPromotion();
         const settings = this.motion.flowerManager.values;
         if (this.inLayer(0).length >= this.layerMaxCounts[0] + settings.middleAutoUpExtraLimit
             || this.motionRandom() >= settings.autoPromoteChance) return;
         const entry = available(1) ?? available(2);
-        if (!entry || !this.canReceive(0, entry)) return;
+        if (!entry || this.layerMaxCounts[0] <= 0) return;
         const from = entry.band, point = { x: entry.anchorX, y: entry.anchorY };
         this.moveToLayer(entry, 0, point, true);
         this.refillVacancy(from, point); this.refreshBands();
@@ -952,10 +839,13 @@ export class FlowerPoolView {
         this.clock += dt;
         // Exponential response remains stable for long frames; clamping dt
         // slowed the entire pool clock below 20 fps.
-        const blend = 1 - Math.exp(-dt * MOTION_RESPONSE);
         for (const entry of this.ordered) {
             if (entry.band === 3 || !entry.node.isValid) continue;
             const appearing = entry.entranceAt !== null;
+            // A frame may straddle a batch birth. Integrate anchor relaxation
+            // only after birth, just as the analytic scale-in does.
+            const activeDt = appearing ? Math.max(0, this.clock - Math.max(previousTime, entry.entranceAt!)) : dt;
+            const entryBlend = 1 - Math.exp(-activeDt * MOTION_RESPONSE);
             if (appearing) {
                 if (this.clock < entry.entranceAt!) { entry.node.active = false; continue; }
                 entry.node.active = true;
@@ -963,7 +853,7 @@ export class FlowerPoolView {
                 entry.scale = LAYER_SCALE[entry.band] * (1 - Math.pow(1 - progress, 3));
                 if (progress === 1) {
                     entry.entranceAt = null;
-                    if (entry.revealPending && entry.band === 2 && this.canReceive(0, entry)) {
+                    if (entry.revealPending && entry.band === 2 && this.canReceive(0)) {
                         entry.revealPending = false;
                         const target = this.choosePosition(entry, this.inLayer(0), this.motionRandom);
                         this.moveToLayer(entry, 0, target, true);
@@ -973,36 +863,30 @@ export class FlowerPoolView {
             }
             const hadPromotion = !!entry.promotion;
             const promotionAngle = this.updatePromotion(entry);
-            const top = entry.visualBand === 0;
-            const driftWeight = entry.promotion ? 0 : clamp((this.clock - entry.floatResume) / 0.2, 0, 1);
-            const amplitude = (top ? 8 : 4) * driftWeight;
-            const speed = 0.75 + (Math.sin(entry.phase * 2.3) + 1) * 0.3;
             const scatter = this.scatterTargets.get(entry);
-            let positionBlend = blend;
-            if (scatter && scatter.at <= this.clock) {
-                // A frame can span the exact release time. Integrate gathering
-                // and scattering separately so low fps neither skips a batch
-                // nor gives its flowers an extra frame of travel.
-                const before = clamp(scatter.at - previousTime, 0, dt);
-                const gatherBlend = 1 - Math.exp(-before * MOTION_RESPONSE);
-                entry.x += (entry.anchorX - entry.x) * gatherBlend;
-                entry.y += (entry.anchorY - entry.y) * gatherBlend;
-                entry.anchorX = scatter.x; entry.anchorY = scatter.y;
-                positionBlend = 1 - Math.exp(-(dt - before) * MOTION_RESPONSE);
-                this.scatterTargets.delete(entry);
+            if(scatter) {
+                if(this.clock<scatter.at) {
+                    entry.x+=(entry.anchorX-entry.x)*entryBlend;
+                    entry.y+=(entry.anchorY-entry.y)*entryBlend;
+                } else {
+                    if(scatter.fromX===undefined) {
+                        const before=clamp(scatter.at-previousTime,0,dt),blend=1-Math.exp(-before*MOTION_RESPONSE);
+                        scatter.fromX=entry.x+(entry.anchorX-entry.x)*blend;
+                        scatter.fromY=entry.y+(entry.anchorY-entry.y)*blend;
+                    }
+                    const p=clamp((this.clock-scatter.at)/SHUFFLE_SETTLE_TIME,0,1),travel=1-Math.pow(1-p,3);
+                    entry.x=scatter.fromX+(scatter.x-scatter.fromX)*travel;
+                    entry.y=scatter.fromY!+(scatter.y-scatter.fromY!)*travel;
+                    entry.anchorX=scatter.x;entry.anchorY=scatter.y;
+                    if(p===1){this.scatterTargets.delete(entry);entry.physicsResumeAt=scatter.at+SHUFFLE_SETTLE_TIME;}
+                }
             }
             if (!hadPromotion) {
-                entry.x += (entry.anchorX - entry.x) * positionBlend;
-                entry.y += (entry.anchorY - entry.y) * positionBlend;
-                entry.alpha += (LAYER_ALPHA[entry.band] - entry.alpha) * blend;
-                if (!appearing) entry.scale += (LAYER_SCALE[entry.band] - entry.scale) * blend;
+                entry.alpha += (LAYER_ALPHA[entry.band] - entry.alpha) * entryBlend;
+                if (!appearing) entry.scale += (LAYER_SCALE[entry.band] - entry.scale) * entryBlend;
             }
-            entry.lift *= 1 - blend;
-            const angle = entry.promotion ? promotionAngle! : entry.angle + Math.sin(this.clock * 0.65 * speed + entry.phase) * (top ? 4.5 : 2.5) * driftWeight;
-            const position = this.limit(entry,
-                entry.x + Math.sin(this.clock * 0.7 * speed + entry.phase) * amplitude,
-                entry.y + Math.cos(this.clock * 0.85 * speed + entry.phase) * amplitude + entry.lift, angle, this.framePosition);
-            entry.node.setPosition(position.x, position.y);
+            const angle = entry.promotion ? promotionAngle! : entry.angle;
+            entry.node.setPosition(entry.x,entry.y);
             entry.node.angle = angle;
             entry.node.setScale(entry.scale, entry.scale, 1);
             entry.opacity.opacity = Math.round(entry.alpha);
@@ -1011,6 +895,24 @@ export class FlowerPoolView {
                 entry.image.node.setScale(0.78 + 0.20 * Math.sin(this.clock * 6 + entry.phase), 1, 1);
             }
         }
+        // Independent rigid-body nodes use real world metres, with fixed .02s
+        // stepping. Render roots retain the original UI/camera unit conversion.
+        for (const entry of this.ordered) {
+            const animated = entry.promotion || this.scatterTargets.has(entry);
+            this.physics.sync(entry.flower.id,entry.band,entry.scale,this.clock>=entry.bornAt,
+                animated?{x:entry.x,y:entry.y,angle:entry.node.angle}:undefined,
+                {x:entry.x,y:entry.y,angle:entry.node.angle},Math.max(entry.bornAt,entry.physicsResumeAt));
+        }
+        this.physics.update(dt);
+        for (const entry of this.ordered) {
+            const pose=this.physics.pose(entry.flower.id);
+            if(pose) {
+                entry.x=entry.anchorX=pose.x;entry.y=entry.anchorY=pose.y;entry.angle=pose.angle;
+                entry.node.setPosition(pose.x,pose.y);entry.node.angle=pose.angle;
+            }
+            this.waterRenderer.sync(entry.flower.id,entry.image,entry.visualBand,entry.node.activeInHierarchy);
+        }
+        this.waterRenderer.order([2,1].reduce<string[]>((ids,band)=>ids.concat(this.inLayer(band).slice().reverse().map(e=>e.flower.id)),[]));
         this.promoteIdleFlowers();
     }
 
@@ -1032,13 +934,13 @@ export class FlowerPoolView {
                 for (const entry of this.inLayer(layer).reverse()) {
                     if (!missing) break;
                     if (entry.flower.specialId || entry.flower.kind !== need.kind || entry.flower.status !== 'pool') continue;
-                    if (!this.canReceive(0, entry)) {
+                    if (!this.canReceive(0)) {
                         // Preserve all currently exposed targets. Exchange an
                         // unrelated flower so a promotion cannot push a target out.
                         const displaced = this.inLayer(0).reverse().find(candidate => candidate.flower.kind !== need.kind);
                         if (!displaced) continue;
                         this.moveToLayer(displaced, layer);
-                        if (!this.canReceive(0, entry)) {
+                        if (!this.canReceive(0)) {
                             this.moveToLayer(displaced, 0);
                             continue;
                         }
@@ -1084,6 +986,7 @@ export class FlowerPoolView {
         this.entries.clear(); this.nodes.clear(); this.ordered = []; this.scatterTargets.clear();
         this.loadedFrames.clear(); this.pendingReveals.clear(); this.takenIds.clear();
         this.surfaceListener = null;
+        this.physics?.dispose();this.waterRenderer?.dispose();
         if (this.root.isValid) this.root.destroy();
     }
 }

@@ -1,0 +1,113 @@
+func 40967 locals [(3, 125)]
+global.get 0
+i32.const 16
+i32.sub
+local.tee 1
+global.set 0
+local.get 1
+i32.const 8
+i32.add
+i32.const 0
+call 48619
+local.get 0
+block -2
+local.get 1
+f32.load offset=8
+local.tee 4
+local.get 4
+f32.mul
+local.get 1
+f32.load offset=12
+local.tee 5
+local.get 5
+f32.mul
+f32.add
+local.tee 3
+f32.const 0.0010000000474974513
+f32.le
+if -64
+i32.const 4358343
+i32.load8_u offset=0
+i32.eqz
+if -64
+i32.const 3364764
+call 2180
+i32.const 4358343
+i32.const 1
+i32.store8 offset=0
+end
+i32.const 3364764
+i32.load offset=0
+i32.load offset=92
+i64.load offset=40
+br 1
+end
+i32.const 4370296
+i32.load8_u offset=0
+i32.eqz
+if -64
+i32.const 3360048
+call 2180
+i32.const 4370296
+i32.const 1
+i32.store8 offset=0
+end
+i32.const 3360048
+i32.load offset=0
+local.tee 2
+i32.load offset=116
+i32.eqz
+if -64
+local.get 2
+call 60460
+end
+block -1
+local.get 3
+f32.sqrt
+local.tee 3
+f32.const 9.999999747378752e-06
+f32.gt
+if -64
+local.get 5
+local.get 3
+f32.div
+i32.reinterpret_f32
+local.set 2
+local.get 4
+local.get 3
+f32.div
+i32.reinterpret_f32
+br 1
+end
+i32.const 4377530
+i32.load8_u offset=0
+i32.eqz
+if -64
+i32.const 3364764
+call 2180
+i32.const 4377530
+i32.const 1
+i32.store8 offset=0
+end
+i32.const 3364764
+i32.load offset=0
+i32.load offset=92
+local.tee 0
+i32.load offset=4
+local.set 2
+local.get 0
+i32.load offset=0
+end
+i64.extend_i32_u
+local.get 2
+i64.extend_i32_u
+i64.const 32
+i64.shl
+i64.or
+end
+i64.store offset=0
+local.get 1
+i32.const 16
+i32.add
+global.set 0
+end

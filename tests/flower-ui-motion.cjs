@@ -8,6 +8,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 const ts = require('/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/Resources/app.asar.unpacked/node_modules/typescript');
 const project = path.join(__dirname, '..');
+const resourceFile = require('./resource-file.cjs');
+const resultEffects = [];
 class Vec3 { constructor(x = 0, y = 0, z = 0) { Object.assign(this, {x, y, z}); } }
 class Component { enabled = true; get enabledInHierarchy() { return this.enabled && this.node.activeInHierarchy; } }
 class Node {
@@ -58,6 +60,7 @@ const cc = { _decorator: {ccclass: () => value => value}, Component, Node, Vec3,
   sys: {platform: 'web', Platform: {WECHAT_GAME: 'wechat'}, localStorage: {getItem: key => storage.has(key) ? storage.get(key) : missingStorageValue, setItem: (key, value) => storage.set(key, value)}},
   resources: {load(_path, Type, done) {
     if (_path === 'original/fonts/font-coverage') { done(null, {json: {body: '第1关𝄞', display: '开始'}}); return; }
+    if (Type === cc.JsonAsset) { done(null,{json:JSON.parse(fs.readFileSync(resourceFile(_path+'.json'),'utf8'))}); return; }
     if (Type === cc.Font) { done(null, new cc.Font()); return; }
     done(null, {originalSize: {width: 100, height: 100}, clone() {return {destroy() {}};}});
   }},
@@ -75,6 +78,7 @@ function load(name) {
     if (request === 'cc') return cc;
     if (request === './FlowerViewport') return require('./viewport-fixture.cjs');
     if (request === './FlowerAssets') return {loadFlowerAsset: cc.resources.load};
+    if (request === './FlowerEffects') return {FlowerEffects:{async preload(){},async create(parent){return {root:ui.uiNode(parent,'OrderEffects'),play(kind,anchor){resultEffects.push({kind,anchor});return null;}};}}};
     if (request === './FlowerPause') return {createPause: async () => {}};
     return load(request.slice(2));
   }});
@@ -350,4 +354,39 @@ test('font quoting is idempotent for shared assets, repeated preloads and retrie
   await view.preloadTypography(); await view.preloadTypography();
   assert.equal(view.fonts[0]._nativeAsset, '"Name 2.0"'); assert.equal(view.fonts[1], view.fonts[0]);
   assert.equal(view.loads, 6);
+});
+
+
+test('second-level unlock preview uses next-level vases and original per-type random species', () => {
+ const {buildUnlockPreview}=load('FlowerResults');
+ const tables=JSON.parse(fs.readFileSync(resourceFile('original/data/original-order-flower-vase-tables.json'),'utf8')).tables;
+ const layouts=JSON.parse(fs.readFileSync(resourceFile('original/data/bouquet-layouts.json'),'utf8'));
+ const metrics=JSON.parse(fs.readFileSync(resourceFile('original/data/flower-sprite-metrics.json'),'utf8'));
+ const values=[0,.2,.5];const preview=buildUnlockPreview(2,tables.VaseInfoConfig,tables.ItemDataConfig,layouts,metrics,()=>values.shift());
+ assert.deepEqual(Array.from(preview.bouquets,b=>b.name),['墨盏桃花','深海信札','萌宠素纸']);
+ for(const [index,resource] of ['cdyz_th_01','cdz_lfx_01','zytx_xlq_01'].entries())assert(preview.bouquets[index].layers.some(l=>l.resource.endsWith(resource)));
+ assert(preview.bouquets[2].layers.some(l=>l.flipX),'original mirrored flower attachments are retained');
+ assert(preview.bouquets.every(b=>b.layers.every(l=>l.width>0&&l.height>0)));
+});
+
+test('unlock title, three cards and original effects reveal before enabling next-level input', async () => {
+ const {createWinResult,FlowerResultReveal}=load('FlowerResults');const before=resultEffects.length;
+ const overlay=await createWinResult(new Node('Canvas'),2,105,10,()=>{});
+ const reveal=overlay.getComponent(FlowerResultReveal),next=descendant(overlay,'NextLevelHit').getComponent(Button);
+ assert(reveal);assert.equal(next.interactable,false);assert(descendant(overlay,'UnlockBouquet2'));assert.equal(descendant(overlay,'UnlockBouquet3'),undefined);
+ reveal.update(.3);assert.equal(resultEffects.length-before,1);assert.equal(resultEffects.at(-1).kind,'result-title');
+ reveal.update(1);assert.equal(resultEffects.length-before,4);assert.equal(resultEffects.filter(x=>x.kind==='result-card').length,3);
+ reveal.update(.51);assert.equal(next.interactable,true);overlay.destroy();
+});
+
+test('every configured future bouquet can build from actual original sprites without borrowing another unlock group', () => {
+ const {buildUnlockPreview}=load('FlowerResults');
+ const tables=JSON.parse(fs.readFileSync(resourceFile('original/data/original-order-flower-vase-tables.json'),'utf8')).tables;
+ const layouts=JSON.parse(fs.readFileSync(resourceFile('original/data/bouquet-layouts.json'),'utf8'));
+ const metrics=JSON.parse(fs.readFileSync(resourceFile('original/data/flower-sprite-metrics.json'),'utf8'));
+ for(let level=1;level<=85;level++){
+  const preview=buildUnlockPreview(level,tables.VaseInfoConfig,tables.ItemDataConfig,layouts,metrics,()=>.9999);
+  assert.equal(preview.bouquets.length,tables.VaseInfoConfig.filter(v=>v.unlockLevel===level+1).length);
+  for(const b of preview.bouquets)for(const layer of b.layers)assert(fs.existsSync(resourceFile(layer.resource+'.png')),layer.resource);
+ }
 });

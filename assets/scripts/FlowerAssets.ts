@@ -51,7 +51,7 @@ function loadBundle(name: string, route: BundleRoute): Promise<AssetManager.Bund
 
 /** Same callback contract as resources.load; all callers retain original/... paths. */
 export function loadFlowerAsset<T extends Asset>(path: string, type: AssetConstructor<T>, callback: AssetCallback<T>): void {
-    const routePath = path.replace(/\/spriteFrame$/, '');
+    const routePath = path.replace(/\/(?:spriteFrame|texture)$/, '');
     void loadRoutes().then(async routes => {
         const name = routes.routes[routePath];
         const owner = name ? await loadBundle(name, routes.bundles[name]) : resources;

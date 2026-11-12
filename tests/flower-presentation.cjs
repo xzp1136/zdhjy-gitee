@@ -559,3 +559,21 @@ test('unavailable flowers and non-collection busy states reject input before res
   pending.shift()(); await work;
   assert.equal(started.length, 1); assert.equal(game.busy, false); assert.equal(game.queuedTaps.size, 0);
 });
+
+test('every delayed landing effect survives the completed basket being replaced in the same event batch', async () => {
+  const game=new FlowerGame(),board=new Node(),oldSlot=uiNode(board,'OldSlot',-280,0);
+  const rules=new FlowerRules({level:2,timeLimit:100,flowers:[{kind:'cdy_lxq',count:3}],initialOrderSlots:1,
+    orders:[{vaseId:1301,needs:[{kind:'cdy_lxq',count:3}]}]});
+  game.rules=rules;game.visual=new FlowerPresentationState(rules);
+  const bouquet=await FlowerBouquetView.create(oldSlot,game.visual.orders[0]);
+  game.orderViews.set(0,{root:oldSlot,bouquet});game.flowerRoot=uiNode(board,'Flowers');game.trayRoot=uiNode(board,'Tray');
+  const played=[],waits=[];game.orderEffects={root:uiNode(board,'Effects'),playAt:(kind,point)=>played.push({kind,point})};
+  game.sound=game.updateHUD=()=>{};game.pool={take:()=>null};game.refreshOrder=async()=>{};
+  game.waitFor=()=>new Promise(resolve=>waits.push(resolve));game.pulseBouquetGroup=async()=>true;
+  game.removeBouquet=async()=>{game.orderViews.delete(0);oldSlot.destroy();return true;};
+  const events=rules.flowers.flatMap(flower=>rules.select(flower.id));await game.animateEvents(events);
+  assert.equal(oldSlot.isValid,false);assert.equal(waits.length,3);assert.equal(played.length,0);
+  for(const resolve of waits)resolve(true);await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(played.length,3,'even the last flower retains its original next-frame Spine trigger');
+  assert(played.every(effect=>effect.kind==='landing'&&Number.isFinite(effect.point.x)&&Number.isFinite(effect.point.y)));
+});

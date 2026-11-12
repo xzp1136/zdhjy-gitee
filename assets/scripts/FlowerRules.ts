@@ -68,7 +68,7 @@ export interface FlowerLevelConfig {
     source?: LevelSource;
     /** One star per completed order was observed in the original first level. */
     starsPerOrder?: number;
-    /** Only level 1 was observed at 10 coins; later defaults are provisional local rewards. */
+    /** Original OverUIControl.InitRewardValue (42816) grants 10 coins. */
     coinsOnWin?: number;
 }
 

@@ -1,0 +1,232 @@
+// Source: supplied Unity 2022 runtime package; see docs/validation-native-physics-water-2026-11-12.md.
+CCEffect %{
+ techniques:
+ - passes:
+   - vert: sprite-vs:vert
+     frag: water-fs:frag
+     depthStencilState: { depthTest: false, depthWrite: false }
+     blendState:
+       targets:
+       - { blend: true, blendSrc: src_alpha, blendDst: one_minus_src_alpha, blendSrcAlpha: one, blendDstAlpha: one_minus_src_alpha }
+     rasterizerState: { cullMode: none }
+     properties:
+       uvOriginX: { value: [0, 1, 1, 0] }
+       uvAxisY: { value: [0, -1, 0, 0] }
+       scalars0: { value: [0,0,0,0] }
+       scalars1: { value: [0,0,0,0] }
+       scalars2: { value: [0,0,0,0] }
+       scalars3: { value: [0,0,0,0] }
+       inputs0: { value: [1,1,1,1] }
+       inputs1: { value: [1,1,1,1] }
+       inputs2: { value: [1,1,1,1] }
+       inputs3: { value: [1,1,1,1] }
+       inputs4: { value: [1,1,1,1] }
+       inputs5: { value: [1,1,1,1] }
+       inputs6: { value: [1,1,1,1] }
+       flowTexture: { value: white }
+       detailTexture: { value: white }
+}%
+CCProgram sprite-vs %{
+  precision highp float;
+  #include <builtin/uniforms/cc-global>
+  #if USE_LOCAL
+    #include <builtin/uniforms/cc-local>
+  #endif
+  #if SAMPLE_FROM_RT
+    #include <common/common-define>
+  #endif
+  in vec3 a_position;
+  in vec2 a_texCoord;
+  in vec4 a_color;
+
+  out vec4 color;
+  out vec2 uv0;
+
+  vec4 vert () {
+    vec4 pos = vec4(a_position, 1);
+
+    #if USE_LOCAL
+      pos = cc_matWorld * pos;
+    #endif
+
+    #if USE_PIXEL_ALIGNMENT
+      pos = cc_matView * pos;
+      pos.xyz = floor(pos.xyz);
+      pos = cc_matProj * pos;
+    #else
+      pos = cc_matViewProj * pos;
+    #endif
+
+    uv0 = a_texCoord;
+    #if SAMPLE_FROM_RT
+      CC_HANDLE_RT_SAMPLE_FLIP(uv0);
+    #endif
+    color = a_color;
+
+    return pos;
+  }
+}%
+CCProgram water-fs %{
+ precision highp float;
+ #include <builtin/uniforms/cc-global>
+ #include <builtin/internal/embedded-alpha>
+ in vec4 color;
+ in vec2 uv0;
+ #pragma builtin(local)
+ layout(set = 2, binding = 12) uniform sampler2D cc_spriteTexture;
+ uniform WaterInputs {
+   vec4 uvOriginX;
+   vec4 uvAxisY;
+   vec4 scalars0;
+   vec4 scalars1;
+   vec4 scalars2;
+   vec4 scalars3;
+   vec4 inputs0;
+   vec4 inputs1;
+   vec4 inputs2;
+   vec4 inputs3;
+   vec4 inputs4;
+   vec4 inputs5;
+   vec4 inputs6;
+ };
+
+  vec2 localUV(vec2 uv) {
+    vec2 d=uv-uvOriginX.xy;
+    float det=uvOriginX.z*uvAxisY.y-uvOriginX.w*uvAxisY.x;
+    return vec2(d.x*uvAxisY.y-d.y*uvAxisY.x, uvOriginX.z*d.y-uvOriginX.w*d.x)/det;
+  }
+  vec2 sourceUV(vec2 uv) {return uvOriginX.xy+uvOriginX.zw*uv.x+uvAxisY.xy*uv.y;}
+ uniform sampler2D flowTexture;
+ uniform sampler2D detailTexture;
+ #define _FlowTimeScale scalars0.x
+ #define _BaseDistortion scalars0.y
+ #define _DetailStrength scalars0.z
+ #define _Perspective scalars0.w
+ #define _EdgeProtectWidth scalars1.x
+ #define _WaterFloatStrength scalars1.y
+ #define _WaterFloatSpeed scalars1.z
+ #define _WaterFloatScale scalars1.w
+ #define _EdgeFloatStrength scalars2.x
+ #define _EdgeAlphaFloat scalars2.y
+ #define _HighlightThreshold scalars2.z
+ #define _HighlightSoftness scalars2.w
+ #define _HighlightStrength scalars3.x
+ #define _WaterAlpha scalars3.y
+ #define _Color inputs0
+ #define _WaterColor inputs1
+ #define _HighlightColor inputs2
+ #define _FlowTiling inputs3
+ #define _DetailTiling inputs4
+ #define _FlowSpeed inputs5
+ #define _DetailSpeed inputs6
+
+ // Arithmetic retained from original 1090-2.glsl; sampler UVs adapt PNG orientation.
+vec3 u_xlat0;
+vec4 u_xlat1;
+vec4 u_xlat2;
+mediump vec3 u_xlat16_3;
+mediump vec3 u_xlat16_4;
+vec2 u_xlat5;
+mediump float u_xlat16_8;
+vec2 u_xlat10;
+vec2 u_xlat11;
+float u_xlat15;
+float u_xlat16;
+vec4 frag()
+{
+    vec2 waterUV=clamp(localUV(uv0),0.0,1.0);
+    u_xlat0.xy = (-waterUV) + vec2(1.0, 1.0);
+    u_xlat0.xy = min(u_xlat0.xy, waterUV);
+    u_xlat0.x = min(u_xlat0.y, u_xlat0.x);
+    u_xlat5.x = max(_EdgeProtectWidth, 0.00100000005);
+    u_xlat5.x = float(1.0) / u_xlat5.x;
+    u_xlat0.x = u_xlat5.x * u_xlat0.x;
+    u_xlat0.x = clamp(u_xlat0.x, 0.0, 1.0);
+    u_xlat5.x = u_xlat0.x * -2.0 + 3.0;
+    u_xlat0.x = u_xlat0.x * u_xlat0.x;
+    u_xlat0.x = u_xlat0.x * u_xlat5.x;
+    u_xlat0.x = u_xlat0.x * 0.220000029 + 0.779999971;
+    u_xlat5.xy = waterUV * _FlowTiling.xy;
+    u_xlat15 = cc_time.x * _FlowTimeScale;
+    u_xlat1.xy = vec2(u_xlat15) * _FlowSpeed.xy;
+    u_xlat11.xy = vec2(u_xlat15) * _DetailSpeed.xy;
+    u_xlat2.y = waterUV.y * _Perspective + 1.0;
+    u_xlat2.x = 1.0;
+    u_xlat5.xy = u_xlat5.xy * u_xlat2.xy + u_xlat1.xy;
+    u_xlat5.xy = texture(flowTexture, vec2(u_xlat5.x,1.0-u_xlat5.y)).xy;
+    u_xlat5.xy = u_xlat5.xy * vec2(2.0, 2.0) + vec2(-1.0, -1.0);
+    u_xlat1.xy = waterUV * _DetailTiling.xy;
+    u_xlat1.xy = u_xlat1.xy * u_xlat2.xy + u_xlat11.xy;
+    u_xlat1.xy = texture(detailTexture, vec2(u_xlat1.x,1.0-u_xlat1.y)).xy;
+    u_xlat1.xy = u_xlat1.xy * vec2(2.0, 2.0) + vec2(-1.0, -1.0);
+    u_xlat10.xy = u_xlat1.xy * vec2(vec2(_DetailStrength, _DetailStrength)) + u_xlat5.xy;
+    u_xlat5.x = u_xlat5.x + (-u_xlat1.y);
+    u_xlat5.x = abs(u_xlat5.x) * 0.340000004;
+    u_xlat1.xy = u_xlat10.xy * vec2(vec2(_BaseDistortion, _BaseDistortion));
+    u_xlat1.xy = u_xlat0.xx * u_xlat1.xy;
+    u_xlat11.xy = u_xlat1.xy * vec2(0.479999989, 0.479999989);
+    u_xlat0.x = waterUV.y * -0.160000026 + 1.0;
+    u_xlat1.xy = u_xlat1.xy * u_xlat0.xx + u_xlat11.xy;
+    u_xlat0.x = dot(waterUV, vec2(0.629999995, 0.370000005));
+    u_xlat0.x = u_xlat0.x * _WaterFloatScale;
+    u_xlat11.x = cc_time.x * _WaterFloatSpeed;
+    u_xlat2.xyz = u_xlat11.xxx * vec3(6.28318548, 3.64424753, 4.52389383);
+    u_xlat0.x = u_xlat0.x * 4.52389383 + (-u_xlat2.y);
+    u_xlat0.x = u_xlat10.x * 1.10000002 + u_xlat0.x;
+    u_xlat0.x = sin(u_xlat0.x);
+    u_xlat0.x = u_xlat0.x * 0.319999993;
+    u_xlat11.xy = waterUV * vec2(vec2(_WaterFloatScale, _WaterFloatScale));
+    u_xlat11.x = u_xlat11.x * 6.28318548 + u_xlat2.x;
+    u_xlat16 = u_xlat11.y * 5.15221214 + (-u_xlat2.z);
+    u_xlat16 = u_xlat10.x * 1.20000005 + u_xlat16;
+    u_xlat16 = sin(u_xlat16);
+    u_xlat16 = u_xlat16 * _WaterFloatStrength;
+    u_xlat2.x = u_xlat16 * 0.280000001;
+    u_xlat11.x = u_xlat10.y * 1.35000002 + u_xlat11.x;
+    u_xlat10.x = dot(u_xlat10.xy, u_xlat10.xy);
+    u_xlat10.x = sqrt(u_xlat10.x);
+    u_xlat5.x = u_xlat10.x * 0.460000008 + u_xlat5.x;
+    u_xlat5.x = min(u_xlat5.x, 1.0);
+    u_xlat5.x = u_xlat5.x + (-_HighlightThreshold);
+    u_xlat10.x = sin(u_xlat11.x);
+    u_xlat0.x = u_xlat10.x * 0.680000007 + u_xlat0.x;
+    u_xlat2.y = u_xlat0.x * _WaterFloatStrength;
+    u_xlat0.xz = u_xlat1.xy + u_xlat2.xy;
+    u_xlat1.xy = u_xlat2.xy * vec2(_EdgeFloatStrength);
+    u_xlat1.xy = u_xlat1.xy * vec2(0.699999988, 0.699999988) + waterUV;
+    u_xlat1.xy = clamp(u_xlat1.xy, 0.0, 1.0);
+    u_xlat15 = CCSampleWithAlphaSeparated(cc_spriteTexture,sourceUV(u_xlat1.xy)).w;
+    u_xlat0.xz = u_xlat0.xz + waterUV;
+    u_xlat0.xz = clamp(u_xlat0.xz, 0.0, 1.0);
+    u_xlat1 = CCSampleWithAlphaSeparated(cc_spriteTexture,sourceUV(u_xlat0.xz));
+    u_xlat16_3.x = u_xlat1.w + -0.0199999996;
+    u_xlat16_3.x = u_xlat16_3.x * 5.55555534;
+    u_xlat16_3.x = clamp(u_xlat16_3.x, 0.0, 1.0);
+    u_xlat16_8 = u_xlat16_3.x * -2.0 + 3.0;
+    u_xlat16_3.x = u_xlat16_3.x * u_xlat16_3.x;
+    u_xlat16_3.x = u_xlat16_3.x * u_xlat16_8;
+    u_xlat2 = CCSampleWithAlphaSeparated(cc_spriteTexture,sourceUV(waterUV));
+    u_xlat1.xyz = u_xlat1.xyz + (-u_xlat2.xyz);
+    u_xlat1.xyz = u_xlat16_3.xxx * u_xlat1.xyz + u_xlat2.xyz;
+    u_xlat16_3.xyz = u_xlat1.xyz * _WaterColor.xyz;
+    u_xlat16_4.xyz = u_xlat16_3.xyz * color.xyz;
+    u_xlat1.xyz = (-u_xlat16_3.xyz) * color.xyz + _HighlightColor.xyz;
+    u_xlat0.x = float(1.0) / _HighlightSoftness;
+    u_xlat0.x = u_xlat0.x * u_xlat5.x;
+    u_xlat0.x = clamp(u_xlat0.x, 0.0, 1.0);
+    u_xlat5.x = u_xlat0.x * -2.0 + 3.0;
+    u_xlat0.x = u_xlat0.x * u_xlat0.x;
+    u_xlat0.x = u_xlat0.x * u_xlat5.x;
+    u_xlat0.x = u_xlat0.x * _HighlightStrength;
+    u_xlat0.x = clamp(u_xlat0.x, 0.0, 1.0);
+    u_xlat1.xyz = u_xlat0.xxx * u_xlat1.xyz + u_xlat16_4.xyz;
+    u_xlat0.x = u_xlat15 + (-u_xlat2.w);
+    u_xlat0.x = _EdgeAlphaFloat * u_xlat0.x + u_xlat2.w;
+    u_xlat0.x = u_xlat0.x * color.w;
+    u_xlat0.x = u_xlat0.x * _Color.w;
+    u_xlat1.w = u_xlat0.x * _WaterAlpha;
+    return u_xlat1;
+}
+
+
+}%
