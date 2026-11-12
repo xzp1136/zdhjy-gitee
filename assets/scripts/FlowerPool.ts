@@ -14,7 +14,7 @@ const LAYER_SCALE = [1, 0.9, 0.8, 0.7];
 const LAYER_ALPHA = [255, 150, 95, 0];
 // One pixel-to-design conversion preserves the size differences between the
 // original flower sprites, instead of fitting every species to the same box.
-const FLOWER_PIXEL_SCALE = 0.5;
+const FLOWER_PIXEL_SCALE = 0.6;
 const SURFACE_FILL_RATIO = 0.68;
 const NEAR_RADIUS = 190;
 const MOTION_RESPONSE = 9;
@@ -23,6 +23,7 @@ const SHUFFLE_BATCH_INTERVAL = 0.05;
 const SHUFFLE_SETTLE_TIME = 0.35;
 
 type Point = { x: number; y: number };
+export type FlowerPoolBounds = { left: number; right: number; bottom: number; top: number };
 type ScatterTarget = Point & { at: number };
 type MotionData = {
     flowerManager: { values: Record<string, number> };
@@ -305,6 +306,7 @@ export class FlowerPoolView {
     private readonly layerMaxCounts: number[];
     private nextLayerOrder = 0;
     private nextAutoPromotion = 0;
+    private bounds: FlowerPoolBounds = {left: LEFT, right: RIGHT, bottom: BOTTOM, top: TOP};
     private motionRandom = randomGenerator(seedOf('flower-pool-motion'));
     private surfaceListener: ((flower: FlowerPiece) => void) | null = null;
     private readonly touchStart = () => {};
@@ -357,12 +359,41 @@ export class FlowerPoolView {
     }
     get layerCounts(): readonly number[] { return [0, 1, 2, 3].map(layer => this.inLayer(layer).length); }
 
+    /** The water stretches on tall phones/tablets; input, packing and capacity
+     * must use that same rectangle rather than a fixed square in its center. */
+    setBounds(bounds: FlowerPoolBounds): void {
+        if (this.disposed || !Object.values(bounds).every(Number.isFinite)
+            || bounds.right - bounds.left < 300 || bounds.top - bounds.bottom < 300) return;
+        const old = this.bounds;
+        if (Object.keys(bounds).every(key => bounds[key] === old[key])) return;
+        const mapX = (x: number) => bounds.left + (x - old.left) / (old.right - old.left) * (bounds.right - bounds.left);
+        const mapY = (y: number) => bounds.bottom + (y - old.bottom) / (old.top - old.bottom) * (bounds.top - bounds.bottom);
+        this.bounds = {...bounds};
+        for (const entry of this.ordered) {
+            const target = this.limit(entry, mapX(entry.anchorX), mapY(entry.anchorY), entry.angle);
+            entry.anchorX = target.x; entry.anchorY = target.y;
+            const current = this.limit(entry, mapX(entry.x), mapY(entry.y), entry.angle);
+            entry.x = current.x; entry.y = current.y; entry.node.setPosition(entry.x, entry.y);
+            if (entry.promotion) {
+                entry.promotion.fromX = mapX(entry.promotion.fromX);
+                entry.promotion.fromY = mapY(entry.promotion.fromY);
+            }
+            const scatter = this.scatterTargets.get(entry);
+            if (scatter) { scatter.x = mapX(scatter.x); scatter.y = mapY(scatter.y); }
+        }
+        const transform = this.root.getComponent(UITransform)!;
+        transform.setContentSize(bounds.right - bounds.left, bounds.top - bounds.bottom);
+        transform.setAnchorPoint(-bounds.left / (bounds.right - bounds.left), -bounds.bottom / (bounds.top - bounds.bottom));
+    }
+
     private flowerArea(entry: PoolEntry): number {
-        return entry.width * entry.height * Math.max(0.01, entry.scale * entry.scale) * 0.48;
+        // Reserve the resting surface size, including flowers still scaling in
+        // or rising from .8/.9 depth scale. Animation must not create capacity.
+        return entry.width * entry.height * 0.48;
     }
 
     private surfaceCapacity(): number {
-        return (RIGHT - LEFT) * (TOP - BOTTOM) * SURFACE_FILL_RATIO;
+        return (this.bounds.right - this.bounds.left) * (this.bounds.top - this.bounds.bottom) * SURFACE_FILL_RATIO;
     }
 
     private surfaceArea(extra?: PoolEntry): number {
@@ -447,6 +478,20 @@ export class FlowerPoolView {
                 pool.ordered.push(entry);
                 pool.entries.set(flower.id, entry);
                 pool.nodes.set(flower.id, entry.node);
+            }
+            if (!pool.firstLevel) {
+                // Input order interleaves layers. Lay out the complete foreground
+                // first so every submerged flower can avoid its actual cover.
+                for (const layer of [0, 1, 2, 3]) {
+                    const placed: PoolEntry[] = [];
+                    for (const entry of pool.inLayer(layer)) {
+                        const point = pool.choosePosition(entry, placed, random);
+                        entry.x = entry.anchorX = point.x; entry.y = entry.anchorY = point.y;
+                        entry.node.setPosition(point.x, point.y);
+                        placed.push(entry);
+                    }
+                }
+                pool.repackSurface();
             }
             pool.refreshBands(true);
             return pool;
@@ -629,8 +674,8 @@ export class FlowerPoolView {
         const cosine = Math.abs(Math.cos(radians)), sine = Math.abs(Math.sin(radians));
         const halfWidth = (cosine * entry.width + sine * entry.height) / 2 + 12;
         const halfHeight = (sine * entry.width + cosine * entry.height) / 2 + 12;
-        out.x = clamp(x, LEFT + halfWidth, RIGHT - halfWidth);
-        out.y = clamp(y, BOTTOM + halfHeight, TOP - halfHeight);
+        out.x = clamp(x, this.bounds.left + halfWidth, this.bounds.right - halfWidth);
+        out.y = clamp(y, this.bounds.bottom + halfHeight, this.bounds.top - halfHeight);
         return out;
     }
 
@@ -639,7 +684,9 @@ export class FlowerPoolView {
         let best: Point = { x: 0, y: -195 }, bestScore = -Infinity;
         const foreground = this.ordered.filter(other => other !== entry && other.band < entry.band && other.band < 3);
         for (let trial = 0; trial < 48; trial++) {
-            const candidate = this.limit(entry, LEFT + random() * (RIGHT - LEFT), BOTTOM + random() * (TOP - BOTTOM), entry.angle);
+            const bounds = this.bounds;
+            const candidate = this.limit(entry, bounds.left + random() * (bounds.right - bounds.left),
+                bounds.bottom + random() * (bounds.top - bounds.bottom), entry.angle);
             let score = Infinity;
             for (const other of existing) {
                 const dx = candidate.x - other.anchorX, dy = candidate.y - other.anchorY;
@@ -680,7 +727,7 @@ export class FlowerPoolView {
             entry.opacity.opacity = entry.alpha;
             entry.node.setScale(entry.scale, entry.scale, 1);
         }
-        // // Render all three active layers; Down remains inactive. Do not truncate
+        // Render all three active layers; Down remains inactive. Do not truncate
         // an initial layer when butterfly insertion takes it over its refill cap.
         let sibling = 0;
         for (const layer of [3, 2, 1, 0]) {
@@ -706,6 +753,7 @@ export class FlowerPoolView {
         this.releaseRipple(entry);
         const bubble = entry.node.getChildByName('Bubble'); if (bubble) bubble.active = false;
         this.refillVacancy(removedLayer, { x: entry.anchorX, y: entry.anchorY });
+        if (removedLayer === 0) this.repackSurface();
         this.refreshBands();
         // Keep ownership and coordinates stable for the caller's flight tween.
         entry.node.setSiblingIndex(this.root.children.length - 1);
@@ -721,21 +769,23 @@ export class FlowerPoolView {
         // The serialized count is the initial fill target. Surface admission is
         // governed by occupied area so a small flower can replace a vacancy even
         // when the target count has already been reached.
-        if (layer === 0) return this.layerMaxCounts[0] > 0 && (!candidate || this.surfaceArea(candidate) <= this.surfaceCapacity());
+        if (layer === 0) return this.layerMaxCounts[0] > 0 && this.surfaceArea(candidate) <= this.surfaceCapacity();
         if (this.layerMaxCounts[layer] <= 0 || this.inLayer(layer).length >= this.layerMaxCounts[layer]) return false;
         return true;
     }
 
-    private firstAvailable(layer: number): PoolEntry | undefined {
-        return this.inLayer(layer).find(entry => entry.flower.status === 'pool' && this.clock >= entry.bornAt);
+    private firstAvailable(layer: number, targetLayer?: number): PoolEntry | undefined {
+        return this.inLayer(layer).find(entry => entry.flower.status === 'pool' && this.clock >= entry.bornAt
+            && (targetLayer !== 0 || this.canReceive(0, entry)));
     }
 
-    private nearestAvailable(layer: number, point: Point): PoolEntry | undefined {
+    private nearestAvailable(layer: number, point: Point, targetLayer?: number): PoolEntry | undefined {
         let nearest: PoolEntry | undefined, distance = NEAR_RADIUS * NEAR_RADIUS;
         for (const entry of this.inLayer(layer)) {
             // Original flowers join the manager only when their batch spawns.
             // Down is inactive even after birth, so active alone cannot tell.
             if (entry.flower.status !== 'pool' || this.clock < entry.bornAt) continue;
+            if (targetLayer === 0 && !this.canReceive(0, entry)) continue;
             const dx = entry.anchorX - point.x, dy = entry.anchorY - point.y;
             const nextDistance = dx * dx + dy * dy;
             if (nextDistance <= distance) { nearest = entry; distance = nextDistance; }
@@ -814,8 +864,8 @@ export class FlowerPoolView {
         if (layer === 3 || !this.canReceive(layer)) return;
         let candidate: PoolEntry | undefined;
         if (layer === 0) {
-            candidate = this.nearestAvailable(1, point) ?? this.nearestAvailable(2, point)
-                ?? this.firstAvailable(1) ?? this.firstAvailable(2) ?? this.firstAvailable(3);
+            candidate = this.nearestAvailable(1, point, 0) ?? this.nearestAvailable(2, point, 0)
+                ?? this.firstAvailable(1, 0) ?? this.firstAvailable(2, 0) ?? this.firstAvailable(3, 0);
         } else if (layer === 1) {
             candidate = this.nearestAvailable(2, point) ?? this.firstAvailable(2) ?? this.firstAvailable(3);
         } else candidate = this.firstAvailable(3);
@@ -841,12 +891,18 @@ export class FlowerPoolView {
         }
     }
 
-    /** Relax top-layer rectangles after a removal/promotion so the board uses
-     * the water area evenly and no flower is left as a tiny exposed fragment. */
+    /** Separate rotated flower silhouettes rather than their shortest dimension:
+     * a long flower needs room along its length as well as across its head. */
     private repackSurface(): void {
         const entries = this.inLayer(0);
         if (entries.length < 2) return;
-        for (let iteration = 0; iteration < 8; iteration++) {
+        const radius = (entry: PoolEntry, dx: number, dy: number) => {
+            const angle = entry.angle * Math.PI / 180;
+            const x = dx * Math.cos(angle) + dy * Math.sin(angle);
+            const y = -dx * Math.sin(angle) + dy * Math.cos(angle);
+            return Math.hypot(entry.width * 0.46 * x, entry.height * 0.46 * y);
+        };
+        for (let iteration = 0; iteration < 16; iteration++) {
             for (let i = 0; i < entries.length; i++) {
                 const a = entries[i];
                 for (let j = i + 1; j < entries.length; j++) {
@@ -854,7 +910,7 @@ export class FlowerPoolView {
                     let dx = b.anchorX - a.anchorX, dy = b.anchorY - a.anchorY;
                     let distance = Math.hypot(dx, dy);
                     if (distance < 0.001) { dx = Math.cos(a.phase); dy = Math.sin(a.phase); distance = 1; }
-                    const target = Math.max(72, (Math.min(a.width, a.height) + Math.min(b.width, b.height)) * 0.42);
+                    const target = Math.max(72, radius(a, dx / distance, dy / distance) + radius(b, dx / distance, dy / distance));
                     if (distance >= target) continue;
                     const push = (target - distance) * 0.5 / distance;
                     const ax = this.limit(a, a.anchorX - dx * push, a.anchorY - dy * push, a.angle);
@@ -863,10 +919,8 @@ export class FlowerPoolView {
                 }
             }
         }
-        for (const entry of entries) {
-            entry.x += (entry.anchorX - entry.x) * 0.35;
-            entry.y += (entry.anchorY - entry.y) * 0.35;
-        }
+        // Only anchors move here. The frame-time motion blends toward them, so
+        // a click cannot cause an instantaneous jump in neighbouring flowers.
     }
 
     private scheduleAutoPromotion(): void {
@@ -878,7 +932,8 @@ export class FlowerPoolView {
     private promoteIdleFlowers(): void {
         if (this.entering || this.firstLevel || this.scatterTargets.size) return;
         const available = (layer: number) => this.inLayer(layer).find(entry =>
-            entry.flower.status === 'pool' && !entry.promotion && entry.entranceAt === null && this.clock >= entry.bornAt);
+            entry.flower.status === 'pool' && !entry.promotion && entry.entranceAt === null && this.clock >= entry.bornAt
+            && this.canReceive(0, entry));
         if (this.clock < this.nextAutoPromotion) return;
         this.scheduleAutoPromotion();
         const settings = this.motion.flowerManager.values;
@@ -977,12 +1032,16 @@ export class FlowerPoolView {
                 for (const entry of this.inLayer(layer).reverse()) {
                     if (!missing) break;
                     if (entry.flower.specialId || entry.flower.kind !== need.kind || entry.flower.status !== 'pool') continue;
-                    if (!this.canReceive(0)) {
+                    if (!this.canReceive(0, entry)) {
                         // Preserve all currently exposed targets. Exchange an
                         // unrelated flower so a promotion cannot push a target out.
                         const displaced = this.inLayer(0).reverse().find(candidate => candidate.flower.kind !== need.kind);
                         if (!displaced) continue;
                         this.moveToLayer(displaced, layer);
+                        if (!this.canReceive(0, entry)) {
+                            this.moveToLayer(displaced, 0);
+                            continue;
+                        }
                     }
                     this.moveToLayer(entry, 0);
                     missing--;

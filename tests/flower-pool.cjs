@@ -75,6 +75,60 @@ test('sprite dimensions preserve variant differences and submerged flowers remai
  p.dispose();
 });
 
+test('surface capacity reserves the final flower size throughout entrance and promotion', async () => {
+ const p=await Pool.create(new Node(),layeredFlowers([2,2,2,0]),2,()=>{},[2,2,2,0]);
+ const candidate=p.inLayer(1)[0],surface=p.inLayer(0),area=p.surfaceArea(candidate);
+ for(const scale of [0,.2,.8,1,1.12]){
+  candidate.scale=scale;for(const entry of surface)entry.scale=scale;
+  assert.equal(p.surfaceArea(candidate),area,'animation does not change the reserved area');
+ }
+ p.dispose();
+});
+
+test('refill skips an oversized nearest flower and admits a smaller flower that fits', async () => {
+ const p=await Pool.create(new Node(),layeredFlowers([2,2,0,0]),2,()=>{},[2,2,0,0]);
+ const [removed,kept]=p.inLayer(0),[large,small]=p.inLayer(1);
+ const capacity=p.surfaceCapacity();kept.width=kept.height=Math.sqrt((capacity-10000)/.48);
+ large.width=large.height=300;large.anchorX=removed.anchorX;large.anchorY=removed.anchorY;
+ small.width=small.height=100;small.anchorX=0;small.anchorY=-195;
+ p.take(removed.flower.id);
+ assert.equal(large.band,1);assert.equal(small.band,0);assert(p.surfaceArea()<=capacity);
+ p.update(2);assert(p.surfaceArea()<=capacity,'fully grown promotion still fits');p.dispose();
+});
+
+test('packing separates long rotated flowers smoothly and keeps them inside the water', async () => {
+ const p=await Pool.create(new Node(),layeredFlowers([2,0,0,0]),2,()=>{},[2,0,0,0]);
+ const entries=p.inLayer(0);
+ for(const e of entries){e.width=240;e.height=90;e.angle=0;e.phase=0;e.x=e.anchorX=0;e.y=e.anchorY=-195;e.node.setPosition(0,-195);}
+ p.repackSurface();
+ const [a,b]=entries;
+ assert(Math.abs(a.anchorX-b.anchorX)>=220,'long horizontal silhouettes need their full width');
+ for(const e of entries){assert.equal(e.node.position.x,0,'packing only updates destinations');assert(Math.abs(e.anchorX)+e.width/2<=325);}
+ p.update(.2);assert(entries.every(e=>Math.abs(e.node.position.x)>0),'frame-time drift follows the relaxed anchors');
+ p.dispose();
+});
+
+test('tall and wide water bounds resize positions, hit routing and area capacity together', async () => {
+ const p=await Pool.create(new Node(),layeredFlowers([21,16,16,8]),2,()=>{},[21,16,16,8]);
+ const initial=p.surfaceCapacity();
+ p.setBounds({left:-331,right:331,bottom:-655,top:330});
+ const top=p.inLayer(0),ys=top.map(e=>e.anchorY);
+ assert(Math.max(...ys)-Math.min(...ys)>700,'flowers occupy the expanded water rather than its center square');
+ assert(p.surfaceCapacity()>initial);
+ const transform=p.root.getComponent(UITransform);assert.equal(transform.height,985);assert.equal(transform.width,662);
+ assert(Math.abs(transform.anchorPoint.y-655/985)<1e-10);
+ p.take(top[0].flower.id);
+ const rising=p.ordered.find(e=>e.promotion);assert(rising);
+ const elapsed=rising.promotion.start;
+ p.setBounds({left:-450,right:450,bottom:-520,top:190});
+ assert.equal(rising.promotion.start,elapsed,'resize preserves transition progress');
+ assert.equal(p.root.getComponent(UITransform).width,900);
+ p.shuffle();p.setBounds({left:-331,right:331,bottom:-655,top:330});p.update(3);
+ for(const e of p.ordered){if(e.band>=3)continue;assert(e.node.position.x>=-331&&e.node.position.x<=331);assert(e.node.position.y>=-655&&e.node.position.y<=330);}
+ const before=JSON.stringify(p.bounds);p.setBounds({left:0,right:NaN,bottom:0,top:1000});assert.equal(JSON.stringify(p.bounds),before);
+ p.dispose();
+});
+
 test('the last delayed difficulty flower floats to an empty surface without another tap', async () => {
  const flower={id:'last-hidden',kind:'dy_zmj',variant:1,status:'hidden',initialLayer:2};
  const p=await Pool.create(new Node(),[flower],3,()=>{},[21,16,16,0]);

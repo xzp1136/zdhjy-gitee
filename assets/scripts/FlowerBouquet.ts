@@ -41,6 +41,8 @@ export interface BouquetLanding {
 /** Keep the vase and foreground masks stable while individual flowers arrive. */
 export class FlowerBouquetView {
     readonly basePosition: Vec3;
+    displayScale = 1;
+    top = 355;
     private placed = new Set<string>();
     private flowersRoot: Node;
     private constructor(readonly root: Node, private readonly layout: Layout, private readonly metrics: Record<string, Metric>, readonly entranceOffset: number) {
@@ -58,6 +60,28 @@ export class FlowerBouquetView {
         const root = uiNode(parent, 'Bouquet', x, y, 240, 360);
         root.active = false;
         const view = new FlowerBouquetView(root, layout, metrics, (motionLayout.width + 80) * 750 / 1080);
+        // Measure the complete future bouquet, not only its currently placed
+        // flowers, so collecting a tall species cannot grow into the HUD.
+        const parts: Layer[] = [...layout.baseLayers, ...layout.foregroundLayers].map(part => ({...part,
+            x: part.x * 750 / 1080, y: part.y * 750 / 1080,
+            width: part.width * 750 / 1080, height: part.height * 750 / 1080}));
+        for (const slot of layout.flowerSlots) {
+            const need = order.needs[slot.group];
+            if (!need) continue;
+            const geometry = view.geometry(slot, need.kind);
+            parts.push({resource: '', x: geometry.position.x, y: geometry.position.y,
+                width: geometry.width, height: geometry.height, angle: geometry.angle});
+        }
+        let top = 0, halfWidth = 0;
+        for (const part of parts) {
+            const angle = (part.angle || 0) * Math.PI / 180, c = Math.abs(Math.cos(angle)), s = Math.abs(Math.sin(angle));
+            top = Math.max(top, part.y + (part.width * s + part.height * c) / 2);
+            halfWidth = Math.max(halfWidth, Math.abs(part.x) + (part.width * c + part.height * s) / 2);
+        }
+        // Reserve a gap below the progress row, including entrance overshoot.
+        view.displayScale = Math.min(1, 165 / Math.max(1, top) / 1.05, 87 / Math.max(1, halfWidth) / 1.05);
+        view.top = y + top * view.displayScale;
+        root.setScale(view.displayScale, view.displayScale, 1);
         const layer = async (part: Layer, index: number) => {
             const scale = 750 / 1080;
             const n = await sprite(root, 'VaseLayer' + index, part.resource, part.x * scale, part.y * scale, part.width * scale, part.height * scale);
@@ -93,6 +117,11 @@ export class FlowerBouquetView {
         const need = order.needs[group];
         const slot = this.layout.flowerSlots.find(item => item.group === group && item.index === need.filled);
         return slot ? this.geometry(slot, need.kind) : null;
+    }
+
+    restingPoint(point: Vec3): Vec3 {
+        return new Vec3(this.basePosition.x + point.x * this.displayScale,
+            this.basePosition.y + point.y * this.displayScale, this.basePosition.z);
     }
 
     groupFlowers(group: number): Node[] {

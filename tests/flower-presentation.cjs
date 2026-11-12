@@ -37,6 +37,9 @@ class UITransform {
   }
 }
 class Mask { static Type = { GRAPHICS_RECT: 0 }; }
+class Sprite {}
+class Label {}
+class UIOpacity { opacity = 255; }
 class Component {
   constructor() { this.isValid = true; this.scheduled = new Set(); }
   scheduleOnce(callback) { this.scheduled.add(callback); }
@@ -44,19 +47,23 @@ class Component {
 }
 const animationTweens = [];
 const cc = {
-  _decorator: { ccclass: () => value => value, property: () => () => {} }, Component, Node, Vec3, UITransform, Mask,
+  _decorator: { ccclass: () => value => value, property: () => () => {} }, Component, Node, Vec3, UITransform, Mask, Sprite, Label, UIOpacity,
   Tween: { stopAllByTarget(target) { for (const value of animationTweens) if (value.target === target) value.stopped = true; } },
-  tween(target) { return { target, steps: [], to(duration, properties, options) { this.steps.push({duration, properties, options}); return this; }, call(callback) { this.callback = callback; return this; }, start() { animationTweens.push(this); return this; } }; },
+  tween(target) { return { target, steps: [], delay() { return this; }, to(duration, properties, options) { this.steps.push({duration, properties, options}); return this; }, call(callback) { this.callback = callback; return this; }, start() { animationTweens.push(this); return this; } }; },
   JsonAsset: class {},
   resources: { load(name, Type, callback) { callback(null, { json: JSON.parse(fs.readFileSync(resourceFile(name + '.json'), 'utf8')) }); } },
 };
 const uiNode = (parent, name, x = 0, y = 0, width = 750, height = 1334) => {
   const node = new Node(name); Object.assign(node, { x, y, width, height });
-  node.addComponent(UITransform).setContentSize(width, height); parent.addChild(node); return node;
+  node.addComponent(UITransform).setContentSize(width, height); node.setPosition(x, y); parent.addChild(node); return node;
 };
 const rewardDialogs = [];
 const pauseDialogs = [];
-const ui = { uiNode, sprite: async (...args) => uiNode(...args), loadFrame: async () => ({}),
+const sprite = async (parent, name, path, x, y, width, height) => {
+  const node = uiNode(parent, name, x, y, width, height); node.addComponent(Sprite); return node;
+};
+const ui = { uiNode, sprite, fittedSprite: sprite, loadFrame: async () => ({}),
+  label(parent, name, text, x, y) { const node = uiNode(parent, name, x, y); node.addComponent(Label).string = text; return node; },
   message: async (parent, title, body, action, onAction) => { rewardDialogs.push({title, body, action, onAction}); return new Node('Message'); } };
 const catalog = { flowerSpritePath: (kind, variant = 1) => 'original/flower/' + kind + '_0' + variant };
 const modules = {};
@@ -167,6 +174,95 @@ test('bouquet landings use original attachment coordinates and incremental flowe
   assert.equal(view.landing(order), null);
   await view.sync(order);
   assert.equal(view.root.getChildByName('PlacedFlowers').children.length, 3);
+});
+
+test('complete bouquets fit below the HUD, including entrance overshoot and slot width', async () => {
+  for (const [vaseId, kind] of [[1301, 'cdy_lxq'], [1001, 'dy_zmj']]) {
+    const order = {id: 'fit-' + vaseId, vaseId, slot: 0, needs: [{kind, required: 3, filled: 0}]};
+    const parent = uiNode(new Node(), 'Slot', -280, 0);
+    const view = await FlowerBouquetView.create(parent, order);
+    assert(view.top < 520); assert(view.displayScale > 0 && view.displayScale <= 1);
+    const landing = view.landing(order), point = view.restingPoint(landing.position);
+    assert.equal(point.x, view.basePosition.x + landing.position.x * view.displayScale);
+    assert.equal(point.y, view.basePosition.y + landing.position.y * view.displayScale);
+    const parts = view.root.children.filter(node => node.name.startsWith('VaseLayer'));
+    for (const part of parts) {
+      const size = part.getComponent(UITransform), a = part.angle * Math.PI / 180;
+      const halfWidth = (size.width * Math.abs(Math.cos(a)) + size.height * Math.abs(Math.sin(a))) / 2;
+      assert((Math.abs(part.position.x) + halfWidth) * view.displayScale * 1.05 <= 87 + 1e-6,
+        JSON.stringify({vaseId, x: part.position.x, width: size.width, height: size.height, angle: part.angle, scale: view.displayScale}));
+    }
+  }
+});
+
+test('early flights target the translated order slot and its fitted flower dimensions', async () => {
+  const game = new FlowerGame(), board = new Node();
+  game.ordersRoot = uiNode(board, 'Orders', 0, 100);
+  game.flowerRoot = uiNode(board, 'Flights', 0, 20);
+  game.trayRoot = uiNode(board, 'Tray');
+  const order = {id: 'left-order', vaseId: 1301, slot: 0, needs: [{kind: 'cdy_lxq', required: 3, filled: 1}]};
+  const parent = uiNode(game.ordersRoot, 'LeftSlot', -280, 0);
+  const bouquet = await FlowerBouquetView.create(parent, order);
+  game.visual = {orders: [order]}; game.orderViews.set(0, {root: parent, bouquet});
+  game.pool = {take: () => uiNode(board, 'Picked', 0, 0, 180, 120)};
+  let flight;
+  game.flyFlower = (node, destination, scale) => {flight = {node, destination, scale}; return Promise.resolve(true);};
+  game.launchEarlyFlight({type: 'move', flowerId: 'picked', from: 'pool', to: 'order', slot: 0}, order);
+  const landing = bouquet.landing(order), point = bouquet.restingPoint(landing.position);
+  assert.equal(flight.destination().x, -280 + point.x);
+  assert.equal(flight.destination().y, 80 + point.y);
+  assert.equal(flight.scale.x, landing.width * bouquet.displayScale / 180);
+  parent.setPosition(87, 0); assert.equal(flight.destination().x, 87 + point.x, 'destination follows the actual slot');
+});
+
+test('new-order rendering returns while its entrance animation is still running', async () => {
+  const game = new FlowerGame(), rules = new FlowerRules();
+  game.rules = rules; game.visual = new FlowerPresentationState(rules);
+  game.visual.orders[0].vaseId = 1301;
+  game.ordersRoot = new Node();
+  let finishEntrance, entered = false;
+  game.enterBouquet = () => { entered = true; return new Promise(resolve => {finishEntrance = resolve;}); };
+  let rendered = false;
+  const work = game.renderOrder(0, true).then(() => {rendered = true;});
+  await new Promise(resolve => setImmediate(resolve));
+  assert(entered); assert(rendered, 'an incoming basket must not block collection commits');
+  finishEntrance(true); await work;
+});
+
+test('group pulses and basket celebrations cannot hold the next landing or its counters', async () => {
+  const game = new FlowerGame(), rules = new FlowerRules({level: 2, timeLimit: 100,
+    flowers: [{kind: 'a', count: 3}], initialOrderSlots: 1,
+    orders: [{needs: [{kind: 'a', count: 1}]}, {needs: [{kind: 'a', count: 2}]}]});
+  game.rules = rules; game.visual = new FlowerPresentationState(rules);
+  game.flowerRoot = new Node(); game.trayRoot = new Node(); game.ordersRoot = new Node();
+  game.sound = game.updateHUD = () => {}; game.refreshOrder = game.renderOrder = async () => {};
+  game.flyFlower = async () => true;
+  game.pool = {take: id => uiNode(game.flowerRoot, id, 0, 0, 100, 100)};
+  const animations = [];
+  game.pulseBouquetGroup = game.removeBouquet = () => new Promise(resolve => animations.push(resolve));
+  const events = rules.flowers.flatMap(flower => rules.select(flower.id));
+  let completed = false;
+  const work = game.animateEvents(events).then(() => {completed = true;});
+  await new Promise(resolve => setImmediate(resolve));
+  assert(completed); assert.equal(game.visual.collected, 3); assert.equal(game.visual.stars, 2);
+  assert(animations.length >= 2, 'decorative animation is still outstanding');
+  for (const finish of animations) finish(true);
+  await work;
+});
+
+test('an outgoing bouquet cannot delete its replacement slot after its animation finishes', async () => {
+  const game = new FlowerGame(), root = new Node(), oldRoot = uiNode(root, 'OldSlot');
+  const bouquet = {root: uiNode(oldRoot, 'Bouquet'), displayScale: .75};
+  game.orderViews.set(0, {root: oldRoot, bouquet});
+  const steps = [];
+  game.animate = () => new Promise(resolve => steps.push(resolve));
+  game.waitFor = async () => true;
+  const work = game.removeBouquet(0);
+  assert.equal(game.orderViews.has(0), false, 'the slot is released synchronously');
+  const replacement = {root: uiNode(root, 'NewSlot')}; game.orderViews.set(0, replacement);
+  for (let i = 0; i < 3; i++) { steps.shift()(true); await new Promise(resolve => setImmediate(resolve)); }
+  assert.equal(await work, true); assert.equal(oldRoot.isValid, false);
+  assert.equal(game.orderViews.get(0), replacement); assert(replacement.root.isValid);
 });
 
 test('changing scene cancels pending flight and tool waits instead of leaving async interactions locked', async () => {
