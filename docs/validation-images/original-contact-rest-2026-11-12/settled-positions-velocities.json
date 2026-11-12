@@ -1,0 +1,2541 @@
+{
+  "scope": "Normal level 2 at 32%, actual Cocos JS physics; logs from generated preview module; only positions and velocities retained, not the stale Node.angle debug field.",
+  "samples": [
+    {
+      "time": "2026-11-12T08:52:27.488Z",
+      "states": [
+        {
+          "id": "flower-6",
+          "positionNativePixels": [
+            47.306724548339844,
+            -24.75990867614746
+          ],
+          "velocityMetresPerSecond": [
+            -0.0004374826676212251,
+            0.0011253214906901121
+          ],
+          "angularVelocityRadiansPerSecond": -0.00043411036791569295,
+          "resting": true
+        },
+        {
+          "id": "special-0",
+          "positionNativePixels": [
+            105.29998016357422,
+            37.46235275268555
+          ],
+          "velocityMetresPerSecond": [
+            -0.0001367024815408513,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": -0.0001442882350057717,
+          "resting": true
+        },
+        {
+          "id": "flower-15",
+          "positionNativePixels": [
+            -98.8259048461914,
+            -39.51485061645508
+          ],
+          "velocityMetresPerSecond": [
+            -2.407412430484045e-35,
+            0.000620602979324758
+          ],
+          "angularVelocityRadiansPerSecond": 0.00039592530368503604,
+          "resting": true
+        },
+        {
+          "id": "special-1",
+          "positionNativePixels": [
+            107.54851531982422,
+            -9.208975791931152
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            0.0003220239595975727
+          ],
+          "angularVelocityRadiansPerSecond": -0.0003670902540131659,
+          "resting": true
+        },
+        {
+          "id": "flower-16",
+          "positionNativePixels": [
+            -4.746201992034912,
+            37.205562591552734
+          ],
+          "velocityMetresPerSecond": [
+            -0.0002413092734059319,
+            -1.0842021724855044e-19
+          ],
+          "angularVelocityRadiansPerSecond": -0.0002538208126178213,
+          "resting": true
+        },
+        {
+          "id": "flower-18",
+          "positionNativePixels": [
+            68.55609893798828,
+            -103.55937194824219
+          ],
+          "velocityMetresPerSecond": [
+            0.000011781048669945449,
+            0.0016169155715033412
+          ],
+          "angularVelocityRadiansPerSecond": -0.00012270891326899384,
+          "resting": true
+        },
+        {
+          "id": "special-2",
+          "positionNativePixels": [
+            -107.39385986328125,
+            -153.95645141601562
+          ],
+          "velocityMetresPerSecond": [
+            -6.018531076210112e-36,
+            0.00025736496900208294
+          ],
+          "angularVelocityRadiansPerSecond": 0.0002917749430949559,
+          "resting": true
+        },
+        {
+          "id": "flower-24",
+          "positionNativePixels": [
+            10.266901969909668,
+            -209.79295349121094
+          ],
+          "velocityMetresPerSecond": [
+            -0.00030938987038098276,
+            0.00009160841000266373
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000720850005291575,
+          "resting": true
+        },
+        {
+          "id": "flower-28",
+          "positionNativePixels": [
+            -62.13348388671875,
+            -75.9416275024414
+          ],
+          "velocityMetresPerSecond": [
+            -0.0007425142102874815,
+            0.0010271202772855759
+          ],
+          "angularVelocityRadiansPerSecond": 0.0001848982120181118,
+          "resting": true
+        },
+        {
+          "id": "flower-26",
+          "positionNativePixels": [
+            -0.18405699729919434,
+            -119.04024505615234
+          ],
+          "velocityMetresPerSecond": [
+            -0.0005986623582430184,
+            0.001461070729419589
+          ],
+          "angularVelocityRadiansPerSecond": 0.00013621936900945215,
+          "resting": false
+        },
+        {
+          "id": "flower-31",
+          "positionNativePixels": [
+            -108.61702728271484,
+            -100.79700469970703
+          ],
+          "velocityMetresPerSecond": [
+            0.000023935521312523633,
+            0.0003958946908824146
+          ],
+          "angularVelocityRadiansPerSecond": 0.00009002155686701905,
+          "resting": true
+        },
+        {
+          "id": "flower-34",
+          "positionNativePixels": [
+            30.37992286682129,
+            -90.53292083740234
+          ],
+          "velocityMetresPerSecond": [
+            -0.000555226462893188,
+            0.0011354105081409216
+          ],
+          "angularVelocityRadiansPerSecond": 0.0005149016669266375,
+          "resting": false
+        },
+        {
+          "id": "flower-48",
+          "positionNativePixels": [
+            -33.51313781738281,
+            -11.23775863647461
+          ],
+          "velocityMetresPerSecond": [
+            -0.0003821140853688121,
+            0.0007801189203746617
+          ],
+          "angularVelocityRadiansPerSecond": -0.00009337975562612545,
+          "resting": true
+        },
+        {
+          "id": "flower-32",
+          "positionNativePixels": [
+            -12.923151016235352,
+            -70.34132385253906
+          ],
+          "velocityMetresPerSecond": [
+            -0.000877303711604327,
+            0.0013540458166971803
+          ],
+          "angularVelocityRadiansPerSecond": -0.000022642551453491525,
+          "resting": true
+        },
+        {
+          "id": "flower-43",
+          "positionNativePixels": [
+            102.7685317993164,
+            -124.53922271728516
+          ],
+          "velocityMetresPerSecond": [
+            -0.00013447838136926293,
+            0.000654928560834378
+          ],
+          "angularVelocityRadiansPerSecond": -0.0005061107147483107,
+          "resting": true
+        },
+        {
+          "id": "flower-46",
+          "positionNativePixels": [
+            -16.769813537597656,
+            -164.2653350830078
+          ],
+          "velocityMetresPerSecond": [
+            -0.00017386124818585813,
+            0.0013444646028801799
+          ],
+          "angularVelocityRadiansPerSecond": 0.00023320662597287972,
+          "resting": false
+        },
+        {
+          "id": "flower-50",
+          "positionNativePixels": [
+            97.82989501953125,
+            -191.2107696533203
+          ],
+          "velocityMetresPerSecond": [
+            0.00004645801891456358,
+            0.00009549017704557627
+          ],
+          "angularVelocityRadiansPerSecond": -0.0003311428978159087,
+          "resting": true
+        },
+        {
+          "id": "flower-76",
+          "positionNativePixels": [
+            -110.47941589355469,
+            -202.8294219970703
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            0.000008011425961740315
+          ],
+          "angularVelocityRadiansPerSecond": 0.000029228682082882337,
+          "resting": true
+        },
+        {
+          "id": "flower-64",
+          "positionNativePixels": [
+            49.006561279296875,
+            34.63895797729492
+          ],
+          "velocityMetresPerSecond": [
+            -0.00003710868622874841,
+            -9.244727294799304e-8
+          ],
+          "angularVelocityRadiansPerSecond": -0.000036792103216953535,
+          "resting": true
+        },
+        {
+          "id": "flower-77",
+          "positionNativePixels": [
+            38.98830032348633,
+            -175.20237731933594
+          ],
+          "velocityMetresPerSecond": [
+            -0.0001911377185024321,
+            0.001708155614323914
+          ],
+          "angularVelocityRadiansPerSecond": 0.00003072700203195293,
+          "resting": false
+        },
+        {
+          "id": "flower-40",
+          "positionNativePixels": [
+            107.47164154052734,
+            -59.1894645690918
+          ],
+          "velocityMetresPerSecond": [
+            -0.00004304703543311916,
+            0.0005322867073118687
+          ],
+          "angularVelocityRadiansPerSecond": -0.00017209517142456151,
+          "resting": true
+        },
+        {
+          "id": "flower-87",
+          "positionNativePixels": [
+            -64.72273254394531,
+            -127.54753875732422
+          ],
+          "velocityMetresPerSecond": [
+            -0.0004253883962519467,
+            0.0009539230959489942
+          ],
+          "angularVelocityRadiansPerSecond": 0.0002106378043316166,
+          "resting": true
+        },
+        {
+          "id": "flower-38",
+          "positionNativePixels": [
+            -65.96734619140625,
+            -193.6180419921875
+          ],
+          "velocityMetresPerSecond": [
+            -0.0002651309478096664,
+            0.0000824586531962268
+          ],
+          "angularVelocityRadiansPerSecond": 0.000058996205877570616,
+          "resting": true
+        },
+        {
+          "id": "flower-51",
+          "positionNativePixels": [
+            -93.80363464355469,
+            25.36676025390625
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            -0.00010114377801073715
+          ],
+          "angularVelocityRadiansPerSecond": -0.00007794673475381198,
+          "resting": true
+        }
+      ]
+    },
+    {
+      "time": "2026-11-12T08:52:30.488Z",
+      "states": [
+        {
+          "id": "flower-6",
+          "positionNativePixels": [
+            47.304962158203125,
+            -24.764202117919922
+          ],
+          "velocityMetresPerSecond": [
+            0.00009802110434975475,
+            -0.000011410827028157655
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000012918759528949315,
+          "resting": true
+        },
+        {
+          "id": "special-0",
+          "positionNativePixels": [
+            105.300048828125,
+            37.46235275268555
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            -2.758516437495473e-8
+          ],
+          "angularVelocityRadiansPerSecond": 8.784925204867596e-8,
+          "resting": true
+        },
+        {
+          "id": "flower-15",
+          "positionNativePixels": [
+            -98.8259048461914,
+            -39.51520919799805
+          ],
+          "velocityMetresPerSecond": [
+            0.00005512706411536783,
+            -0.00004873665238847025
+          ],
+          "angularVelocityRadiansPerSecond": -0.00002824925398955034,
+          "resting": true
+        },
+        {
+          "id": "special-1",
+          "positionNativePixels": [
+            107.54851531982422,
+            -9.20939826965332
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            -0.000022801290469942614
+          ],
+          "angularVelocityRadiansPerSecond": 0.000025992262061316127,
+          "resting": true
+        },
+        {
+          "id": "flower-16",
+          "positionNativePixels": [
+            -4.745333671569824,
+            37.205596923828125
+          ],
+          "velocityMetresPerSecond": [
+            0.00002907248017436359,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": 0.000030579844365394755,
+          "resting": true
+        },
+        {
+          "id": "flower-18",
+          "positionNativePixels": [
+            68.5577621459961,
+            -103.56108093261719
+          ],
+          "velocityMetresPerSecond": [
+            0.00010034352453658357,
+            -0.00003989561810158193
+          ],
+          "angularVelocityRadiansPerSecond": 0.000017214870234698445,
+          "resting": true
+        },
+        {
+          "id": "special-2",
+          "positionNativePixels": [
+            -107.39385986328125,
+            -153.9564208984375
+          ],
+          "velocityMetresPerSecond": [
+            0.000005485398105520289,
+            0.000003735324298759224
+          ],
+          "angularVelocityRadiansPerSecond": 0.000002401130737699251,
+          "resting": true
+        },
+        {
+          "id": "flower-24",
+          "positionNativePixels": [
+            10.26766586303711,
+            -209.7930145263672
+          ],
+          "velocityMetresPerSecond": [
+            0.000011656630704237614,
+            -1.7852137547099203e-14
+          ],
+          "angularVelocityRadiansPerSecond": -1.4048341478803414e-14,
+          "resting": true
+        },
+        {
+          "id": "flower-28",
+          "positionNativePixels": [
+            -62.13347625732422,
+            -75.94025421142578
+          ],
+          "velocityMetresPerSecond": [
+            0.00012191707355668768,
+            -0.00002782983756333124
+          ],
+          "angularVelocityRadiansPerSecond": -0.000015645707060289793,
+          "resting": true
+        },
+        {
+          "id": "flower-26",
+          "positionNativePixels": [
+            -0.18166780471801758,
+            -119.04110717773438
+          ],
+          "velocityMetresPerSecond": [
+            0.0001241837744601071,
+            -0.000005437784238893073
+          ],
+          "angularVelocityRadiansPerSecond": -0.000010000682484798103,
+          "resting": false
+        },
+        {
+          "id": "flower-31",
+          "positionNativePixels": [
+            -108.61702728271484,
+            -100.79736328125
+          ],
+          "velocityMetresPerSecond": [
+            0.000004412270754983183,
+            -0.000017917043805937283
+          ],
+          "angularVelocityRadiansPerSecond": 0.00001659469511305897,
+          "resting": true
+        },
+        {
+          "id": "flower-34",
+          "positionNativePixels": [
+            30.385629653930664,
+            -90.53820037841797
+          ],
+          "velocityMetresPerSecond": [
+            0.00008956277451943606,
+            -0.000003324736326248967
+          ],
+          "angularVelocityRadiansPerSecond": 0.000008737161311113667,
+          "resting": false
+        },
+        {
+          "id": "flower-48",
+          "positionNativePixels": [
+            -33.5140495300293,
+            -11.236342430114746
+          ],
+          "velocityMetresPerSecond": [
+            0.000054325955716194585,
+            -0.000013331764421309344
+          ],
+          "angularVelocityRadiansPerSecond": 0.00005136663066359719,
+          "resting": true
+        },
+        {
+          "id": "flower-32",
+          "positionNativePixels": [
+            -12.923445701599121,
+            -70.33960723876953
+          ],
+          "velocityMetresPerSecond": [
+            0.0001029783597914502,
+            -7.972821549628861e-7
+          ],
+          "angularVelocityRadiansPerSecond": 0.000019018693799099524,
+          "resting": true
+        },
+        {
+          "id": "flower-43",
+          "positionNativePixels": [
+            102.76860809326172,
+            -124.5396728515625
+          ],
+          "velocityMetresPerSecond": [
+            -0.000004124371116631664,
+            -0.00004598473242367618
+          ],
+          "angularVelocityRadiansPerSecond": 0.000014911067001033021,
+          "resting": true
+        },
+        {
+          "id": "flower-46",
+          "positionNativePixels": [
+            -16.76963233947754,
+            -164.26548767089844
+          ],
+          "velocityMetresPerSecond": [
+            0.00008111089118756354,
+            -0.0000044990920287091285
+          ],
+          "angularVelocityRadiansPerSecond": 0.000012116289134362325,
+          "resting": false
+        },
+        {
+          "id": "flower-50",
+          "positionNativePixels": [
+            97.82982635498047,
+            -191.21084594726562
+          ],
+          "velocityMetresPerSecond": [
+            -0.000009403712283528876,
+            -0.000004086934495717287
+          ],
+          "angularVelocityRadiansPerSecond": 0.00002166362647423641,
+          "resting": true
+        },
+        {
+          "id": "flower-76",
+          "positionNativePixels": [
+            -110.47942352294922,
+            -202.8294219970703
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            4.874162300438911e-7
+          ],
+          "angularVelocityRadiansPerSecond": 0.0000017782770189159457,
+          "resting": true
+        },
+        {
+          "id": "flower-64",
+          "positionNativePixels": [
+            49.007080078125,
+            34.66294860839844
+          ],
+          "velocityMetresPerSecond": [
+            0.00005317183240549639,
+            3.808002801974908e-8
+          ],
+          "angularVelocityRadiansPerSecond": 0.000015152907418637438,
+          "resting": true
+        },
+        {
+          "id": "flower-77",
+          "positionNativePixels": [
+            38.98860168457031,
+            -175.20497131347656
+          ],
+          "velocityMetresPerSecond": [
+            0.00007426659431075677,
+            -0.00003261896927142516
+          ],
+          "angularVelocityRadiansPerSecond": -0.00004225791133398751,
+          "resting": false
+        },
+        {
+          "id": "flower-40",
+          "positionNativePixels": [
+            107.47167205810547,
+            -59.18983840942383
+          ],
+          "velocityMetresPerSecond": [
+            -0.000004382703991723247,
+            -0.000027916008548345417
+          ],
+          "angularVelocityRadiansPerSecond": -0.000017521307809553803,
+          "resting": true
+        },
+        {
+          "id": "flower-87",
+          "positionNativePixels": [
+            -64.7205810546875,
+            -127.54634094238281
+          ],
+          "velocityMetresPerSecond": [
+            0.00007406502845697105,
+            -0.000013857214980816934
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000057460458378969374,
+          "resting": true
+        },
+        {
+          "id": "flower-38",
+          "positionNativePixels": [
+            -65.96714782714844,
+            -193.61793518066406
+          ],
+          "velocityMetresPerSecond": [
+            0.000020366896933410317,
+            -0.000006460329586843727
+          ],
+          "angularVelocityRadiansPerSecond": -0.000014889704300160114,
+          "resting": true
+        },
+        {
+          "id": "flower-51",
+          "positionNativePixels": [
+            -93.80364990234375,
+            25.366809844970703
+          ],
+          "velocityMetresPerSecond": [
+            0.0000017676363768259762,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": 0.000004103863161122528,
+          "resting": true
+        }
+      ]
+    },
+    {
+      "time": "2026-11-12T08:52:33.489Z",
+      "states": [
+        {
+          "id": "flower-6",
+          "positionNativePixels": [
+            47.300411224365234,
+            -24.773422241210938
+          ],
+          "velocityMetresPerSecond": [
+            0.00006096763536334038,
+            6.157065399747808e-7
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000030326185325600826,
+          "resting": true
+        },
+        {
+          "id": "special-0",
+          "positionNativePixels": [
+            105.300048828125,
+            37.46235275268555
+          ],
+          "velocityMetresPerSecond": [
+            -0.0000010361862905483576,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000010936851709298855,
+          "resting": true
+        },
+        {
+          "id": "flower-15",
+          "positionNativePixels": [
+            -98.8259506225586,
+            -39.51491928100586
+          ],
+          "velocityMetresPerSecond": [
+            0.000048313126171706244,
+            -0.00003077090877923183
+          ],
+          "angularVelocityRadiansPerSecond": 0.000004499120364636247,
+          "resting": true
+        },
+        {
+          "id": "special-1",
+          "positionNativePixels": [
+            107.54851531982422,
+            -9.209240913391113
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            -0.000013785145711153746
+          ],
+          "angularVelocityRadiansPerSecond": 0.00001571433735834271,
+          "resting": true
+        },
+        {
+          "id": "flower-16",
+          "positionNativePixels": [
+            -4.745882511138916,
+            37.20562744140625
+          ],
+          "velocityMetresPerSecond": [
+            0.000028443402698030695,
+            -4.4581523260360523e-13
+          ],
+          "angularVelocityRadiansPerSecond": 0.000029918153562830817,
+          "resting": true
+        },
+        {
+          "id": "flower-18",
+          "positionNativePixels": [
+            68.5595932006836,
+            -103.56028747558594
+          ],
+          "velocityMetresPerSecond": [
+            0.00006192021101014689,
+            -0.000016134024917846546
+          ],
+          "angularVelocityRadiansPerSecond": 0.00001111050238117636,
+          "resting": true
+        },
+        {
+          "id": "special-2",
+          "positionNativePixels": [
+            -107.39385986328125,
+            -153.95651245117188
+          ],
+          "velocityMetresPerSecond": [
+            0.0000032086268220155034,
+            0.0000022458782495959895
+          ],
+          "angularVelocityRadiansPerSecond": 0.000004231328945351198,
+          "resting": true
+        },
+        {
+          "id": "flower-24",
+          "positionNativePixels": [
+            10.267545700073242,
+            -209.79302978515625
+          ],
+          "velocityMetresPerSecond": [
+            0.000006253786978049902,
+            -8.934752555324853e-15
+          ],
+          "angularVelocityRadiansPerSecond": -7.031005564855289e-15,
+          "resting": true
+        },
+        {
+          "id": "flower-28",
+          "positionNativePixels": [
+            -62.133453369140625,
+            -75.93853759765625
+          ],
+          "velocityMetresPerSecond": [
+            0.00007559621735708788,
+            -0.000015596015146002173
+          ],
+          "angularVelocityRadiansPerSecond": -0.00001121278475104187,
+          "resting": true
+        },
+        {
+          "id": "flower-26",
+          "positionNativePixels": [
+            -0.17975568771362305,
+            -119.04161071777344
+          ],
+          "velocityMetresPerSecond": [
+            0.00007625608122907579,
+            5.863862497790251e-7
+          ],
+          "angularVelocityRadiansPerSecond": -0.00000238118141327362,
+          "resting": false
+        },
+        {
+          "id": "flower-31",
+          "positionNativePixels": [
+            -108.61701965332031,
+            -100.79710388183594
+          ],
+          "velocityMetresPerSecond": [
+            0.0000021611660940834554,
+            -0.0000097318843472749
+          ],
+          "angularVelocityRadiansPerSecond": 0.000008128188211230622,
+          "resting": true
+        },
+        {
+          "id": "flower-34",
+          "positionNativePixels": [
+            30.39306640625,
+            -90.54916381835938
+          ],
+          "velocityMetresPerSecond": [
+            0.00005558378325076774,
+            0.000005681182301486842
+          ],
+          "angularVelocityRadiansPerSecond": 0.000006568069492614973,
+          "resting": false
+        },
+        {
+          "id": "flower-48",
+          "positionNativePixels": [
+            -33.51741409301758,
+            -11.231745719909668
+          ],
+          "velocityMetresPerSecond": [
+            0.00003938399095204659,
+            0.000002777580448309891
+          ],
+          "angularVelocityRadiansPerSecond": 0.00002998176020057774,
+          "resting": true
+        },
+        {
+          "id": "flower-32",
+          "positionNativePixels": [
+            -12.925326347351074,
+            -70.33248901367188
+          ],
+          "velocityMetresPerSecond": [
+            0.00006395928357960656,
+            0.0000048956026148516685
+          ],
+          "angularVelocityRadiansPerSecond": 0.000011621547466668395,
+          "resting": true
+        },
+        {
+          "id": "flower-43",
+          "positionNativePixels": [
+            102.76859283447266,
+            -124.53914642333984
+          ],
+          "velocityMetresPerSecond": [
+            -8.421206985076424e-7,
+            -0.00002131382643710822
+          ],
+          "angularVelocityRadiansPerSecond": 0.0000030445499482649326,
+          "resting": true
+        },
+        {
+          "id": "flower-46",
+          "positionNativePixels": [
+            -16.76995277404785,
+            -164.2657928466797
+          ],
+          "velocityMetresPerSecond": [
+            0.000047215999074978754,
+            1.8310493032913655e-7
+          ],
+          "angularVelocityRadiansPerSecond": 0.000010805464160225101,
+          "resting": false
+        },
+        {
+          "id": "flower-50",
+          "positionNativePixels": [
+            97.82986450195312,
+            -191.21080017089844
+          ],
+          "velocityMetresPerSecond": [
+            -0.00000419185289501911,
+            -0.00000195082975551486
+          ],
+          "angularVelocityRadiansPerSecond": 0.000010340807495642715,
+          "resting": true
+        },
+        {
+          "id": "flower-76",
+          "positionNativePixels": [
+            -110.47942352294922,
+            -202.8294219970703
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            2.1048950316071569e-7
+          ],
+          "angularVelocityRadiansPerSecond": 7.67944475376099e-7,
+          "resting": true
+        },
+        {
+          "id": "flower-64",
+          "positionNativePixels": [
+            49.00658416748047,
+            34.63895797729492
+          ],
+          "velocityMetresPerSecond": [
+            0.000043424341129139066,
+            1.9213061364098394e-8
+          ],
+          "angularVelocityRadiansPerSecond": 0.000007647489178244247,
+          "resting": true
+        },
+        {
+          "id": "flower-77",
+          "positionNativePixels": [
+            38.98982620239258,
+            -175.20729064941406
+          ],
+          "velocityMetresPerSecond": [
+            0.00004454062946024351,
+            -0.000012083335604984313
+          ],
+          "angularVelocityRadiansPerSecond": -0.000023179885112835553,
+          "resting": false
+        },
+        {
+          "id": "flower-40",
+          "positionNativePixels": [
+            107.47164916992188,
+            -59.18971252441406
+          ],
+          "velocityMetresPerSecond": [
+            -0.0000029679940780624747,
+            -0.00001601223266334273
+          ],
+          "angularVelocityRadiansPerSecond": -0.000011865418458210012,
+          "resting": true
+        },
+        {
+          "id": "flower-87",
+          "positionNativePixels": [
+            -64.71806335449219,
+            -127.5456771850586
+          ],
+          "velocityMetresPerSecond": [
+            0.00004194768189336173,
+            -0.00000631934062766959
+          ],
+          "angularVelocityRadiansPerSecond": -0.000006941985996473719,
+          "resting": true
+        },
+        {
+          "id": "flower-38",
+          "positionNativePixels": [
+            -65.96758270263672,
+            -193.61810302734375
+          ],
+          "velocityMetresPerSecond": [
+            0.000011410722436266951,
+            -0.0000024292685338878073
+          ],
+          "angularVelocityRadiansPerSecond": -0.000009817953451261295,
+          "resting": true
+        },
+        {
+          "id": "flower-51",
+          "positionNativePixels": [
+            -93.80366516113281,
+            25.366804122924805
+          ],
+          "velocityMetresPerSecond": [
+            0.0000012007857321805204,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": 0.000002787826446285972,
+          "resting": true
+        }
+      ]
+    },
+    {
+      "time": "2026-11-12T08:52:36.491Z",
+      "states": [
+        {
+          "id": "flower-6",
+          "positionNativePixels": [
+            47.30717849731445,
+            -24.765195846557617
+          ],
+          "velocityMetresPerSecond": [
+            0.000054297586757456884,
+            0.00018458723207004368
+          ],
+          "angularVelocityRadiansPerSecond": -0.00005351537933500598,
+          "resting": true
+        },
+        {
+          "id": "special-0",
+          "positionNativePixels": [
+            105.30003356933594,
+            37.46235275268555
+          ],
+          "velocityMetresPerSecond": [
+            -0.00002409994340268895,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": -0.000025437273735582176,
+          "resting": true
+        },
+        {
+          "id": "flower-15",
+          "positionNativePixels": [
+            -98.8260269165039,
+            -39.51482391357422
+          ],
+          "velocityMetresPerSecond": [
+            -7.52316384526264e-37,
+            0.00008843388786772266
+          ],
+          "angularVelocityRadiansPerSecond": 0.00002974734928172224,
+          "resting": true
+        },
+        {
+          "id": "special-1",
+          "positionNativePixels": [
+            107.54851531982422,
+            -9.209284782409668
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            0.000024849799956427887
+          ],
+          "angularVelocityRadiansPerSecond": -0.000028327459272652273,
+          "resting": true
+        },
+        {
+          "id": "flower-16",
+          "positionNativePixels": [
+            -4.7461395263671875,
+            37.205657958984375
+          ],
+          "velocityMetresPerSecond": [
+            -0.000011504362191772088,
+            -1.3552527156068805e-20
+          ],
+          "angularVelocityRadiansPerSecond": -0.000012100848275967206,
+          "resting": true
+        },
+        {
+          "id": "flower-18",
+          "positionNativePixels": [
+            68.55650329589844,
+            -103.56124114990234
+          ],
+          "velocityMetresPerSecond": [
+            0.00006822372961323708,
+            0.00019379655714146793
+          ],
+          "angularVelocityRadiansPerSecond": 0.000010020476196642701,
+          "resting": true
+        },
+        {
+          "id": "special-2",
+          "positionNativePixels": [
+            -107.39385986328125,
+            -153.9563446044922
+          ],
+          "velocityMetresPerSecond": [
+            1.3552527156068805e-20,
+            0.00009639964991947636
+          ],
+          "angularVelocityRadiansPerSecond": 0.00010928833176181689,
+          "resting": true
+        },
+        {
+          "id": "flower-24",
+          "positionNativePixels": [
+            10.267389297485352,
+            -209.7930145263672
+          ],
+          "velocityMetresPerSecond": [
+            0.00001572769724589307,
+            0.000010601295798551291
+          ],
+          "angularVelocityRadiansPerSecond": -0.000008341971221856845,
+          "resting": true
+        },
+        {
+          "id": "flower-28",
+          "positionNativePixels": [
+            -62.13326644897461,
+            -75.9417724609375
+          ],
+          "velocityMetresPerSecond": [
+            0.000075172443757765,
+            0.00015045501640997827
+          ],
+          "angularVelocityRadiansPerSecond": 0.00003375234918681628,
+          "resting": true
+        },
+        {
+          "id": "flower-26",
+          "positionNativePixels": [
+            -0.1837480068206787,
+            -119.0418930053711
+          ],
+          "velocityMetresPerSecond": [
+            0.000040434526454191655,
+            0.00020739392493851483
+          ],
+          "angularVelocityRadiansPerSecond": -0.000029975915344737513,
+          "resting": false
+        },
+        {
+          "id": "flower-31",
+          "positionNativePixels": [
+            -108.61701202392578,
+            -100.79714965820312
+          ],
+          "velocityMetresPerSecond": [
+            0.000036988196370657533,
+            0.00005558154953178018
+          ],
+          "angularVelocityRadiansPerSecond": 0.00012480090855137923,
+          "resting": true
+        },
+        {
+          "id": "flower-34",
+          "positionNativePixels": [
+            30.379249572753906,
+            -90.53662109375
+          ],
+          "velocityMetresPerSecond": [
+            0.000022903108401806094,
+            0.00016042927745729685
+          ],
+          "angularVelocityRadiansPerSecond": 0.00007154257451115225,
+          "resting": false
+        },
+        {
+          "id": "flower-48",
+          "positionNativePixels": [
+            -33.51268768310547,
+            -11.23788833618164
+          ],
+          "velocityMetresPerSecond": [
+            0.000013973098248243332,
+            0.00012571921979542822
+          ],
+          "angularVelocityRadiansPerSecond": 0.00006920446441401245,
+          "resting": true
+        },
+        {
+          "id": "flower-32",
+          "positionNativePixels": [
+            -12.923348426818848,
+            -70.34212493896484
+          ],
+          "velocityMetresPerSecond": [
+            0.00004106467167730443,
+            0.00020568243053276092
+          ],
+          "angularVelocityRadiansPerSecond": 0.000009383417743780272,
+          "resting": true
+        },
+        {
+          "id": "flower-43",
+          "positionNativePixels": [
+            102.7685775756836,
+            -124.53971099853516
+          ],
+          "velocityMetresPerSecond": [
+            -0.000016514304661541246,
+            0.00006323908746708184
+          ],
+          "angularVelocityRadiansPerSecond": -0.00006215175474937703,
+          "resting": true
+        },
+        {
+          "id": "flower-46",
+          "positionNativePixels": [
+            -16.769683837890625,
+            -164.26577758789062
+          ],
+          "velocityMetresPerSecond": [
+            0.000046152832510415465,
+            0.00017211446538567543
+          ],
+          "angularVelocityRadiansPerSecond": 0.00002098669146986722,
+          "resting": false
+        },
+        {
+          "id": "flower-50",
+          "positionNativePixels": [
+            97.8298110961914,
+            -191.2108917236328
+          ],
+          "velocityMetresPerSecond": [
+            0.000004167568931734422,
+            0.000009102215699385852
+          ],
+          "angularVelocityRadiansPerSecond": -0.000029706051155875952,
+          "resting": true
+        },
+        {
+          "id": "flower-76",
+          "positionNativePixels": [
+            -110.47942352294922,
+            -202.8294219970703
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            7.429268293890345e-7
+          ],
+          "angularVelocityRadiansPerSecond": 0.000002710475801883728,
+          "resting": true
+        },
+        {
+          "id": "flower-64",
+          "positionNativePixels": [
+            49.00661087036133,
+            34.662960052490234
+          ],
+          "velocityMetresPerSecond": [
+            0.000043880183511646464,
+            1.0934192573586188e-7
+          ],
+          "angularVelocityRadiansPerSecond": 0.000043522019309081916,
+          "resting": true
+        },
+        {
+          "id": "flower-77",
+          "positionNativePixels": [
+            38.98876953125,
+            -175.20318603515625
+          ],
+          "velocityMetresPerSecond": [
+            0.00003813587318290956,
+            0.00019807984062936157
+          ],
+          "angularVelocityRadiansPerSecond": -0.000012594916451254596,
+          "resting": false
+        },
+        {
+          "id": "flower-40",
+          "positionNativePixels": [
+            107.47164916992188,
+            -59.19002914428711
+          ],
+          "velocityMetresPerSecond": [
+            -0.000010631656550685875,
+            0.00005911544940317981
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000425035424972038,
+          "resting": true
+        },
+        {
+          "id": "flower-87",
+          "positionNativePixels": [
+            -64.72228240966797,
+            -127.5478515625
+          ],
+          "velocityMetresPerSecond": [
+            0.00003468342765700072,
+            0.00015723708202131093
+          ],
+          "angularVelocityRadiansPerSecond": -0.000013399335934374975,
+          "resting": true
+        },
+        {
+          "id": "flower-38",
+          "positionNativePixels": [
+            -65.9671859741211,
+            -193.6181640625
+          ],
+          "velocityMetresPerSecond": [
+            0.0000234195904340595,
+            0.00006396302342182025
+          ],
+          "angularVelocityRadiansPerSecond": -0.00006793777070981661,
+          "resting": true
+        },
+        {
+          "id": "flower-51",
+          "positionNativePixels": [
+            -93.80368041992188,
+            25.36679458618164
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            -0.000009706986020319164
+          ],
+          "angularVelocityRadiansPerSecond": -0.000007480716975705173,
+          "resting": true
+        }
+      ]
+    },
+    {
+      "time": "2026-11-12T08:52:39.492Z",
+      "states": [
+        {
+          "id": "flower-6",
+          "positionNativePixels": [
+            47.3050537109375,
+            -24.762712478637695
+          ],
+          "velocityMetresPerSecond": [
+            0.00010383600601926446,
+            0.00003279365773778409
+          ],
+          "angularVelocityRadiansPerSecond": -0.000009640690576191186,
+          "resting": true
+        },
+        {
+          "id": "special-0",
+          "positionNativePixels": [
+            105.300048828125,
+            37.46235275268555
+          ],
+          "velocityMetresPerSecond": [
+            -0.000005989427791064372,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": -0.000006321786639345006,
+          "resting": true
+        },
+        {
+          "id": "flower-15",
+          "positionNativePixels": [
+            -98.82604217529297,
+            -39.51435852050781
+          ],
+          "velocityMetresPerSecond": [
+            0.00004989349326933734,
+            -0.00003340176772326231
+          ],
+          "angularVelocityRadiansPerSecond": -0.00002158972521559242,
+          "resting": true
+        },
+        {
+          "id": "special-1",
+          "positionNativePixels": [
+            107.54851531982422,
+            -9.208827018737793
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            -0.000015046915905259084
+          ],
+          "angularVelocityRadiansPerSecond": 0.000017152683970348045,
+          "resting": true
+        },
+        {
+          "id": "flower-16",
+          "positionNativePixels": [
+            -4.74487829208374,
+            37.20573425292969
+          ],
+          "velocityMetresPerSecond": [
+            0.000023249725927598774,
+            -3.3881317890172014e-21
+          ],
+          "angularVelocityRadiansPerSecond": 0.000024455186592489075,
+          "resting": true
+        },
+        {
+          "id": "flower-18",
+          "positionNativePixels": [
+            68.55781555175781,
+            -103.55986785888672
+          ],
+          "velocityMetresPerSecond": [
+            0.00010743796883616596,
+            0.0000076252390499575995
+          ],
+          "angularVelocityRadiansPerSecond": 0.000022481804762010873,
+          "resting": true
+        },
+        {
+          "id": "special-2",
+          "positionNativePixels": [
+            -107.39385986328125,
+            -153.95611572265625
+          ],
+          "velocityMetresPerSecond": [
+            0.000003475843641354004,
+            0.000010790335181809496
+          ],
+          "angularVelocityRadiansPerSecond": 0.000012996465290160226,
+          "resting": true
+        },
+        {
+          "id": "flower-24",
+          "positionNativePixels": [
+            10.267558097839355,
+            -209.7930145263672
+          ],
+          "velocityMetresPerSecond": [
+            0.00001489524311182322,
+            -9.708906787797393e-15
+          ],
+          "angularVelocityRadiansPerSecond": -7.640209689681797e-15,
+          "resting": true
+        },
+        {
+          "id": "flower-28",
+          "positionNativePixels": [
+            -62.133365631103516,
+            -75.93955993652344
+          ],
+          "velocityMetresPerSecond": [
+            0.00012479597353376448,
+            0.000001840372078731889
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000076270786031953,
+          "resting": true
+        },
+        {
+          "id": "flower-26",
+          "positionNativePixels": [
+            -0.18148565292358398,
+            -119.03971099853516
+          ],
+          "velocityMetresPerSecond": [
+            0.00013241438136901706,
+            0.00004343176260590553
+          ],
+          "angularVelocityRadiansPerSecond": -0.000012743974797985205,
+          "resting": false
+        },
+        {
+          "id": "flower-31",
+          "positionNativePixels": [
+            -108.61702728271484,
+            -100.79683685302734
+          ],
+          "velocityMetresPerSecond": [
+            0.0000031466026939597214,
+            -0.000008178741154551972
+          ],
+          "angularVelocityRadiansPerSecond": 0.000011834455332160387,
+          "resting": true
+        },
+        {
+          "id": "flower-34",
+          "positionNativePixels": [
+            30.385902404785156,
+            -90.53640747070312
+          ],
+          "velocityMetresPerSecond": [
+            0.00008694164716871455,
+            0.000034407323255436495
+          ],
+          "angularVelocityRadiansPerSecond": 0.000021524458823849024,
+          "resting": false
+        },
+        {
+          "id": "flower-48",
+          "positionNativePixels": [
+            -33.51438903808594,
+            -11.235644340515137
+          ],
+          "velocityMetresPerSecond": [
+            0.00005339946073945612,
+            0.000018903878299170174
+          ],
+          "angularVelocityRadiansPerSecond": 0.00006043258322943394,
+          "resting": true
+        },
+        {
+          "id": "flower-32",
+          "positionNativePixels": [
+            -12.923285484313965,
+            -70.33863830566406
+          ],
+          "velocityMetresPerSecond": [
+            0.00010401086183264852,
+            0.00004875009835814126
+          ],
+          "angularVelocityRadiansPerSecond": 0.00002414920904657225,
+          "resting": true
+        },
+        {
+          "id": "flower-43",
+          "positionNativePixels": [
+            102.76859283447266,
+            -124.5391616821289
+          ],
+          "velocityMetresPerSecond": [
+            -3.1931185162648035e-7,
+            -0.00002628501533763483
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000012017333870945462,
+          "resting": true
+        },
+        {
+          "id": "flower-46",
+          "positionNativePixels": [
+            -16.76975440979004,
+            -164.26466369628906
+          ],
+          "velocityMetresPerSecond": [
+            0.00008842391980579123,
+            0.000030915434763301164
+          ],
+          "angularVelocityRadiansPerSecond": 0.00001592220367127293,
+          "resting": false
+        },
+        {
+          "id": "flower-50",
+          "positionNativePixels": [
+            97.82984161376953,
+            -191.21084594726562
+          ],
+          "velocityMetresPerSecond": [
+            -0.0000051817105486406945,
+            -0.0000027528603823157027
+          ],
+          "angularVelocityRadiansPerSecond": 0.000014592106612522206,
+          "resting": true
+        },
+        {
+          "id": "flower-76",
+          "positionNativePixels": [
+            -110.47943115234375,
+            -202.82940673828125
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            7.488775395358971e-7
+          ],
+          "angularVelocityRadiansPerSecond": 0.0000027321862556099837,
+          "resting": true
+        },
+        {
+          "id": "flower-64",
+          "positionNativePixels": [
+            49.007347106933594,
+            34.66294860839844
+          ],
+          "velocityMetresPerSecond": [
+            0.000051447706937324256,
+            9.953498647519154e-8
+          ],
+          "angularVelocityRadiansPerSecond": 0.00003961098632384198,
+          "resting": true
+        },
+        {
+          "id": "flower-77",
+          "positionNativePixels": [
+            38.98909378051758,
+            -175.20339965820312
+          ],
+          "velocityMetresPerSecond": [
+            0.00007989378354977816,
+            0.000014500921679427847
+          ],
+          "angularVelocityRadiansPerSecond": -0.000039317026690350366,
+          "resting": false
+        },
+        {
+          "id": "flower-40",
+          "positionNativePixels": [
+            107.47166442871094,
+            -59.18899154663086
+          ],
+          "velocityMetresPerSecond": [
+            -0.000006750631200702628,
+            -0.00001119817443395732
+          ],
+          "angularVelocityRadiansPerSecond": -0.000026987944943405896,
+          "resting": true
+        },
+        {
+          "id": "flower-87",
+          "positionNativePixels": [
+            -64.72042846679688,
+            -127.54602813720703
+          ],
+          "velocityMetresPerSecond": [
+            0.00007577898941235617,
+            0.000012472333764890209
+          ],
+          "angularVelocityRadiansPerSecond": 8.739696428200673e-7,
+          "resting": true
+        },
+        {
+          "id": "flower-38",
+          "positionNativePixels": [
+            -65.96707916259766,
+            -193.6177520751953
+          ],
+          "velocityMetresPerSecond": [
+            0.000022920166884432547,
+            -7.996686690603383e-8
+          ],
+          "angularVelocityRadiansPerSecond": -0.00001922620437763743,
+          "resting": true
+        },
+        {
+          "id": "flower-51",
+          "positionNativePixels": [
+            -93.80370330810547,
+            25.36679458618164
+          ],
+          "velocityMetresPerSecond": [
+            0.0000013617616332339821,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": 0.0000031615569823163295,
+          "resting": true
+        }
+      ]
+    },
+    {
+      "time": "2026-11-12T08:52:42.479Z",
+      "states": [
+        {
+          "id": "flower-6",
+          "positionNativePixels": [
+            47.300743103027344,
+            -24.76634979248047
+          ],
+          "velocityMetresPerSecond": [
+            0.00006426533946068957,
+            0.0000070188816607696936
+          ],
+          "angularVelocityRadiansPerSecond": -0.000002595583375547015,
+          "resting": true
+        },
+        {
+          "id": "special-0",
+          "positionNativePixels": [
+            105.300048828125,
+            37.46235275268555
+          ],
+          "velocityMetresPerSecond": [
+            -0.0000024545361156924628,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000025907403758953537,
+          "resting": true
+        },
+        {
+          "id": "flower-15",
+          "positionNativePixels": [
+            -98.82606506347656,
+            -39.515045166015625
+          ],
+          "velocityMetresPerSecond": [
+            0.00003854711030726321,
+            -0.00003298054070910439
+          ],
+          "angularVelocityRadiansPerSecond": -0.000017417688109607986,
+          "resting": true
+        },
+        {
+          "id": "special-1",
+          "positionNativePixels": [
+            107.54851531982422,
+            -9.209329605102539
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            -0.000011884768355230335
+          ],
+          "angularVelocityRadiansPerSecond": 0.000013548005945930993,
+          "resting": true
+        },
+        {
+          "id": "flower-16",
+          "positionNativePixels": [
+            -4.746005535125732,
+            37.205780029296875
+          ],
+          "velocityMetresPerSecond": [
+            0.000021255085812299512,
+            -4.235164736271502e-22
+          ],
+          "angularVelocityRadiansPerSecond": 0.00002235713111593796,
+          "resting": true
+        },
+        {
+          "id": "flower-18",
+          "positionNativePixels": [
+            68.55953216552734,
+            -103.55850982666016
+          ],
+          "velocityMetresPerSecond": [
+            0.00006842461880296469,
+            -0.000009227159353031311
+          ],
+          "angularVelocityRadiansPerSecond": 0.000013282020404141338,
+          "resting": true
+        },
+        {
+          "id": "special-2",
+          "positionNativePixels": [
+            -107.39385986328125,
+            -153.95657348632812
+          ],
+          "velocityMetresPerSecond": [
+            0.000004239445388520835,
+            0.0000011894703675352503
+          ],
+          "angularVelocityRadiansPerSecond": 0.0000027092133346437032,
+          "resting": true
+        },
+        {
+          "id": "flower-24",
+          "positionNativePixels": [
+            10.267669677734375,
+            -209.7930145263672
+          ],
+          "velocityMetresPerSecond": [
+            0.000008031740435399115,
+            -9.246596205185996e-15
+          ],
+          "angularVelocityRadiansPerSecond": -7.27640659076185e-15,
+          "resting": true
+        },
+        {
+          "id": "flower-28",
+          "positionNativePixels": [
+            -62.132808685302734,
+            -75.93854522705078
+          ],
+          "velocityMetresPerSecond": [
+            0.00008261645416496322,
+            -0.000018623191863298416
+          ],
+          "angularVelocityRadiansPerSecond": -0.000013050049759914309,
+          "resting": true
+        },
+        {
+          "id": "flower-26",
+          "positionNativePixels": [
+            -0.17888832092285156,
+            -119.03854370117188
+          ],
+          "velocityMetresPerSecond": [
+            0.00008355296449735761,
+            0.000005534131560125388
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000019275617486286053,
+          "resting": false
+        },
+        {
+          "id": "flower-31",
+          "positionNativePixels": [
+            -108.61702728271484,
+            -100.79730987548828
+          ],
+          "velocityMetresPerSecond": [
+            0.0000025998440378316445,
+            -0.000012063520443916786
+          ],
+          "angularVelocityRadiansPerSecond": 0.000009778081493883165,
+          "resting": true
+        },
+        {
+          "id": "flower-34",
+          "positionNativePixels": [
+            30.394805908203125,
+            -90.54314422607422
+          ],
+          "velocityMetresPerSecond": [
+            0.000060500515246530995,
+            0.000010074039892060682
+          ],
+          "angularVelocityRadiansPerSecond": 0.000011082811272338472,
+          "resting": false
+        },
+        {
+          "id": "flower-48",
+          "positionNativePixels": [
+            -33.51811981201172,
+            -11.231671333312988
+          ],
+          "velocityMetresPerSecond": [
+            0.00003753206692636013,
+            -0.0000035047241908614524
+          ],
+          "angularVelocityRadiansPerSecond": 0.00004034399208026062,
+          "resting": true
+        },
+        {
+          "id": "flower-32",
+          "positionNativePixels": [
+            -12.924078941345215,
+            -70.33120727539062
+          ],
+          "velocityMetresPerSecond": [
+            0.00006877710984554142,
+            0.000008718347999092657
+          ],
+          "angularVelocityRadiansPerSecond": 0.000013056328291369832,
+          "resting": true
+        },
+        {
+          "id": "flower-43",
+          "positionNativePixels": [
+            102.76859283447266,
+            -124.53939819335938
+          ],
+          "velocityMetresPerSecond": [
+            -6.845658049314807e-7,
+            -0.000021395688236225396
+          ],
+          "angularVelocityRadiansPerSecond": 0.000002474933723574,
+          "resting": true
+        },
+        {
+          "id": "flower-46",
+          "positionNativePixels": [
+            -16.7697696685791,
+            -164.2645721435547
+          ],
+          "velocityMetresPerSecond": [
+            0.00005512455027201213,
+            0.000003393894075998105
+          ],
+          "angularVelocityRadiansPerSecond": 0.000012079768632317214,
+          "resting": false
+        },
+        {
+          "id": "flower-50",
+          "positionNativePixels": [
+            97.829833984375,
+            -191.2108612060547
+          ],
+          "velocityMetresPerSecond": [
+            -0.000004380582140584011,
+            -0.000002096250682370737
+          ],
+          "angularVelocityRadiansPerSecond": 0.000011111587707745103,
+          "resting": true
+        },
+        {
+          "id": "flower-76",
+          "positionNativePixels": [
+            -110.47942352294922,
+            -202.8294219970703
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            1.9800707207195956e-7
+          ],
+          "angularVelocityRadiansPerSecond": 7.224039899210275e-7,
+          "resting": true
+        },
+        {
+          "id": "flower-64",
+          "positionNativePixels": [
+            49.00646209716797,
+            34.66298294067383
+          ],
+          "velocityMetresPerSecond": [
+            0.00004024041845696047,
+            3.923132041450117e-8
+          ],
+          "angularVelocityRadiansPerSecond": 0.00001562288919800598,
+          "resting": true
+        },
+        {
+          "id": "flower-77",
+          "positionNativePixels": [
+            38.99038314819336,
+            -175.20509338378906
+          ],
+          "velocityMetresPerSecond": [
+            0.000051064955187030137,
+            -0.000005832534043292981
+          ],
+          "angularVelocityRadiansPerSecond": -0.00002270795269141353,
+          "resting": false
+        },
+        {
+          "id": "flower-40",
+          "positionNativePixels": [
+            107.47166442871094,
+            -59.18939971923828
+          ],
+          "velocityMetresPerSecond": [
+            -0.0000036794024254049873,
+            -0.000011605905456235632
+          ],
+          "angularVelocityRadiansPerSecond": -0.000014709557260986158,
+          "resting": true
+        },
+        {
+          "id": "flower-87",
+          "positionNativePixels": [
+            -64.71785736083984,
+            -127.54566192626953
+          ],
+          "velocityMetresPerSecond": [
+            0.000047024073865031824,
+            -0.000007887914762250148
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000024483812350850323,
+          "resting": true
+        },
+        {
+          "id": "flower-38",
+          "positionNativePixels": [
+            -65.96725463867188,
+            -193.6179962158203
+          ],
+          "velocityMetresPerSecond": [
+            0.000013675924492417835,
+            -0.0000034739591683319304
+          ],
+          "angularVelocityRadiansPerSecond": -0.000009930753005039822,
+          "resting": true
+        },
+        {
+          "id": "flower-51",
+          "positionNativePixels": [
+            -93.8037109375,
+            25.366788864135742
+          ],
+          "velocityMetresPerSecond": [
+            0.0000012177094959042734,
+            -6.740367270406666e-13
+          ],
+          "angularVelocityRadiansPerSecond": 0.000002827115000775775,
+          "resting": true
+        }
+      ]
+    },
+    {
+      "time": "2026-11-12T08:52:45.481Z",
+      "states": [
+        {
+          "id": "flower-6",
+          "positionNativePixels": [
+            47.30719757080078,
+            -24.76117515563965
+          ],
+          "velocityMetresPerSecond": [
+            0.00012878798588644713,
+            0.00006293901242315769
+          ],
+          "angularVelocityRadiansPerSecond": -0.000010581153207265495,
+          "resting": true
+        },
+        {
+          "id": "special-0",
+          "positionNativePixels": [
+            105.30004119873047,
+            37.46235275268555
+          ],
+          "velocityMetresPerSecond": [
+            -0.000010327690688427538,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": -0.000010900782699736442,
+          "resting": true
+        },
+        {
+          "id": "flower-15",
+          "positionNativePixels": [
+            -98.82610321044922,
+            -39.513771057128906
+          ],
+          "velocityMetresPerSecond": [
+            0.00005410432640928775,
+            -0.00003452949022175744
+          ],
+          "angularVelocityRadiansPerSecond": -0.00002305171782422191,
+          "resting": true
+        },
+        {
+          "id": "special-1",
+          "positionNativePixels": [
+            107.54851531982422,
+            -9.208877563476562
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            -0.000011840471415780485
+          ],
+          "angularVelocityRadiansPerSecond": 0.00001349750569832784,
+          "resting": true
+        },
+        {
+          "id": "flower-16",
+          "positionNativePixels": [
+            -4.745757102966309,
+            37.205841064453125
+          ],
+          "velocityMetresPerSecond": [
+            0.000019512090148054995,
+            -6.776263578034403e-21
+          ],
+          "angularVelocityRadiansPerSecond": 0.000020523764260950322,
+          "resting": true
+        },
+        {
+          "id": "flower-18",
+          "positionNativePixels": [
+            68.5563735961914,
+            -103.56000518798828
+          ],
+          "velocityMetresPerSecond": [
+            0.0001361155154881999,
+            0.000033807180443545803
+          ],
+          "angularVelocityRadiansPerSecond": 0.0000315350536929473,
+          "resting": true
+        },
+        {
+          "id": "special-2",
+          "positionNativePixels": [
+            -107.39385986328125,
+            -153.9562530517578
+          ],
+          "velocityMetresPerSecond": [
+            0.000003885170826833928,
+            0.000016086660252767615
+          ],
+          "angularVelocityRadiansPerSecond": 0.00001999081172789704,
+          "resting": true
+        },
+        {
+          "id": "flower-24",
+          "positionNativePixels": [
+            10.267362594604492,
+            -209.7930145263672
+          ],
+          "velocityMetresPerSecond": [
+            0.000021492318410309963,
+            -6.405735791521587e-15
+          ],
+          "angularVelocityRadiansPerSecond": -5.0408531150238395e-15,
+          "resting": true
+        },
+        {
+          "id": "flower-28",
+          "positionNativePixels": [
+            -62.1331787109375,
+            -75.94123840332031
+          ],
+          "velocityMetresPerSecond": [
+            0.00014863602700643241,
+            0.00001578330557094887
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000037088738796906575,
+          "resting": true
+        },
+        {
+          "id": "flower-26",
+          "positionNativePixels": [
+            -0.18385910987854004,
+            -119.04076385498047
+          ],
+          "velocityMetresPerSecond": [
+            0.0001666146272327751,
+            0.00007868363900342956
+          ],
+          "angularVelocityRadiansPerSecond": -0.000015420179751099288,
+          "resting": false
+        },
+        {
+          "id": "flower-31",
+          "positionNativePixels": [
+            -108.61705017089844,
+            -100.79627990722656
+          ],
+          "velocityMetresPerSecond": [
+            0.0000035634125197248068,
+            -0.0000069053830884513445
+          ],
+          "angularVelocityRadiansPerSecond": 0.000013401943726633621,
+          "resting": true
+        },
+        {
+          "id": "flower-34",
+          "positionNativePixels": [
+            30.38001251220703,
+            -90.53399658203125
+          ],
+          "velocityMetresPerSecond": [
+            0.00010742667654994875,
+            0.000059379068261478096
+          ],
+          "angularVelocityRadiansPerSecond": 0.00003285786971485484,
+          "resting": false
+        },
+        {
+          "id": "flower-48",
+          "positionNativePixels": [
+            -33.51276397705078,
+            -11.23767375946045
+          ],
+          "velocityMetresPerSecond": [
+            0.00006055236008251086,
+            0.000032911331800278276
+          ],
+          "angularVelocityRadiansPerSecond": 0.00007476838776312116,
+          "resting": true
+        },
+        {
+          "id": "flower-32",
+          "positionNativePixels": [
+            -12.922917366027832,
+            -70.34158325195312
+          ],
+          "velocityMetresPerSecond": [
+            0.0001274491660296917,
+            0.00008244108903454617
+          ],
+          "angularVelocityRadiansPerSecond": 0.000032206082167114085,
+          "resting": true
+        },
+        {
+          "id": "flower-43",
+          "positionNativePixels": [
+            102.76859283447266,
+            -124.539306640625
+          ],
+          "velocityMetresPerSecond": [
+            -0.000002711136403377168,
+            -0.000014818909221503418
+          ],
+          "angularVelocityRadiansPerSecond": -0.000010203389494748217,
+          "resting": true
+        },
+        {
+          "id": "flower-46",
+          "positionNativePixels": [
+            -16.769855499267578,
+            -164.26539611816406
+          ],
+          "velocityMetresPerSecond": [
+            0.0001157951628556475,
+            0.000059827467339346185
+          ],
+          "angularVelocityRadiansPerSecond": 0.000022967172428981753,
+          "resting": false
+        },
+        {
+          "id": "flower-50",
+          "positionNativePixels": [
+            97.8298568725586,
+            -191.21083068847656
+          ],
+          "velocityMetresPerSecond": [
+            -0.00000266373967861,
+            -0.0000022276672098087147
+          ],
+          "angularVelocityRadiansPerSecond": 0.000011808237186873941,
+          "resting": true
+        },
+        {
+          "id": "flower-76",
+          "positionNativePixels": [
+            -110.47941589355469,
+            -202.8294219970703
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            0.0000010486619430594146
+          ],
+          "angularVelocityRadiansPerSecond": 0.000003825913677367122,
+          "resting": true
+        },
+        {
+          "id": "flower-64",
+          "positionNativePixels": [
+            49.00669479370117,
+            34.63895034790039
+          ],
+          "velocityMetresPerSecond": [
+            0.00005680353569914587,
+            1.415189245790316e-7
+          ],
+          "angularVelocityRadiansPerSecond": 0.00005631893124474424,
+          "resting": true
+        },
+        {
+          "id": "flower-77",
+          "positionNativePixels": [
+            38.98966598510742,
+            -175.20164489746094
+          ],
+          "velocityMetresPerSecond": [
+            0.00010371622920501977,
+            0.000042795440094778314
+          ],
+          "angularVelocityRadiansPerSecond": -0.00005107980491417543,
+          "resting": false
+        },
+        {
+          "id": "flower-40",
+          "positionNativePixels": [
+            107.47166442871094,
+            -59.189422607421875
+          ],
+          "velocityMetresPerSecond": [
+            -0.000009781873814063147,
+            -0.0000021331015886971727
+          ],
+          "angularVelocityRadiansPerSecond": -0.00003910634972269687,
+          "resting": true
+        },
+        {
+          "id": "flower-87",
+          "positionNativePixels": [
+            -64.72274780273438,
+            -127.54736328125
+          ],
+          "velocityMetresPerSecond": [
+            0.00009464126196689904,
+            0.000027931571821682155
+          ],
+          "angularVelocityRadiansPerSecond": 0.000008897392750438239,
+          "resting": true
+        },
+        {
+          "id": "flower-38",
+          "positionNativePixels": [
+            -65.9672622680664,
+            -193.61810302734375
+          ],
+          "velocityMetresPerSecond": [
+            0.00003161389395245351,
+            0.0000023554364361189073
+          ],
+          "angularVelocityRadiansPerSecond": -0.000025025812713493334,
+          "resting": true
+        },
+        {
+          "id": "flower-51",
+          "positionNativePixels": [
+            -93.8037338256836,
+            25.36678123474121
+          ],
+          "velocityMetresPerSecond": [
+            0.0000013502373121809796,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": 0.000003134801866912494,
+          "resting": true
+        }
+      ]
+    },
+    {
+      "time": "2026-11-12T08:52:48.482Z",
+      "states": [
+        {
+          "id": "flower-6",
+          "positionNativePixels": [
+            47.305362701416016,
+            -24.762075424194336
+          ],
+          "velocityMetresPerSecond": [
+            0.00010368115908931941,
+            0.000010116398698301055
+          ],
+          "angularVelocityRadiansPerSecond": 0.0000030463479287570803,
+          "resting": true
+        },
+        {
+          "id": "special-0",
+          "positionNativePixels": [
+            105.300048828125,
+            37.46235275268555
+          ],
+          "velocityMetresPerSecond": [
+            -0.0000034475308439141372,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": -0.0000036388380322021958,
+          "resting": true
+        },
+        {
+          "id": "flower-15",
+          "positionNativePixels": [
+            -98.82614135742188,
+            -39.5138053894043
+          ],
+          "velocityMetresPerSecond": [
+            0.00006124961510067806,
+            -0.0000552243618585635
+          ],
+          "angularVelocityRadiansPerSecond": -0.000027107643155510738,
+          "resting": true
+        },
+        {
+          "id": "special-1",
+          "positionNativePixels": [
+            107.54851531982422,
+            -9.208977699279785
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            -0.000017115369701059535
+          ],
+          "angularVelocityRadiansPerSecond": 0.000019510618989194083,
+          "resting": true
+        },
+        {
+          "id": "flower-16",
+          "positionNativePixels": [
+            -4.7458930015563965,
+            37.205867767333984
+          ],
+          "velocityMetresPerSecond": [
+            0.000028547356123453937,
+            -2.117582368135751e-22
+          ],
+          "angularVelocityRadiansPerSecond": 0.000030027497349785046,
+          "resting": true
+        },
+        {
+          "id": "flower-18",
+          "positionNativePixels": [
+            68.55789947509766,
+            -103.55964660644531
+          ],
+          "velocityMetresPerSecond": [
+            0.00011160004942212254,
+            -0.000016429952665930614
+          ],
+          "angularVelocityRadiansPerSecond": 0.000012920415573417331,
+          "resting": true
+        },
+        {
+          "id": "special-2",
+          "positionNativePixels": [
+            -107.39385986328125,
+            -153.95619201660156
+          ],
+          "velocityMetresPerSecond": [
+            0.000007288651431736071,
+            2.486794983269647e-7
+          ],
+          "angularVelocityRadiansPerSecond": 0.0000017302454396572708,
+          "resting": true
+        },
+        {
+          "id": "flower-24",
+          "positionNativePixels": [
+            10.267433166503906,
+            -209.7930145263672
+          ],
+          "velocityMetresPerSecond": [
+            0.000013245215086499229,
+            -1.5382521509820987e-14
+          ],
+          "angularVelocityRadiansPerSecond": -1.2104935916343038e-14,
+          "resting": true
+        },
+        {
+          "id": "flower-28",
+          "positionNativePixels": [
+            -62.133209228515625,
+            -75.9394302368164
+          ],
+          "velocityMetresPerSecond": [
+            0.0001319404982496053,
+            -0.000033641234040260315
+          ],
+          "angularVelocityRadiansPerSecond": -0.00002717174747603613,
+          "resting": true
+        },
+        {
+          "id": "flower-26",
+          "positionNativePixels": [
+            -0.18137764930725098,
+            -119.03915405273438
+          ],
+          "velocityMetresPerSecond": [
+            0.000115579656267073,
+            -0.000005248081833997276
+          ],
+          "angularVelocityRadiansPerSecond": -0.000010337047098853292,
+          "resting": false
+        },
+        {
+          "id": "flower-31",
+          "positionNativePixels": [
+            -108.61703491210938,
+            -100.79656219482422
+          ],
+          "velocityMetresPerSecond": [
+            0.000004478619757719571,
+            -0.000021155788999749348
+          ],
+          "angularVelocityRadiansPerSecond": 0.00001684419198989367,
+          "resting": true
+        },
+        {
+          "id": "flower-34",
+          "positionNativePixels": [
+            30.386138916015625,
+            -90.53548431396484
+          ],
+          "velocityMetresPerSecond": [
+            0.0001056997207342647,
+            0.000013442845556710381
+          ],
+          "angularVelocityRadiansPerSecond": 0.00002691115786357254,
+          "resting": false
+        },
+        {
+          "id": "flower-48",
+          "positionNativePixels": [
+            -33.51430892944336,
+            -11.235851287841797
+          ],
+          "velocityMetresPerSecond": [
+            0.000059111189329996705,
+            -0.000011367196748324204
+          ],
+          "angularVelocityRadiansPerSecond": 0.00006109277264253538,
+          "resting": true
+        },
+        {
+          "id": "flower-32",
+          "positionNativePixels": [
+            -12.923035621643066,
+            -70.3386459350586
+          ],
+          "velocityMetresPerSecond": [
+            0.00011393111344659701,
+            0.0000026600982891977765
+          ],
+          "angularVelocityRadiansPerSecond": 0.0000241476897279724,
+          "resting": true
+        },
+        {
+          "id": "flower-43",
+          "positionNativePixels": [
+            102.76859283447266,
+            -124.53927612304688
+          ],
+          "velocityMetresPerSecond": [
+            -1.263582305455202e-7,
+            -0.000027891459467355162
+          ],
+          "angularVelocityRadiansPerSecond": -4.7555044553766726e-7,
+          "resting": true
+        },
+        {
+          "id": "flower-46",
+          "positionNativePixels": [
+            -16.769725799560547,
+            -164.2643585205078
+          ],
+          "velocityMetresPerSecond": [
+            0.00008761505887378007,
+            6.419295459636487e-7
+          ],
+          "angularVelocityRadiansPerSecond": 0.000019508941887621446,
+          "resting": false
+        },
+        {
+          "id": "flower-50",
+          "positionNativePixels": [
+            97.82984924316406,
+            -191.21083068847656
+          ],
+          "velocityMetresPerSecond": [
+            -0.0000062288768276630435,
+            -0.0000031155905162449926
+          ],
+          "angularVelocityRadiansPerSecond": 0.00001651484538330613,
+          "resting": true
+        },
+        {
+          "id": "flower-76",
+          "positionNativePixels": [
+            -110.47941589355469,
+            -202.82943725585938
+          ],
+          "velocityMetresPerSecond": [
+            0,
+            2.61663842593407e-7
+          ],
+          "angularVelocityRadiansPerSecond": 9.546479904530436e-7,
+          "resting": true
+        },
+        {
+          "id": "flower-64",
+          "positionNativePixels": [
+            49.006439208984375,
+            34.638980865478516
+          ],
+          "velocityMetresPerSecond": [
+            0.00005447291550808586,
+            5.949685188966214e-8
+          ],
+          "angularVelocityRadiansPerSecond": 0.000023693129900942516,
+          "resting": true
+        },
+        {
+          "id": "flower-77",
+          "positionNativePixels": [
+            38.989749908447266,
+            -175.20236206054688
+          ],
+          "velocityMetresPerSecond": [
+            0.00008433331095147878,
+            -0.00001211504695675103
+          ],
+          "angularVelocityRadiansPerSecond": -0.000032585469811575494,
+          "resting": false
+        },
+        {
+          "id": "flower-40",
+          "positionNativePixels": [
+            107.47166442871094,
+            -59.189064025878906
+          ],
+          "velocityMetresPerSecond": [
+            -0.000006442364792746957,
+            -0.00001625502045499161
+          ],
+          "angularVelocityRadiansPerSecond": -0.000025755605260570436,
+          "resting": true
+        },
+        {
+          "id": "flower-87",
+          "positionNativePixels": [
+            -64.7207260131836,
+            -127.54572296142578
+          ],
+          "velocityMetresPerSecond": [
+            0.00007438665488734841,
+            -0.00001784509004210122
+          ],
+          "angularVelocityRadiansPerSecond": -0.000002312358429239953,
+          "resting": true
+        },
+        {
+          "id": "flower-38",
+          "positionNativePixels": [
+            -65.96702575683594,
+            -193.61769104003906
+          ],
+          "velocityMetresPerSecond": [
+            0.000022216283468878828,
+            -0.000007025924332992872
+          ],
+          "angularVelocityRadiansPerSecond": -0.00001406395651338744,
+          "resting": true
+        },
+        {
+          "id": "flower-51",
+          "positionNativePixels": [
+            -93.80374908447266,
+            25.366777420043945
+          ],
+          "velocityMetresPerSecond": [
+            0.0000019242179405409843,
+            0
+          ],
+          "angularVelocityRadiansPerSecond": 0.000004467394587815674,
+          "resting": true
+        }
+      ]
+    }
+  ]
+}

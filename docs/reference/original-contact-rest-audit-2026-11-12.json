@@ -1,0 +1,205 @@
+{
+  "source": "/Users/a7/Desktop/真的好解压_wx38b4f3dff4fbedf0/runtime-cache/d83724c5931a26b5.webgl.data.unityweb.bin",
+  "sha256": "3f74128bbe4c7b8490e2b012f52c5b928dce1a940fff80eb5ade91571fb644b6",
+  "physicsSettings": {
+    "m_Gravity": {
+      "x": 0.0,
+      "y": -9.8100004196167
+    },
+    "m_DefaultMaterial": {
+      "m_FileID": 0,
+      "m_PathID": 0
+    },
+    "m_VelocityIterations": 8,
+    "m_PositionIterations": 3,
+    "m_VelocityThreshold": 1.0,
+    "m_MaxLinearCorrection": 0.20000000298023224,
+    "m_MaxAngularCorrection": 8.0,
+    "m_MaxTranslationSpeed": 100.0,
+    "m_MaxRotationSpeed": 360.0,
+    "m_BaumgarteScale": 0.20000000298023224,
+    "m_BaumgarteTimeOfImpactScale": 0.75,
+    "m_TimeToSleep": 0.5,
+    "m_LinearSleepTolerance": 0.009999999776482582,
+    "m_AngularSleepTolerance": 2.0,
+    "m_DefaultContactOffset": 0.009999999776482582,
+    "m_JobOptions": {
+      "useMultithreading": false,
+      "useConsistencySorting": false,
+      "m_InterpolationPosesPerJob": 100,
+      "m_NewContactsPerJob": 30,
+      "m_CollideContactsPerJob": 100,
+      "m_ClearFlagsPerJob": 200,
+      "m_ClearBodyForcesPerJob": 200,
+      "m_SyncDiscreteFixturesPerJob": 50,
+      "m_SyncContinuousFixturesPerJob": 50,
+      "m_FindNearestContactsPerJob": 100,
+      "m_UpdateTriggerContactsPerJob": 100,
+      "m_IslandSolverCostThreshold": 100,
+      "m_IslandSolverBodyCostScale": 1,
+      "m_IslandSolverContactCostScale": 10,
+      "m_IslandSolverJointCostScale": 10,
+      "m_IslandSolverBodiesPerJob": 50,
+      "m_IslandSolverContactsPerJob": 50
+    },
+    "m_SimulationMode": 0,
+    "m_QueriesHitTriggers": true,
+    "m_QueriesStartInColliders": true,
+    "m_CallbacksOnDisable": true,
+    "m_ReuseCollisionCallbacks": true,
+    "m_AutoSyncTransforms": false,
+    "m_LayerCollisionMatrix": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      3840,
+      384,
+      640,
+      1152,
+      2176,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "prefabBodies": {
+    "cdtx_sl_01": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": 3828
+      },
+      "m_BodyType": 0,
+      "m_Simulated": true,
+      "m_UseFullKinematicContacts": false,
+      "m_UseAutoMass": false,
+      "m_Mass": 1.0,
+      "m_LinearDrag": 2.0,
+      "m_AngularDrag": 6.0,
+      "m_GravityScale": 0.0,
+      "m_Material": {
+        "m_FileID": 0,
+        "m_PathID": 1122
+      },
+      "m_IncludeLayers": {
+        "m_Bits": 0
+      },
+      "m_ExcludeLayers": {
+        "m_Bits": 0
+      },
+      "m_Interpolate": 1,
+      "m_SleepingMode": 1,
+      "m_CollisionDetection": 0,
+      "m_Constraints": 0
+    },
+    "cdsy_fhbhh_01": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": 3942
+      },
+      "m_BodyType": 0,
+      "m_Simulated": true,
+      "m_UseFullKinematicContacts": false,
+      "m_UseAutoMass": false,
+      "m_Mass": 1.0,
+      "m_LinearDrag": 2.0,
+      "m_AngularDrag": 6.0,
+      "m_GravityScale": 0.0,
+      "m_Material": {
+        "m_FileID": 0,
+        "m_PathID": 1122
+      },
+      "m_IncludeLayers": {
+        "m_Bits": 0
+      },
+      "m_ExcludeLayers": {
+        "m_Bits": 0
+      },
+      "m_Interpolate": 1,
+      "m_SleepingMode": 1,
+      "m_CollisionDetection": 0,
+      "m_Constraints": 0
+    },
+    "zy_lmg_01": {
+      "m_GameObject": {
+        "m_FileID": 0,
+        "m_PathID": 4011
+      },
+      "m_BodyType": 0,
+      "m_Simulated": true,
+      "m_UseFullKinematicContacts": false,
+      "m_UseAutoMass": false,
+      "m_Mass": 1.0,
+      "m_LinearDrag": 2.0,
+      "m_AngularDrag": 6.0,
+      "m_GravityScale": 0.0,
+      "m_Material": {
+        "m_FileID": 0,
+        "m_PathID": 1122
+      },
+      "m_IncludeLayers": {
+        "m_Bits": 0
+      },
+      "m_ExcludeLayers": {
+        "m_Bits": 0
+      },
+      "m_Interpolate": 1,
+      "m_SleepingMode": 1,
+      "m_CollisionDetection": 0,
+      "m_Constraints": 0
+    }
+  },
+  "nativeWrapperNames": {
+    "20374": "UnityEngine.Rigidbody2D::set_drag(System.Single)",
+    "20375": "UnityEngine.Rigidbody2D::set_angularDrag(System.Single)",
+    "20381": "UnityEngine.Rigidbody2D::IsAwake()",
+    "20382": "UnityEngine.Rigidbody2D::Sleep()",
+    "20383": "UnityEngine.Rigidbody2D::WakeUp()",
+    "20388": "UnityEngine.Rigidbody2D::AddForce_Injected(UnityEngine.Vector2&,UnityEngine.ForceMode2D)",
+    "20389": "UnityEngine.Rigidbody2D::AddTorque(System.Single,UnityEngine.ForceMode2D)"
+  },
+  "flowFunctions": {
+    "FixedUpdate": 40963,
+    "UpdateLayerFlow": 40964,
+    "ApplyRigidbodySetting": 40969,
+    "RegisterFlower": 40968,
+    "SetFlower": 44354
+  },
+  "verified": {
+    "sleepTime": 0.5,
+    "linearSleepTolerance": 0.01,
+    "angularSleepToleranceDegrees": 2,
+    "runtimeLinearDrag": 0.35,
+    "runtimeAngularDrag": 0.25,
+    "prefabDragOverriddenAtRegistration": true,
+    "waterForceOnlyWhenAwake": true,
+    "sameLayerAndWallsOnly": true,
+    "originalCapsulesNative": true
+  },
+  "migrationFindings": [
+    "Creator JS applyLinearImpulseToCenter uses native GetPosition instead of GetWorldCenter; explicit COM needed.",
+    "Node.eulerAngles.z folds signed planar rotations beyond 90 degrees; use quaternion planar angle.",
+    "Convex polygon fan seams can trap an initially overlapping circle inside a reconstructed capsule; exact box/circle union removes fan seams."
+  ],
+  "scope": "Original game code/settings verified statically; Cocos reproduction uses actual bundled native Box2D JS. Unity original was not launched."
+}

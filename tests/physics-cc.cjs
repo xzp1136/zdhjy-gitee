@@ -6,7 +6,14 @@ if(!engine)throw Error('Set COCOS_ENGINE to the engine directory supplied with C
 const partition={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(engine,'cocos/physics-2d/framework/utils/polygon-partition.ts'),'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.CommonJS}}).outputText,{exports:partition.exports,require(){return {logID(...args){throw Error('Cocos polygon partition '+args);}};}});
 const b2=require(path.join(engine,'node_modules/@cocos/box2d'));
 module.exports=function physicsCC(Node){
- Object.defineProperty(Node.prototype,'eulerAngles',{configurable:true,get(){if(this._physicsAngle!==undefined){this.angle=this._physicsAngle;delete this._physicsAngle;}return {x:0,y:0,z:this.angle};}});
+ // Match Creator's rotation quaternion and cached angle independently. Generic
+ // Euler conversion folds planar rotations outside [-90,90] into X/Y flips.
+ Object.defineProperties(Node.prototype,{
+  angle:{configurable:true,get(){return this._angleCache??0;},set(v){this._angleCache=v;this._rotationAngle=v;this._eulerDirty=false;}},
+  rotation:{configurable:true,get(){const a=(this._rotationAngle??0)*Math.PI/360;return {x:0,y:0,z:Math.sin(a),w:Math.cos(a)};}},
+  eulerAngles:{configurable:true,get(){if(this._eulerDirty){this._angleCache=Math.asin(Math.sin((this._rotationAngle??0)*Math.PI/180))*180/Math.PI;this._eulerDirty=false;}return {x:0,y:0,z:this.angle};}}
+ });
+ const angleOf=node=>{const q=node.rotation;return Math.atan2(2*q.w*q.z,1-2*q.z*q.z);};
  const world=new b2.World(new b2.Vec2(0,0)), bodies=new Set(),colliders=new Set();let writing=false;
  const factory=world.m_contactManager.m_contactFactory,liveContacts=new Set(),create=factory.Create.bind(factory),destroyContact=factory.Destroy.bind(factory);
  factory.Create=(...args)=>{const c=create(...args);if(c&&liveContacts.has(c))throw Error('Box2D contact reused while active');if(c)liveContacts.add(c);return c;};
@@ -20,19 +27,22 @@ module.exports=function physicsCC(Node){
 
  world.SetContactListener(listener);
  const system={autoSimulation:true,enable:true,velocityIterations:8,positionIterations:3,collisionMatrix:{},
-  physicsWorld:{syncSceneToPhysics(){for(const rb of [...bodies]){if(!rb.node.isValid){world.DestroyBody(rb.impl);bodies.delete(rb);continue;}rb.impl.SetActive(rb.node.activeInHierarchy);if(rb.node.activeInHierarchy)for(const c of colliders)if(c.rb===rb&&!c.fixtures.length&&c.node.isValid)c.apply();rb.impl.SetType(rb.type);rb.impl.SetTransformVec(new b2.Vec2(rb.node.position.x/32,rb.node.position.y/32),rb.node.eulerAngles.z*Math.PI/180);rb.impl.SetLinearDamping(rb.linearDamping);rb.impl.SetAngularDamping(rb.angularDamping);}},
-   syncPhysicsToScene(){writing=true;for(const rb of bodies){if(!rb.node.activeInHierarchy)continue;const p=rb.impl.GetPosition();rb.node.setPosition(p.x*32,p.y*32);rb.node._physicsAngle=rb.impl.GetAngle()*180/Math.PI;}writing=false;}},
+  physicsWorld:{syncSceneToPhysics(){for(const rb of [...bodies]){if(!rb.node.isValid){world.DestroyBody(rb.impl);bodies.delete(rb);continue;}rb.impl.SetActive(rb.node.activeInHierarchy);if(rb.node.activeInHierarchy)for(const c of colliders)if(c.rb===rb&&!c.fixtures.length&&c.node.isValid)c.apply();rb.impl.SetType(rb.type);rb.impl.SetTransformVec(new b2.Vec2(rb.node.position.x/32,rb.node.position.y/32),angleOf(rb.node));rb.impl.SetLinearDamping(rb.linearDamping);rb.impl.SetAngularDamping(rb.angularDamping);}},
+   syncPhysicsToScene(){writing=true;for(const rb of bodies){if(!rb.node.activeInHierarchy)continue;const p=rb.impl.GetPosition();rb.node.setPosition(p.x*32,p.y*32);rb.node._rotationAngle=rb.impl.GetAngle()*180/Math.PI;rb.node._eulerDirty=true;}writing=false;}},
   step(dt){world.Step(dt,this.velocityIterations,this.positionIterations);}};
  class RigidBody2D{
   type=2;group=1;gravityScale=0;linearDamping=0;angularDamping=0;fixedRotation=false;allowSleep=true;
-  ensure(){if(!this.impl){const d=new b2.BodyDef();d.type=this.type;d.gravityScale=0;d.active=this.node.activeInHierarchy;d.position.Set(this.node.position.x/32,this.node.position.y/32);d.angle=this.node.angle*Math.PI/180;this.impl=world.CreateBody(d);bodies.add(this);}return this.impl;}
+  ensure(){if(!this.impl){const d=new b2.BodyDef();d.type=this.type;d.gravityScale=0;d.active=this.node.activeInHierarchy;d.position.Set(this.node.position.x/32,this.node.position.y/32);d.angle=angleOf(this.node);this.impl=world.CreateBody(d);bodies.add(this);}return this.impl;}
   getMass(){return this.ensure().GetMass();}
   get linearVelocity(){return this.ensure().GetLinearVelocity().Clone();}set linearVelocity(v){this.ensure().SetLinearVelocity(v);}
   get angularVelocity(){return this.ensure().GetAngularVelocity();}set angularVelocity(v){this.ensure().SetAngularVelocity(v);}
   isAwake(){return this.ensure().IsAwake();}
   sleep(){this.ensure().SetAwake(false);}
   wakeUp(){this.ensure().SetAwake(true);}
-  applyLinearImpulseToCenter(v,w){const b=this.ensure();b.ApplyLinearImpulse(v,b.GetWorldCenter(),w);}
+  // Creator 3.8.7's JS backend uses the body origin in this convenience method.
+  applyLinearImpulseToCenter(v,w){const b=this.ensure();b.ApplyLinearImpulse(v,b.GetPosition(),w);}
+  getWorldCenter(out){const p=this.ensure().GetWorldCenter();out.x=p.x*32;out.y=p.y*32;return out;}
+  applyLinearImpulse(v,p,w){this.ensure().ApplyLinearImpulse(v,new b2.Vec2(p.x/32,p.y/32),w);}
   applyAngularImpulse(v,w){this.ensure().ApplyAngularImpulse(v,w);}
  }
  class Collider2D{

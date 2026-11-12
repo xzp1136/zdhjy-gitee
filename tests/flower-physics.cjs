@@ -22,9 +22,13 @@ test('every exported collider attaches to its own native body and keeps explicit
  const p=create();let i=0,total=0;
  for(const [key,profile] of Object.entries(original.flowers)){
   const id=String(i++);add(p,id,(i%25)*8,Math.floor(i/25)*8,0,1,{x:.2,y:0},key);p.update(.02);
-  const state=p.states.get(id);assert.equal(state.colliders.length,profile.fixtures.length);
+  const state=p.states.get(id);const components=profile.fixtures.reduce((count,f)=>{
+   if(f.kind!=='CapsuleCollider2D')return count+1;
+   const [a,b,c,d]=f.matrix,w=f.m_Size.x*Math.hypot(a,b),h=f.m_Size.y*Math.hypot(c,d);
+   return count+((f.m_Direction===0?h>w:w>h)?3:1);
+  },0);assert.equal(state.colliders.length,components);
   for(const c of state.colliders){assert.equal(c.node,state.body.node);assert.equal(c.rb,state.body);assert(c.fixtures.length);assert(Math.abs(c.friction-.1)<1e-7);}
-  assert(Math.abs(state.body.getMass()-1)<1e-5);total+=state.colliders.length;p.remove(id);
+  assert(Math.abs(state.body.getMass()-1)<1e-5);total+=profile.fixtures.length;p.remove(id);
  }
  assert.equal(i,442);assert.equal(total,480);p.dispose();assert.equal(cc.bodies.size,0);
 });
@@ -118,7 +122,7 @@ test('native sleeping bodies are not awakened by the periodic water impulse',()=
  assert.equal(state.body.isAwake(),false,'call the Creator isAwake() method; a function reference is always truthy');
  assert.deepEqual(p.pose('sleeping'),before);p.dispose();
 });
-test('render interpolation and contact rest read refreshed Euler angles after native world rotation',()=>{
+test('render interpolation follows native world rotation even with an old angle cache',()=>{
  const p=create(circleData());add(p,'turning',0,-2,0,1,{x:0,y:0},'test');p.update(.02);
  const state=p.states.get('turning');state.body.angularVelocity=.8;const start=state.node.eulerAngles.z;
  p.update(.03);const native=state.body.impl.GetAngle()*180/Math.PI;
@@ -127,4 +131,46 @@ test('render interpolation and contact rest read refreshed Euler angles after na
  const visual=p.pose('turning');
  assert(Math.abs(visual.angle-(start+native)/2)<1e-7,'rendered angle interpolates the real collision-body rotation');
  assert(Math.abs(state.node.eulerAngles.z-native)<1e-7);p.dispose();
+});
+
+test('full-circle native rotation stays aligned with art across both Euler folds and the 180-degree seam',()=>{
+ const difference=(a,b)=>Math.abs(((a-b+540)%360)-180);
+ for(const angle of [-179,-155,-91,-89,89,91,155,179]){
+  const p=create(circleData());p.add('turn','test',0,-2*UNIT,angle,1,0,{x:0,y:0});p.sync('turn',0,1,true);p.update(.02);
+  const state=p.states.get('turn');state.body.angularVelocity=1;
+  for(let frame=0;frame<90;frame++){
+   p.update(1/30);const actual=state.body.impl.GetAngle()*180/Math.PI,alpha=p.accumulator/.02;
+   const expected=state.previous.angle+(((actual-state.previous.angle+540)%360)-180)*alpha;
+   assert(difference(p.pose('turn').angle,expected)<1e-6,`${angle}: art must follow native quaternion, without an Euler fold`);
+  }
+  p.dispose();
+ }
+});
+test('original linear impulses act through the real mass centre of an offset collider, without incidental torque',()=>{
+ const data=circleData();data.flowers.test.fixtures[0].matrix[4]=.4;
+ const p=create(data);p.add('offset','test',0,-2*UNIT,155,1,0,{x:0,y:.3});p.sync('offset',0,1,true);p.update(.02);
+ const state=p.states.get('offset');assert(Math.abs(state.body.angularVelocity)<1e-10,'spawn AddForce impulse produces no torque');
+ state.body.angularVelocity=0;state.body.linearVelocity=new cc.Vec2();state.direction=new cc.Vec2(0,1);state.nextDirection=Infinity;
+ // Bypass the separately intentional random torque; inspect only the flow force.
+ p.random=()=>1;p.flowIndex=1;p.flow();
+ assert(state.body.linearVelocity.y>0,'original water force is still applied');
+ assert(Math.abs(state.body.angularVelocity)<1e-10,'water force also goes through the actual mass centre');p.dispose();
+});
+
+test('overlapping original blue rose and water-lily bodies separate and settle at pool corner without locking rotation',()=>{
+ const data={...original,flow:{...original.flow,torqueImpulse:0,layers:original.flow.layers.map(layer=>({...layer,strength:0}))}};
+ for(const fps of [15,30,60])for(const variant of [1,2,3]){
+  const p=create(data);
+  p.add('rose',`original/flower/zy_lmg_0${variant}`,-2.8*UNIT,-5.8*UNIT,155,1.1,0,{x:0,y:0});p.sync('rose',0,1,true);
+  p.add('lily',`original/flower/cdtx_sl_0${variant}`,-2.7*UNIT,-5.7*UNIT,-155,1,0,{x:0,y:0});p.sync('lily',0,1,true);
+  for(let i=0;i<fps*30;i++)p.update(1/fps);
+  const a=p.states.get('rose'),b=p.states.get('lily'),separation=Math.hypot(a.node.position.x-b.node.position.x,a.node.position.y-b.node.position.y)/32;
+  assert(separation>1.5,`${fps}fps variant ${variant}: original same-depth fixtures must separate (${separation})`);
+  for(const s of [a,b]){
+   assert.equal(s.body.fixedRotation,false,'natural collision rotation remains enabled');
+   assert.equal(s.body.isAwake(),false,`${fps}fps variant ${variant} must eventually sleep without an external force`);
+  }
+  const before=[p.pose('rose'),p.pose('lily')];for(let i=0;i<fps*3;i++)p.update(1/fps);
+  assert.deepEqual([p.pose('rose'),p.pose('lily')],before,'the settled pair does not continue spinning');p.dispose();
+ }
 });

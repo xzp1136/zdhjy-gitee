@@ -81,3 +81,7 @@ Cocos 没有 CapsuleCollider2D。本实现按 Direction 和缩放构建圆形/�
 ## 生成映射回归的后续修复
 
 此前手补 preview 编号导出与 import-map 的方式，在 Creator 独立重建映射后产生 `__unresolved_16` 启动错误。已替换为引擎完整模块标识，修复工具不再写 import-map；验证见 [预览模块映射启动错误](validation-preview-module-resolution-2026-11-12.md)。本节取代上文旧的缓存修复方式说明。
+
+## 后续修正
+
+本记录之后核实了质心施力、大角度欧拉分解及胶囊多边形内部接缝的问题；当前实现与复现结果以 [原包碰撞与休眠复核](validation-original-contact-rest-2026-11-12.md) 为准。

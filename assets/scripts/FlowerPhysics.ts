@@ -6,6 +6,12 @@ export const FLOWER_WORLD_UNIT = 750 / 10.8;
 // the original camera conversion; velocity/impulse/mass stay in Unity metres.
 const PTM = 32;
 type Point = {x: number; y: number};
+// Generic Euler decomposition folds Z angles beyond 90 degrees into X/Y flips.
+// These bodies rotate only in the XY plane: read the complete signed Z angle.
+function planarAngle(node: Node): number {
+    const q=node.rotation;
+    return Math.atan2(2*(q.w*q.z+q.x*q.y),1-2*(q.y*q.y+q.z*q.z))*180/Math.PI;
+}
 export type PhysicsFixture = {kind: string; matrix: number[]; offset: Point; density: number; friction: number; restitution: number;
     m_Size?: Point; m_Radius?: number; m_Direction?: number; m_Points?: {m_Paths: Point[][]}};
 export type OriginalBody = {mass: number; autoMass: boolean; gravityScale: number; constraints: number; fixtures: PhysicsFixture[]};
@@ -29,8 +35,7 @@ type State = {contacts: Map<IPhysics2DContact,Node>; neighbours: Set<Node>; neig
     direction: Vec2; nextDirection: number; impulse: Point; previous: {x: number; y: number; angle: number}; scale: number; baseScale: number; massDirty: boolean};
 
 /** Restore original rigid bodies, per-depth filtering and 40963/40964 flow.
- * Curved capsules become convex polygons within Box2D's original contact slop;
- * Cocos partitions those polygons to its supported vertex count. */
+ * Native capsules use an exact rectangle/circle union, avoiding polygon fan seams. */
 export class FlowerPhysics {
     readonly root: Node;
     private readonly states = new Map<string,State>();
@@ -41,6 +46,7 @@ export class FlowerPhysics {
     private flowTimer=0;
     private flowIndex=0;
     private disposed=false;
+    private readonly massCenter=new Vec2();
     constructor(parent: Node, readonly data: OriginalPhysics, private readonly random: () => number = Math.random) {
         this.system=PhysicsSystem2D.instance;
         if (!this.system?.physicsWorld) throw new Error('Flower physics needs the project Box2D 2D engine module.');
@@ -100,17 +106,19 @@ export class FlowerPhysics {
             if(segment<1e-8) {
                 const circle=node.addComponent(CircleCollider2D);circle.offset=offset;circle.radius=radius*PTM;finish(circle);
             } else {
-                // Approximation error <= original Physics2D contact offset .01m.
-                const steps=Math.max(4,Math.ceil(Math.PI/Math.acos(Math.max(-1,1-this.data.contactOffset/radius))));
-                const points: Vec2[]=[];
-                for(let end=0;end<2;end++)for(let i=0;i<=steps;i++) {
-                    const t=(vertical?(end===0?0:Math.PI):(end===0?-Math.PI/2:Math.PI/2))+i*Math.PI/steps;
-                    const x=radius*Math.cos(t)+(vertical?0:(end===0?segment:-segment));
-                    const y=radius*Math.sin(t)+(vertical?(end===0?segment:-segment):0);
-                    // Dimensions already include the original nonuniform scale.
-                    points.push(new Vec2((a/sx*x+c/sy*y)*PTM+offset.x,(b/sx*x+d/sy*y)*PTM+offset.y));
+                // A convex capsule outline exceeds Box2D's 8-vertex limit.
+                // Fan partitioning adds internal edges: a flower spawned inside
+                // can get trapped by opposing seam normals. The original native
+                // capsule has no such edges. Represent its exact boundary as a
+                // centre rectangle and two round caps instead.
+                const mapped=(x: number,y: number)=>new Vec2((a/sx*x+c/sy*y)*PTM+offset.x,(b/sx*x+d/sy*y)*PTM+offset.y);
+                const w=vertical?radius:segment,h=vertical?segment:radius;
+                polygon([mapped(-w,-h),mapped(w,-h),mapped(w,h),mapped(-w,h)]);
+                for(const sign of [-1,1]){
+                    const cap=node.addComponent(CircleCollider2D);
+                    cap.offset=mapped(vertical?0:sign*segment,vertical?sign*segment:0);
+                    cap.radius=radius*PTM;finish(cap);
                 }
-                polygon(points);
             }
         } else throw new Error(`Unsupported original collider: ${source.kind}`);
         return colliders;
@@ -164,12 +172,19 @@ export class FlowerPhysics {
     private normalizeMass(): void {
         for(const state of this.states.values())if(state.active){
             if(state.massDirty&&!state.profile.autoMass){const mass=state.body.getMass();if(mass>1e-12){const ratio=state.profile.mass/mass;for(const c of state.colliders){c.density*=ratio;c.apply();}state.massDirty=false;}}
-            if(state.impulse.x||state.impulse.y){state.body.applyLinearImpulseToCenter(new Vec2(state.impulse.x,state.impulse.y),true);state.impulse={x:0,y:0};}
+            if(state.impulse.x||state.impulse.y){this.push(state.body,new Vec2(state.impulse.x,state.impulse.y));state.impulse={x:0,y:0};}
             if(!state.registered){
                 state.registered=true;const v=state.body.linearVelocity;
                 if(v.x*v.x+v.y*v.y<.0025){const speed=this.range(.05,.12);state.body.linearVelocity=new Vec2(state.direction.x*speed,state.direction.y*speed);}
             }
         }
+    }
+    private push(body: RigidBody2D,impulse: Vec2): void {
+        // Original Rigidbody2D.AddForce(..., Impulse) acts at the mass centre.
+        // Creator 3.8.7 JS applyLinearImpulseToCenter uses GetPosition() (origin),
+        // adding torque on offset/compound shapes. Use the explicit world COM.
+        body.getWorldCenter(this.massCenter);
+        body.applyLinearImpulse(impulse,this.massCenter,true);
     }
     private clamp(state: State,max: number): void {
         const v=state.body.linearVelocity,length=Math.hypot(v.x,v.y);
@@ -195,9 +210,8 @@ export class FlowerPhysics {
         if(!neighbours.size||v.x*v.x+v.y*v.y>STILL_SPEED*STILL_SPEED||Math.abs(state.body.angularVelocity)>STILL_ANGULAR_SPEED){
             this.clearRest(state);return;
         }
-        // Native sync writes world rotation; Node.angle can still hold an old Euler
-        // cache. eulerAngles refreshes it before rest detection and rendering.
-        const pose={x:state.node.position.x/PTM,y:state.node.position.y/PTM,angle:state.node.eulerAngles.z},origin=state.quietPose;
+        // Use the same full planar rotation for rest detection and rendered poses.
+        const pose={x:state.node.position.x/PTM,y:state.node.position.y/PTM,angle:planarAngle(state.node)},origin=state.quietPose;
         const rotation=origin?Math.abs(((pose.angle-origin.angle+540)%360)-180):0;
         if(!origin||Math.hypot(pose.x-origin.x,pose.y-origin.y)>REST_POSITION_RANGE||rotation>REST_ANGLE_RANGE){
             this.clearRest(state);state.quietPose=pose;
@@ -223,7 +237,7 @@ export class FlowerPhysics {
                 const v=state.body.linearVelocity,speed=Math.hypot(v.x,v.y),threshold=settings.maxSpeed*.8;
                 if(speed<threshold&&state.body.isAwake()){
                     const factor=.35+.65*Math.max(0,Math.min(1,1-speed/Math.max(threshold,.01)));
-                    state.body.applyLinearImpulseToCenter(new Vec2(state.direction.x*settings.strength*factor,state.direction.y*settings.strength*factor),true);
+                    this.push(state.body,new Vec2(state.direction.x*settings.strength*factor,state.direction.y*settings.strength*factor));
                 }
                 if(!state.contacts.size&&state.body.isAwake()&&Math.abs(state.body.angularVelocity)*180/Math.PI<10&&this.random()<.18)
                     state.body.applyAngularImpulse(this.range(-this.data.flow.torqueImpulse,this.data.flow.torqueImpulse),true);
@@ -243,7 +257,7 @@ export class FlowerPhysics {
             for(const state of this.states.values())if(state.active)this.settleContact(state);
             for(const state of this.states.values())if(state.active&&Math.abs(state.body.angularVelocity)>this.data.maxAngularSpeed*Math.PI/180)
                 state.body.angularVelocity=Math.sign(state.body.angularVelocity)*this.data.maxAngularSpeed*Math.PI/180;
-            for(const state of this.states.values())if(state.active)state.previous={x:state.node.position.x/PTM*FLOWER_WORLD_UNIT,y:state.node.position.y/PTM*FLOWER_WORLD_UNIT,angle:state.node.eulerAngles.z};
+            for(const state of this.states.values())if(state.active)state.previous={x:state.node.position.x/PTM*FLOWER_WORLD_UNIT,y:state.node.position.y/PTM*FLOWER_WORLD_UNIT,angle:planarAngle(state.node)};
             this.clock+=this.data.fixedTimeStep;this.flowTimer+=this.data.fixedTimeStep;
             if(this.flowTimer+1e-9>=this.data.flow.updateInterval){this.flowTimer=0;this.flow();}
             this.system.step(this.data.fixedTimeStep);world.syncPhysicsToScene();this.accumulator-=this.data.fixedTimeStep;
@@ -251,7 +265,7 @@ export class FlowerPhysics {
     }
     pose(id: string): {x: number;y: number;angle: number}|null {
         const state=this.states.get(id);if(!state?.active)return null;
-        const x=state.node.position.x/PTM*FLOWER_WORLD_UNIT,y=state.node.position.y/PTM*FLOWER_WORLD_UNIT,angle=state.node.eulerAngles.z;
+        const x=state.node.position.x/PTM*FLOWER_WORLD_UNIT,y=state.node.position.y/PTM*FLOWER_WORLD_UNIT,angle=planarAngle(state.node);
         const delta=((angle-state.previous.angle+540)%360)-180;
         const alpha=state.band<2?Math.max(0,Math.min(1,this.accumulator/this.data.fixedTimeStep)):1;
         return {x:state.previous.x+(x-state.previous.x)*alpha,y:state.previous.y+(y-state.previous.y)*alpha,

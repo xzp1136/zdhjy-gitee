@@ -30,3 +30,7 @@ Used the already-running normal Creator preview at `http://127.0.0.1:7456/?previ
 ![Second-level collection and large flowers](validation-images/runtime-jitter-2026-11-12/level2-after-collection.png)
 
 Physical motion immediately after a removal is expected; the test concerns indefinite vibration after contacts settle. Existing water/ripple and butterfly-wing animations remain active. No real-device performance claim is made.
+
+## 后续修正
+
+本记录之后核实了质心施力、大角度欧拉分解及胶囊多边形内部接缝的问题；当前实现与复现结果以 [原包碰撞与休眠复核](validation-original-contact-rest-2026-11-12.md) 为准。
