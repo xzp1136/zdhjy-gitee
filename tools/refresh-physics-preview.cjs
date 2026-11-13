@@ -9,8 +9,7 @@ const fs=require('node:fs'),path=require('node:path'),os=require('node:os');
  */
 function refreshPhysicsPreview(project,engine){
  const config=JSON.parse(fs.readFileSync(path.join(project,'settings/v2/packages/engine.json'),'utf8')).modules.configs.defaultConfig;
- for(const feature of ['physics-2d-framework','physics-2d-box2d'])
-  if(!config.includeModules.includes(feature))throw Error('Project physics feature is not enabled: '+feature);
+ if(!config.includeModules.includes('physics-2d-box2d'))throw Error('Project physics feature is not enabled: physics-2d-box2d');
  const features=JSON.parse(fs.readFileSync(path.join(engine,'cc.config.json'),'utf8')).features;
  const engineMap=JSON.parse(fs.readFileSync(path.join(engine,'bin/.cache/dev/preview/import-map.json'),'utf8')).imports;
  const units=[];
@@ -22,6 +21,10 @@ function refreshPhysicsPreview(project,engine){
    if(!units.includes(id))units.push(id);
   }
  }
+ // Creator's Box2D feature already expands to the shared physics framework.
+ // Validate the effective exports rather than requiring a duplicate feature.
+ for(const unit of ['physics-2d-box2d','physics-2d-framework'])
+  if(!units.includes('cce:/internal/x/cc-fu/'+unit))throw Error('Engine physics module is missing: '+unit);
  const root=path.join(project,'temp/programming/packer-driver/targets/preview'),file=path.join(root,'import-map.json');
  const map=JSON.parse(fs.readFileSync(file,'utf8')),id=map.imports['cce:/internal/x/cc'];
  if(typeof id!=='string')throw Error('Creator preview cc export module was not found.');

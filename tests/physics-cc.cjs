@@ -68,5 +68,5 @@ module.exports=function physicsCC(Node){
  class PolygonCollider2D extends Collider2D{points=[];}
  const destroy=Node.prototype.destroy;
  Node.prototype.destroy=function(){const rb=this.getComponent(RigidBody2D);if(rb?.impl&&bodies.has(rb)){world.DestroyBody(rb.impl);bodies.delete(rb);}return destroy.call(this);};
- return {Node,Vec2,Contact2DType,RigidBody2D,Collider2D,CircleCollider2D,BoxCollider2D,PolygonCollider2D,ERigidBody2DType:{Static:0,Kinematic:1,Dynamic:2},PhysicsSystem2D:{instance:system},world,bodies};
+ return {Node,Vec2,Contact2DType,RigidBody2D,Collider2D,CircleCollider2D,BoxCollider2D,PolygonCollider2D,ERigidBody2DType:{Static:0,Kinematic:1,Dynamic:2},PhysicsSystem2D:{instance:system},world,bodies,engineRoot:engine};
 };

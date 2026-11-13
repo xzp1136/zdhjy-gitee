@@ -3,7 +3,7 @@ const {refreshPhysicsPreview}=require('../tools/refresh-physics-preview.cjs');
 function fixture(){
  const project=fs.mkdtempSync(path.join(os.tmpdir(),'flower-preview-exports-test-')),engine=path.join(project,'engine');
  const write=(relative,value)=>{const file=path.join(project,relative);fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,typeof value==='string'?value:JSON.stringify(value));return file;};
- write('settings/v2/packages/engine.json',{modules:{configs:{defaultConfig:{includeModules:['base','physics-2d-box2d','physics-2d-framework']}}}});
+ write('settings/v2/packages/engine.json',{modules:{configs:{defaultConfig:{includeModules:['base','physics-2d-box2d']}}}});
  const features={base:{modules:['base']},'physics-2d-framework':{modules:['physics-2d-framework']},'physics-2d-box2d':{modules:['physics-2d-box2d','physics-2d-framework']}};
  write('engine/cc.config.json',{features});
  const imports={};for(const unit of ['base','physics-2d-box2d','physics-2d-framework'])imports['cce:/internal/x/cc-fu/'+unit]='q-bundled:///exports/'+unit+'.js';
@@ -39,5 +39,23 @@ test('unknown or disabled project features fail without changing generated files
  const f=fixture();try{
   const previous=fs.readFileSync(f.moduleFile,'utf8');f.write('settings/v2/packages/engine.json',{modules:{configs:{defaultConfig:{includeModules:['base']}}}});
   assert.throws(()=>refreshPhysicsPreview(f.project,f.engine),/not enabled/);assert.equal(fs.readFileSync(f.moduleFile,'utf8'),previous);
+ }finally{fs.rmSync(f.project,{recursive:true,force:true});}
+});
+
+test('editor-style Box2D config and an explicit shared-framework entry produce identical preview exports',()=>{
+ const f=fixture();try{
+  const first=refreshPhysicsPreview(f.project,f.engine),code=fs.readFileSync(f.moduleFile,'utf8');
+  assert(first.units.includes('cce:/internal/x/cc-fu/physics-2d-framework'),'Box2D supplies the framework through engine feature expansion');
+  f.write('settings/v2/packages/engine.json',{modules:{configs:{defaultConfig:{includeModules:['base','physics-2d-box2d','physics-2d-framework']}}}});
+  const explicit=refreshPhysicsPreview(f.project,f.engine);
+  assert.equal(explicit.changed,false);assert.deepEqual(explicit.units,first.units);assert.equal(fs.readFileSync(f.moduleFile,'utf8'),code);
+ }finally{fs.rmSync(f.project,{recursive:true,force:true});}
+});
+test('a backend missing its required shared framework is rejected before writing generated files',()=>{
+ const f=fixture();try{
+  const before=fs.readFileSync(f.moduleFile,'utf8');
+  f.write('engine/cc.config.json',{features:{base:{modules:['base']},'physics-2d-box2d':{modules:['physics-2d-box2d']}}});
+  assert.throws(()=>refreshPhysicsPreview(f.project,f.engine),/Engine physics module is missing: physics-2d-framework/);
+  assert.equal(fs.readFileSync(f.moduleFile,'utf8'),before);
  }finally{fs.rmSync(f.project,{recursive:true,force:true});}
 });

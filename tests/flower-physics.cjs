@@ -60,7 +60,9 @@ test('project enables both the Box2D selector and the actual exported physics mo
  assert.equal(config.cache['physics-2d']._value,true);
  assert.equal(config.cache['physics-2d']._option,'physics-2d-box2d');
  assert.equal(config.cache['physics-2d-box2d']._value,true);
- assert(config.includeModules.includes('physics-2d-framework'),'PhysicsSystem2D must be exported to cc');
+ const features=JSON.parse(fs.readFileSync(path.join(cc.engineRoot,'cc.config.json'),'utf8')).features;
+ const units=new Set(config.includeModules.flatMap(feature=>features[feature].modules));
+ assert(units.has('physics-2d-framework'),'effective engine features must export PhysicsSystem2D');
  assert(config.includeModules.includes('physics-2d-box2d'),'native Box2D implementation must be linked');
 });
 
