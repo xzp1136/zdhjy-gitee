@@ -8,8 +8,8 @@
     "assets/resources/startup/notice.png",
     "assets/resources/startup/track.png"
   ],
-  "sourceBytes": 56160546,
-  "localBundleBytes": 19603556,
+  "sourceBytes": 56160381,
+  "localBundleBytes": 19603391,
   "remoteBundleBytes": 34468247,
   "bundles": {
     "core-data": {
@@ -24,7 +24,7 @@
     },
     "core-effects": {
       "remote": false,
-      "sourceBytes": 1567987,
+      "sourceBytes": 1567822,
       "fileCount": 79
     },
     "core-level1": {
@@ -1186,8 +1186,8 @@
       "source": "db://assets/resources/original/effects/spine/orderTipSpine/orderTipSpine.png",
       "target": "db://assets/bundles/core-effects/original/effects/spine/orderTipSpine/orderTipSpine.png",
       "uuid": "0f4174a8-132d-4fb2-86aa-77290684a8b7",
-      "bytes": 13727,
-      "sha256": "a6526c9ec60a5c1d76d060e0153d422be2b8655d5d4f6c6611584b7f81eafa4f",
+      "bytes": 13562,
+      "sha256": "0fdee8741c9c4872503046cd5a65ee53cab99d009caa72c7e25b92233168cdcd",
       "bundle": "core-effects"
     },
     {
