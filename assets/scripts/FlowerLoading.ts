@@ -1,21 +1,18 @@
 import { BlockInputEvents, Button, Color, Label, Node, Sprite, SpriteFrame, tween, Tween, UITransform, UIOpacity } from 'cc';
 import { loadFrame, uiNode } from './FlowerUI';
-import { bindFlowerViewport, coverFlowerArt } from './FlowerViewport';
+import { bindFlowerViewport, coverFlowerArt, fitFlowerPortrait } from './FlowerViewport';
 
 /** Scene-bound SpriteFrames use this exact order; missing entries load on demand. */
-export const LOADING_ART_PATHS: string[] = [
-    'original/extras/bgLoad_8', 'original/extras/btz_11',
-    'original/extras/pb_0_6', 'original/extras/pb_1_7',
-    'original/extras/fl_l_9', 'original/extras/fl_r_4', 'original/extras/fl_b_10',
+export const LOADING_ART_PATHS = [
+    'startup/garden', 'startup/logo', 'startup/track', 'startup/fill', 'startup/caption', 'startup/notice',
 ];
 type Retry = () => void | Promise<void>;
 const MIN_DISPLAY_MS = 1200;
 const COMPLETE_HOLD_MS = 350;
 const FADE_SECONDS = 0.18;
-const LOADING_TEXT = '加载中...请稍后';
 const COMPLETE_TEXT = '加载完成，即将进入游戏';
 
-/** Level0 loading artwork, at its original 750×1334 reference resolution. */
+/** Loading artwork uses the supplied 1080×2400 design coordinates. */
 export class FlowerLoadingView {
     readonly root: Node;
     private readonly opacity: UIOpacity;
@@ -23,7 +20,7 @@ export class FlowerLoadingView {
     private readonly clones: SpriteFrame[] = [];
     private readonly timers = new Map<ReturnType<typeof setTimeout>, (completed: boolean) => void>();
     private fill!: Node;
-    private percent!: Label;
+    private loadingCaption!: Node;
     private caption!: Label;
     private retryButton!: Button;
     private retryNode!: Node;
@@ -43,7 +40,7 @@ export class FlowerLoadingView {
         this.phase = 'loading'; this.finishing = null; this.retry = null;
         this.target = 0; this.progress.value = 0; this.shownAt = Date.now();
         this.opacity.opacity = 255; this.retryButton.interactable = false;
-        this.caption.string = LOADING_TEXT; this.renderProgress();
+        this.showStatus(); this.renderProgress();
         const revision = this.revision;
         try {
             Promise.resolve(retry()).catch(() => {
@@ -84,56 +81,66 @@ export class FlowerLoadingView {
 
     get displayedProgress(): number { return this.progress.value; }
 
-    private art(parent: Node, name: string, frame: SpriteFrame, x: number, y: number, width: number, height: number,
-        insets?: [number, number]): Node {
-        const node = uiNode(parent, name, x, y, width, height);
-        const sprite = node.addComponent(Sprite);
-        sprite.sizeMode = Sprite.SizeMode.CUSTOM;
-        if (insets) {
-            const clone = frame.clone(); this.clones.push(clone);
-            clone.insetLeft = insets[0]; clone.insetRight = insets[1]; clone.insetTop = 0; clone.insetBottom = 0;
-            sprite.spriteFrame = clone; sprite.type = Sprite.Type.SLICED;
-        } else sprite.spriteFrame = frame;
+    private art(parent: Node, name: string, frame: SpriteFrame,
+        left: number, top: number, width: number, height: number): Node {
+        const node = uiNode(parent, name, left + width / 2 - 540, 1200 - top - height / 2, width, height);
+        const renderer = node.addComponent(Sprite);
+        renderer.sizeMode = Sprite.SizeMode.CUSTOM;
+        renderer.trim = false;
+        renderer.spriteFrame = frame;
         return node;
     }
 
-    private text(parent: Node, name: string, value: string, x: number, y: number, width: number, height: number,
-        outlineAlpha: number, shrink = false): Label {
-        const node = uiNode(parent, name, x, y, width, height);
-        const label = node.addComponent(Label);
-        label.useSystemFont = true; label.fontFamily = 'sans-serif';
-        label.fontSize = 32; label.lineHeight = 38; label.string = value;
-        label.horizontalAlign = Label.HorizontalAlign.CENTER; label.verticalAlign = Label.VerticalAlign.CENTER;
-        label.enableWrapText = false; label.overflow = shrink ? Label.Overflow.SHRINK : Label.Overflow.CLAMP;
-        label.color = new Color(255, 255, 255, 255);
-        label.enableOutline = true; label.outlineWidth = 1; label.outlineColor = new Color(0, 0, 0, outlineAlpha);
-        return label;
+    private showStatus(message = '', fillColor = new Color(9, 54, 91)): void {
+        this.loadingCaption.active = !message;
+        this.caption.node.active = !!message;
+        this.caption.color = fillColor;
+        this.caption.string = message;
     }
 
     private build(frames: SpriteFrame[]): void {
-        const background = this.art(this.root, 'Background', frames[0], 0, 0, 750, 1334);
-        const title = this.art(this.root, 'Title', frames[1], 0, 337, 1112 * 0.67, 345 * 0.67);
-        const progress = uiNode(this.root, 'Progress');
-        this.art(progress, 'ProgressBackground', frames[2], 0, -399.5, 500, 57.8, [35, 35]);
-        this.fill = this.art(progress, 'ProgressFill', frames[3], -250, -399.5, 500, 57.8, [41, 38]);
+        const background = this.art(this.root, 'Background', frames[0], 0, 0, 1080, 2400);
+        const artwork = uiNode(this.root, 'Artwork', 0, 0, 1080, 2400);
+        this.art(artwork, 'Title', frames[1], 244, 297, 591, 429);
+        this.art(artwork, 'HealthNotice', frames[5], 54, 1950, 974, 144);
+        const progress = uiNode(artwork, 'Progress', 0, 0);
+        this.art(progress, 'ProgressBackground', frames[2], 158, 1797, 771, 94);
+        this.fill = this.art(progress, 'ProgressFill', frames[3], 170, 1808, 249, 67);
+        this.fill.setPosition(170 - 540, 1200 - 1808 - 67 / 2, 0);
         this.fill.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-        this.art(progress, 'FlowerLeft', frames[4], -254, -399.5, 105, 109);
-        this.art(progress, 'FlowerRight', frames[5], 244, -399.5, 88, 87);
-        this.art(progress, 'CaptionFlowerLeft', frames[6], -146, -461, 39, 38);
-        this.art(progress, 'CaptionFlowerRight', frames[6], 146, -461, 39, 38);
-        this.percent = this.text(progress, 'ProgressText', '0%', 0, -395, 240, 50, 217);
-        this.caption = this.text(progress, 'ProgressCaption', LOADING_TEXT, 0, -461, 245, 70, 255, true);
-        this.retryNode = uiNode(progress, 'RetryHit', 0, -425, 570, 145);
+        const fillSprite = this.fill.getComponent(Sprite)!;
+        const fillFrame = frames[3].clone();
+        this.clones.push(fillFrame);
+        fillFrame.insetLeft = 24;
+        fillFrame.insetRight = 24;
+        fillSprite.spriteFrame = fillFrame;
+        fillSprite.type = Sprite.Type.SLICED;
+        this.loadingCaption = this.art(progress, 'LoadingCaptionArt', frames[4], 468, 1819, 184, 46);
+        const status = uiNode(progress, 'ProgressCaption', 20, -643, 540, 66);
+        this.caption = status.addComponent(Label);
+        this.caption.useSystemFont = true;
+        this.caption.fontFamily = 'sans-serif';
+        this.caption.fontSize = 44;
+        this.caption.lineHeight = 52;
+        this.caption.horizontalAlign = Label.HorizontalAlign.CENTER;
+        this.caption.verticalAlign = Label.VerticalAlign.CENTER;
+        this.caption.enableWrapText = false;
+        this.caption.overflow = Label.Overflow.SHRINK;
+        this.showStatus();
+
+        this.retryNode = uiNode(progress, 'RetryHit', 2, -644, 772, 94);
         this.retryButton = this.retryNode.addComponent(Button);
         this.retryButton.transition = Button.Transition.NONE;
         this.retryButton.interactable = false;
         this.retryNode.on(Button.EventType.CLICK, this.retryClicked);
         bindFlowerViewport(this.root, viewport => {
-            coverFlowerArt(background, viewport);
-            title.setPosition(0, 337 + viewport.topShift, 0);
-            progress.setPosition(0, viewport.bottomShift, 0);
+            coverFlowerArt(background, viewport, 1080, 2400);
+            const scale = fitFlowerPortrait(artwork, viewport);
+            artwork.setPosition((viewport.safeLeft + viewport.safeRight) / 2,
+                Math.max(0, viewport.safeBottom + 894 * scale), 0);
         });
-        this.shownAt = Date.now(); this.renderProgress();
+        this.shownAt = Date.now();
+        this.renderProgress();
     }
 
     /** Reports completed real work. No timer advances the target by itself. */
@@ -145,12 +152,10 @@ export class FlowerLoadingView {
     }
 
     private renderProgress(): void {
-        if (!this.fill?.isValid || !this.percent?.isValid) return;
+        if (!this.fill?.isValid) return;
         const value = Math.max(0, Math.min(1, this.progress.value));
         this.fill.active = value > 0;
-        this.fill.getComponent(UITransform)!.setContentSize(500 * value, 57.8);
-        const cap = this.phase === 'finishing' ? 100 : 99;
-        this.percent.string = `${Math.min(cap, Math.floor(value * 100 + 1e-6))}%`;
+        this.fill.getComponent(UITransform)!.setContentSize(746 * value, 67);
     }
 
     private animateProgress(value: number, duration: number): Promise<boolean> {
@@ -171,7 +176,7 @@ export class FlowerLoadingView {
         const revision = this.revision;
         this.finishing = (async () => {
             if (!await this.animateProgress(1, 0.12) || !this.current(revision)) return false;
-            this.caption.string = COMPLETE_TEXT;
+            this.showStatus(COMPLETE_TEXT);
             const hold = Math.max(COMPLETE_HOLD_MS, MIN_DISPLAY_MS - (Date.now() - this.shownAt) - FADE_SECONDS * 1000);
             if (!await this.wait(hold) || !this.current(revision)) return false;
             const faded = await new Promise<boolean>(resolve => {
@@ -190,7 +195,8 @@ export class FlowerLoadingView {
         this.revision++; this.cancelWork(); this.finishing = null;
         this.phase = 'error'; this.retry = onRetry; this.opacity.opacity = 255;
         this.progress.value = Math.min(this.progress.value, 0.99);
-        this.caption.string = '加载失败，点击重试'; this.retryButton.interactable = true;
+        this.showStatus('加载失败，点击重试', new Color(80, 24, 20));
+        this.retryButton.interactable = true;
         this.renderProgress();
     }
 

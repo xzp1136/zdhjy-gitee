@@ -199,11 +199,20 @@ async function checkRuntime(buildRoot = path.join(PROJECT, 'build/wechatgame')) 
         for (const flower of rules.flowers.filter(flower => flower.kind === 'cdy_lxq')) rules.select(flower.id);
         assert.equal(rules.stars, 1); assert.equal(rules.flowers.filter(flower => flower.status === 'collected').length, 3);
     });
-    await check('compiled bouquet preload expands and deduplicates Set resource paths', async () => {
+    await check('compiled orders preload the original flower vessels alongside the PSD board', async () => {
         const before = runtime.requests.length;
-        await load('FlowerBouquet').preloadBouquets([1301, 1301, 1601]);
-        const frames = runtime.requests.slice(before).filter(request => request.logical.endsWith('/spriteFrame'));
-        assert(frames.length > 0); assert.equal(new Set(frames.map(request => request.logical)).size, frames.length);
+        const skin = load('FlowerBoardSkin'), bouquet = load('FlowerBouquet');
+        await Promise.all([skin.preloadBoardSkin(), skin.preloadBoardSkin(), bouquet.preloadBouquets([1301, 1301, 1601])]);
+        const requests = runtime.requests.slice(before);
+        for (const asset of ['order-tag/spriteFrame', 'pool/spriteFrame', 'Baloo-Regular']) {
+            const matches = requests.filter(request => request.logical === 'greenhouse/' + asset);
+            assert.equal(matches.length, 1, asset);
+            assert.equal(matches[0].bundle, 'greenhouse-board');
+        }
+        for (const name of ['bkt1_3cdy_01', 'bkt1_3cdy_01_mask', 'bkt1_3dy_01']) {
+            assert.equal(requests.filter(request => request.logical === `original/vase/${name}/spriteFrame`).length, 1);
+        }
+        assert(!requests.some(request => /^greenhouse\/basket-/.test(request.logical)));
     });
     await check('compiled Spine preload expands seven real effect resource names from its Set', async () => {
         const before = runtime.requests.length; await load('FlowerEffects').FlowerEffects.preload();

@@ -29,8 +29,8 @@ class Sprite {static SizeMode={CUSTOM:0};grayscale=false;}
 class Vec3 {constructor(x=0,y=0,z=0){Object.assign(this,{x,y,z});}}
 class UITransform {setContentSize(width,height){this.contentSize={width,height};this.width=width;this.height=height;}setAnchorPoint(x,y){this.anchorPoint={x,y};}convertToNodeSpaceAR(v){let x=v.x,y=v.y;const chain=[];for(let n=this.node;n;n=n.parent)chain.unshift(n);for(const n of chain){x-=n.position.x;y-=n.position.y;const r=n.angle*Math.PI/180,xx=x*Math.cos(r)+y*Math.sin(r),yy=-x*Math.sin(r)+y*Math.cos(r);x=xx/n.scale.x;y=yy/n.scale.y;}return new Vec3(x,y,v.z);}}
 class UIOpacity {opacity=255;}
-class Graphics {moveTo(){}lineTo(){}stroke(){}}
-class Color {constructor(r,g,b,a){Object.assign(this,{r,g,b,a});}}
+class Graphics {static LineCap={ROUND:1};moveTo(){}lineTo(){}stroke(){}clear(){}ellipse(){}fill(){}circle(){}close(){}}
+class Color {constructor(r,g,b,a){this.set(r,g,b,a);}set(r,g,b,a){Object.assign(this,{r,g,b,a});return this;}}
 function uiNode(parent,name,x=0,y=0,w=750,h=1334){const n=new Node(name);n.layer=parent.layer;n.addComponent(UITransform).setContentSize(w,h);n.setPosition(x,y);parent.addChild(n);return n;}
 async function loadFrame(path) { const file=resourceFile(path+'.png');if(!fs.existsSync(file+'.meta')){const png=fs.readFileSync(file);return {originalSize:{width:png.readUInt32BE(16),height:png.readUInt32BE(20)}};}const meta=JSON.parse(fs.readFileSync(file+'.meta','utf8')); const d=Object.values(meta.subMetas).find(s=>s.importer==='sprite-frame').userData;return {originalSize:{width:d.rawWidth,height:d.rawHeight}}; }
 const cc={Node,Button,Sprite,UITransform,UIOpacity,Graphics,Color,Vec3,JsonAsset:class{},resources:{load(path,type,done){done(null,{json:JSON.parse(fs.readFileSync(resourceFile(path+'.json'),'utf8'))});}},Tween:{stopAllByTarget(){}}};
@@ -228,29 +228,38 @@ test('released hidden flowers use the original scale-in and async disposal canno
  const pending=p.reveal({id:'cancelled',kind:'cdy_lxq',variant:1,status:'pool',initialLayer:2});p.dispose();assert.equal(await pending,null,'dispose cancels a release while its frame is loading');assert.equal(p.nodeMap.size,0);
 });
 
-test('shuffle scatters in small batches, preserves frame-rate timing and releases taken entries', async () => {
+test('shuffle submerges flowers, restores them in batches and clears its water effect', async () => {
+ const {SHUFFLE_GATHER,SHUFFLE_RELEASE,SHUFFLE_BATCH_INTERVAL}=moduleLoad('FlowerShuffleWater');
  const samples=[];
  for(const fps of [15,30,60]){
   const p=await Pool.create(new Node(),layeredFlowers([22,6,22,10]),2,()=>{},[22,6,22,10]);
   const downBefore=p.inLayer(3).map(e=>({id:e.flower.id,x:e.node.position.x,y:e.node.position.y}));
-  const duration=p.shuffle();
-  assert(duration>0.63,'returned duration covers gather, multiple scatter batches and settling');
+  const completed=[];
+  const duration=p.shuffle(undefined,value=>completed.push(value));
+  assert(duration>SHUFFLE_RELEASE,'duration covers the final wave');
   for(let frame=0;frame<fps*2;frame++)p.update(1/fps);
   samples.push(snapshot(p));
   assert.equal(p.scatterTargets.size,0,'every scheduled flower scatters');
+  assert.deepEqual(completed,[true],'completion follows the pool clock');
+  assert.equal(p.root.getChildByName('ShuffleWater').isValid,false);
   assert.deepEqual(p.inLayer(3).map(e=>({id:e.flower.id,x:e.node.position.x,y:e.node.position.y})),downBefore,'Down flowers do not participate');
   p.dispose();
  }
  assertMotionClose(samples[0],samples[2],'15 fps does not skip scatter batches');
  assertMotionClose(samples[1],samples[2],'30 fps does not shift scatter timing');
  const p=await Pool.create(new Node(),layeredFlowers([22,6,22,10]),2,()=>{},[22,6,22,10]);
- p.shuffle();const gathered=new Map(p.ordered.map(e=>[e,{x:e.anchorX,y:e.anchorY}]));
- const scattered=()=>p.ordered.filter(e=>e.band<3&&(e.anchorX!==gathered.get(e).x||e.anchorY!==gathered.get(e).y)).length;
- p.update(.29);const first=scattered();assert(first>=4&&first<=6,'first scatter batch has four to six flowers');
- p.update(.05);const second=scattered()-first;assert(second>=4&&second<=6,'next batch starts fifty milliseconds later');
- const waiting=[...p.scatterTargets.keys()][0];assert(waiting);
+ const cancelled=[];p.shuffle(undefined,value=>cancelled.push(value));
+ assert.equal(p.shuffle(),0,'duplicate shuffle cannot start mid-effect');
+ const active=()=>p.ordered.filter(e=>e.band<3&&e.node.active).length;
+ p.update(SHUFFLE_GATHER+0.01);assert.equal(active(),0,'flowers disappear while the vortex is exposed');
+ p.update(SHUFFLE_RELEASE-SHUFFLE_GATHER);const first=active();assert(first>=4&&first<=6,'first batch has four to six flowers');
+ p.update(SHUFFLE_BATCH_INTERVAL);const second=active()-first;assert(second>=4&&second<=6,'second batch rises separately');
+ const waiting=[...p.scatterTargets].find(([,target])=>target.at>SHUFFLE_RELEASE+SHUFFLE_BATCH_INTERVAL)[0];
  const flight=p.take(waiting.flower.id),position={...flight.position};
  assert(!p.scatterTargets.has(waiting),'taken flower is removed from scheduled animation immediately');
  p.update(2);assert.deepEqual(flight.position,position,'pool no longer animates the handed-off flight node');
  p.dispose();p.update(1);assert.equal(p.scatterTargets.size,0,'dispose clears pending animation state');
+ assert.deepEqual(cancelled,[true]);
+ const leaving=await Pool.create(new Node(),layeredFlowers([3]),2,()=>{});
+ const result=[];leaving.shuffle(undefined,value=>result.push(value));leaving.dispose();assert.deepEqual(result,[false]);
 });

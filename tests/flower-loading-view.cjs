@@ -42,6 +42,7 @@ function harness(options = {}) {
     getComponent(Type) { return this.components.find(component => component instanceof Type) || null; }
     getChildByName(name) { return this.children.find(node => node.name === name) || null; }
     setPosition(x, y, z = 0) { this.position = {x, y, z}; }
+    setScale(x, y, z = 1) { this.scale = {x, y, z}; }
     on(name, callback) { if (!this.events.has(name)) this.events.set(name, new Set()); this.events.get(name).add(callback); }
     off(name, callback) { this.events.get(name)?.delete(callback); }
     emit(name) { for (const callback of [...(this.events.get(name) || [])]) callback(); }
@@ -61,6 +62,10 @@ function harness(options = {}) {
     destroy() { this.isValid = false; this.destroyCount++; }
   }
   function frame(resource) {
+    if (resource === 'startup/garden') {
+      assert(fs.existsSync(path.join(project, 'assets/resources/startup/garden.jpg')));
+      return new SpriteFrame(resource, {width: 1080, height: 2400});
+    }
     const png = fs.readFileSync(path.join(project, 'assets/resources', resource + '.png'));
     return new SpriteFrame(resource, {width: png.readUInt32BE(16), height: png.readUInt32BE(20)});
   }
@@ -82,35 +87,41 @@ function harness(options = {}) {
   return {...scope.exports, ...cc, clock, loads, clones, pendingLoads, flush, frame};
 }
 
-test('scene-bound art builds before the create promise yields and preserves original loading geometry', async () => {
+const progressNode = view => view.root.getChildByName('Artwork').getChildByName('Progress');
+
+test('scene-bound art builds before the create promise yields and preserves the PSD loading geometry', async () => {
   const h = harness(), parent = new h.Node(), frames = h.LOADING_ART_PATHS.map(h.frame);
   const pending = h.FlowerLoadingView.create(parent, frames);
   const root = parent.getChildByName('StartupLoading'); assert(root.getChildByName('Background'), 'cold-start art is built synchronously');
   const view = await pending; assert.equal(h.loads.length, 0); assert(root.getComponent(h.BlockInputEvents));
-  const title = root.getChildByName('Title'); assert.equal(title.position.y, 337); assert.equal(title.getComponent(h.UITransform).width, 1112 * .67);
-  const back = root.getChildByName('Progress').getChildByName('ProgressBackground').getComponent(h.Sprite), fill = root.getChildByName('Progress').getChildByName('ProgressFill').getComponent(h.Sprite);
-  assert.equal(back.spriteFrame.insetLeft, 35); assert.equal(fill.spriteFrame.insetLeft, 41); assert.equal(fill.spriteFrame.insetRight, 38);
-  assert.deepEqual(fill.spriteFrame.originalSize, {width: 202, height: 72}, 'transparent padding is kept, not cropped to the green alpha bounds');
-  assert.equal(root.getChildByName('Progress').getChildByName('ProgressCaption').getComponent(h.Label).overflow, h.Label.Overflow.SHRINK);
+  const artwork = root.getChildByName('Artwork'), title = artwork.getChildByName('Title');
+  assert.deepEqual(title.position, {x: -.5, y: 688.5, z: 0});
+  assert.equal(title.getComponent(h.UITransform).width, 591);
+  const progress = artwork.getChildByName('Progress');
+  const fill = progress.getChildByName('ProgressFill').getComponent(h.Sprite);
+  assert.equal(fill.spriteFrame.insetLeft, 24); assert.equal(fill.spriteFrame.insetRight, 24);
+  assert.deepEqual(fill.spriteFrame.originalSize, {width: 249, height: 67});
+  assert(progress.getChildByName('LoadingCaptionArt').active);
+  assert(artwork.getChildByName('HealthNotice'));
   view.dispose(); assert(h.clones.every(frame => frame.destroyCount === 1)); assert(frames.every(frame => frame.isValid && frame.destroyCount === 0));
 });
 
 test('progress only follows real reports, remains monotonic and cannot show 100 before finish', async () => {
   const h = harness(), view = await h.FlowerLoadingView.create(new h.Node());
-  const percent = view.root.getChildByName('Progress').getChildByName('ProgressText').getComponent(h.Label);
+  const fill = progressNode(view).getChildByName('ProgressFill').getComponent(h.UITransform);
   await h.clock.advance(10000); assert.equal(view.displayedProgress, 0, 'elapsed time alone creates no progress');
   view.setProgress(.4); await h.clock.advance(70); assert(view.displayedProgress > 0 && view.displayedProgress < .4);
-  await h.clock.advance(300); assert.equal(percent.string, '40%');
-  view.setProgress(.2); await h.clock.advance(300); assert.equal(percent.string, '40%', 'out-of-order reports do not move backward');
-  view.setProgress(1); await h.clock.advance(300); assert.equal(percent.string, '99%'); assert.equal(view.displayedProgress, .99);
-  view.setProgress(NaN); await h.clock.advance(5000); assert.equal(percent.string, '99%'); view.dispose();
+  await h.clock.advance(300); assert.equal(fill.width, 746 * .4);
+  view.setProgress(.2); await h.clock.advance(300); assert.equal(fill.width, 746 * .4, 'out-of-order reports do not move backward');
+  view.setProgress(1); await h.clock.advance(300); assert.equal(fill.width, 746 * .99); assert.equal(view.displayedProgress, .99);
+  view.setProgress(NaN); await h.clock.advance(5000); assert.equal(fill.width, 746 * .99); view.dispose();
 });
 
 test('finish shows the exact completion text and honors the minimum display before fading', async () => {
   const h = harness(), view = await h.FlowerLoadingView.create(new h.Node(), h.LOADING_ART_PATHS.map(h.frame));
   const finished = view.finish(); assert.equal(view.finish(), finished, 'concurrent finish calls share one result');
-  await h.clock.advance(120); assert.equal(view.root.getChildByName('Progress').getChildByName('ProgressText').getComponent(h.Label).string, '100%');
-  assert.equal(view.root.getChildByName('Progress').getChildByName('ProgressCaption').getComponent(h.Label).string, '加载完成，即将进入游戏');
+  await h.clock.advance(120); assert.equal(view.displayedProgress, 1);
+  assert.equal(progressNode(view).getChildByName('ProgressCaption').getComponent(h.Label).string, '加载完成，即将进入游戏');
   await h.clock.advance(1079); assert(view.root.isValid, 'a cached startup does not flash away');
   await h.clock.advance(1); assert.equal(await finished, true); assert.equal(h.clock.now, 1200); assert.equal(view.root.isValid, false);
   assert.equal(h.clock.timers, 0); assert.equal(h.clock.tweens, 0); assert(h.clones.every(frame => frame.destroyCount === 1));
@@ -121,10 +132,10 @@ test('errors cancel pending finish, retry once per click and restore genuine loa
   view.setProgress(.6); await h.clock.advance(300); const finishing = view.finish(); await h.clock.advance(120);
   let retries = 0; view.setError(() => { retries++; view.setProgress(.25); });
   assert.equal(await finishing, false); assert.equal(h.clock.timers, 0); assert.equal(view.root.getComponent(h.UIOpacity).opacity, 255);
-  const retry = view.root.getChildByName('Progress').getChildByName('RetryHit'); assert.equal(retry.getComponent(h.Button).interactable, true);
+  const retry = progressNode(view).getChildByName('RetryHit'); assert.equal(retry.getComponent(h.Button).interactable, true);
   retry.emit(h.Button.EventType.CLICK); retry.emit(h.Button.EventType.CLICK); assert.equal(retries, 1);
-  assert.equal(view.root.getChildByName('Progress').getChildByName('ProgressCaption').getComponent(h.Label).string, '加载中...请稍后');
-  await h.clock.advance(300); assert.equal(view.root.getChildByName('Progress').getChildByName('ProgressText').getComponent(h.Label).string, '25%');
+  assert(progressNode(view).getChildByName('LoadingCaptionArt').active);
+  await h.clock.advance(300); assert.equal(view.displayedProgress, .25);
   view.setError(() => Promise.reject(new Error('retry failed'))); retry.emit(h.Button.EventType.CLICK); await h.flush();
   assert.equal(retry.getComponent(h.Button).interactable, true, 'failed async retries can be attempted again'); view.dispose();
 });

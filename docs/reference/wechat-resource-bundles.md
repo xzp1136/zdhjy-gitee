@@ -65,9 +65,9 @@ node tools/build-wechat.cjs --check
 node --test tests/*.test.cjs
 ```
 
-`docs/reference/bundle-migration-plan.json` 保存每个移动文件的原路径、目标路径、UUID、源字节数和 SHA-256。审计脚本只读文件，检查目标完整性、旧路径已移走、路由归属、Bundle preset 和启动图是否存在；它不会移动或重新导出资源。
+`docs/reference/bundle-migration-plan.json` 保存每个移动文件的原路径、目标路径、UUID、当前资源字节数和 SHA-256。JSON 和 Spine 图集文本以 LF 计算，Windows 检出时的换行转换不影响比对。资源替换后更新相应记录和分包汇总。审计脚本只读文件，检查目标完整性、旧路径已移走、路由归属、Bundle preset 和启动图是否存在；它不会移动或重新导出资源。
 
-本次完成的验证：
+首次拆分资源包时的验证：
 
 - 1,153 个移动文件字节/哈希/UUID一致；1,138 条路由和16个 Bundle 配置通过。
 - MCP 回读16个 Bundle 均 `imported:true`、`invalid:false`。

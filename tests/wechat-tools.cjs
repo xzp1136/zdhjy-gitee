@@ -100,6 +100,7 @@ test('package audit rejects symlinks and missing declared subpackages', t => {
     const {root,write}=fixture(t);
     write('game.json',JSON.stringify({subpackages:[{name:'missing',root:'absent'}]}));
     assert.throws(()=>auditPackage(root),/empty or absent/);
-    write('game.json','{}');fs.symlinkSync(os.tmpdir(),path.join(root,'outside'));
+    write('game.json','{}');
+    fs.symlinkSync(os.tmpdir(),path.join(root,'outside'),process.platform==='win32'?'junction':'dir');
     assert.throws(()=>auditPackage(root),/symlink/);
 });

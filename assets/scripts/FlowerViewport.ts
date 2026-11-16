@@ -85,3 +85,12 @@ export function coverFlowerArt(node: Node, viewport: FlowerViewport, artWidth = 
     node.getComponent(UITransform)!.setContentSize(artWidth * scale, artHeight * scale);
     node.setPosition(0, 0, 0);
 }
+
+/** Keep 1080×2400 artwork coordinates stable while fitting a different screen. */
+export function fitFlowerPortrait(node: Node, viewport: FlowerViewport): number {
+    const width = viewport.safeRight - viewport.safeLeft;
+    const scale = Math.min(width / 1080, viewport.height / 2400);
+    node.setScale(scale, scale, 1);
+    node.setPosition((viewport.safeLeft + viewport.safeRight) / 2, 0, 0);
+    return scale;
+}

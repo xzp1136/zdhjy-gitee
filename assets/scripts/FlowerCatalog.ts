@@ -21,12 +21,21 @@ export interface OriginalLevel {
 interface OrderGroup { index: number; orderList: number[] }
 interface Tables { [key: string]: unknown[] }
 const flowerVariants = new Map<string, string[]>();
+const toyKinds = new Set(['cdtxwj_bsx', 'cdtxwj_yaya', 'dytx_cet', 'dytx_wjx',
+    'zytx_xfz', 'zytx_xhf', 'zytx_xlq', 'zytx_xm']);
 
 /** Some original species reuse their first image in their second/third slot. */
-export function flowerSpritePath(kind: string, variant = 1): string {
+export function originalFlowerSpritePath(kind: string, variant = 1): string {
     const paths = flowerVariants.get(kind);
     const resource = paths?.[Math.max(0, variant - 1)] ?? paths?.[0];
     return 'original/flower/' + (resource || (/^hd_\d+$/.test(kind) ? kind : `${kind}_0${variant}`));
+}
+
+export function flowerSpritePath(kind: string, variant = 1): string {
+    if (kind === 'hd_01' || kind === 'hd_02') return 'greenhouse/butterfly/' + kind;
+    const original = originalFlowerSpritePath(kind, variant);
+    if (toyKinds.has(kind)) return 'greenhouse/toys/' + original.slice('original/flower/'.length);
+    return original;
 }
 
 function json<T>(name: string): Promise<T> {

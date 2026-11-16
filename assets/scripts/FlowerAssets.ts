@@ -14,7 +14,7 @@ const bundles = new Map<string, Promise<AssetManager.Bundle>>();
 function loadRoutes(): Promise<BundleRoutes> {
     if (!routesPromise) {
         routesPromise = new Promise<BundleRoutes>((resolve, reject) => {
-            // This small routing table and the seven first-paint images stay in resources.
+            // This small routing table and first-paint artwork stay in resources.
             resources.load('bundle-routes', JsonAsset, (error, asset) => {
                 if (error) { reject(error); return; }
                 const value = asset.json as BundleRoutes;

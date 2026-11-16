@@ -1,12 +1,9 @@
 import { loadFlowerAsset } from './FlowerAssets';
-import { Button, Color, JsonAsset, Label, Node, Sprite } from 'cc';
-import { dismissPopup, label, loadFrame, modal, presentPopup, slicedSprite, sprite, tap, uiNode } from './FlowerUI';
+import { JsonAsset, Label, Node } from 'cc';
+import { dismissPopup, label, loadFrame, modal, popupButton, popupFrame, popupIcon, popupInset, preloadPopupFrames,
+    presentPopup, sprite, tap, uiNode } from './FlowerUI';
 
 const A = 'original/';
-const SCALE = 750 / 1052;
-const UNITY_SCALE = 750 / 1080;
-const screenX = (x: number) => (x - 526) * SCALE;
-const screenY = (y: number) => 667 - (y - 88) * SCALE;
 
 export interface BouquetPreviewLayer {
     resource: string;
@@ -39,19 +36,19 @@ function loadFirstLevelPreview(): Promise<PreviewData> {
     return firstLevelPreview;
 }
 
-const sharedFrames = [
-    `${A}ui/over/bg`, `${A}ui/itemicon/gold`, `${A}ui/over/output_icon_1`, `${A}extras/green_button_931`,
-];
-
 /** Optional preloading avoids showing cards one at a time at the end of a level. */
 export async function preloadWinResult(level: number): Promise<void> {
-    const paths = [...sharedFrames];
+    const skin = preloadPopupFrames(['coin', 'star', 'victory']);
     if (level === 1) {
-        const data = await loadFirstLevelPreview();
-        paths.push(`${A}ui/over/tittle`, `${A}ui/over/bunchcard`, `${A}ui/over/new`);
-        for (const bouquet of data.bouquets) paths.push(...bouquet.layers.map(layer => layer.resource));
+        const bouquets = loadFirstLevelPreview().then(data => {
+            const paths = new Set<string>();
+            for (const bouquet of data.bouquets) for (const layer of bouquet.layers) paths.add(layer.resource);
+            return Promise.all(Array.from(paths, path => loadFrame(path)));
+        });
+        await Promise.all([skin, bouquets]);
+    } else {
+        await skin;
     }
-    await Promise.all(Array.from(new Set(paths)).map(path => loadFrame(path)));
 }
 
 function previewBounds(layers: BouquetPreviewLayer[]) {
@@ -67,12 +64,12 @@ function previewBounds(layers: BouquetPreviewLayer[]) {
 }
 
 async function bouquetCard(parent: Node, bouquet: BouquetPreview, index: number): Promise<void> {
-    const x = screenX([260, 527, 793][index % 3]);
-    const y = screenY(index < 3 ? 645 : 985);
-    const card = await sprite(parent, `UnlockBouquet${index}`, `${A}ui/over/bunchcard`, x, y, 240 * SCALE, 320 * SCALE);
+    const x = (index % 3 - 1) * 196;
+    const y = index < 3 ? 275 : 52;
+    const card = await popupInset(parent, `UnlockBouquet${index}`, x, y, 181, 211);
     const bounds = previewBounds(bouquet.layers);
-    const scale = Math.min(151 / bounds.width, 165 / bounds.height);
-    const art = uiNode(card, 'Bouquet', 0, 27, 151, 165);
+    const scale = Math.min(151 / bounds.width, 150 / bounds.height);
+    const art = uiNode(card, 'Bouquet', 0, 18, 151, 150);
     for (let i = 0; i < bouquet.layers.length; i++) {
         const layer = bouquet.layers[i];
         const part = await sprite(art, `Layer${i}`, layer.resource,
@@ -80,8 +77,9 @@ async function bouquetCard(parent: Node, bouquet: BouquetPreview, index: number)
             layer.width * scale, layer.height * scale);
         part.angle = layer.angle ?? 0;
     }
-    await sprite(card, 'NewBouquet', `${A}ui/over/new`, 70.5, 99.6, 46.5, 39.6);
-    label(card, 'BouquetName', bouquet.name, 0, -84.3, 27.8, 168, '#c64b4f');
+    const name = label(card, 'BouquetName', bouquet.name, 0, -76, 24, 156, '#7c4d27').getComponent(Label)!;
+    name.overflow = Label.Overflow.SHRINK;
+    name.enableWrapText = false;
 }
 
 /**
@@ -109,36 +107,26 @@ export async function createWinResult(
             await preloadWinResult(0);
         }
     } else await preloadWinResult(level);
-    const overlay = modal(parent, 'WinResultOverlay', '#141414eb');
+    if (!parent.isValid) return parent;
+    const overlay = modal(parent, 'WinResultOverlay');
+    await popupFrame(overlay, '通关成功', 678, preview ? 1020 : 824);
 
     if (preview) {
-        await sprite(overlay, 'NextBouquetsTitle', `${A}ui/over/tittle`, 0, screenY(365), 960 * SCALE);
+        label(overlay, 'NextBouquetsTitle', '解锁新花束', 0, 410, 30, 510, '#694727', 'display');
         for (let i = 0; i < preview.bouquets.length; i++) await bouquetCard(overlay, preview.bouquets[i], i);
     } else {
-        const title = label(overlay, 'SuccessTitle', '通关成功', 0, 335, 61, 650, '#fff1cd').getComponent(Label)!;
-        title.enableOutline = true; title.outlineColor = new Color(194, 124, 80); title.outlineWidth = 2;
-        await sprite(overlay, 'SuccessStar', `${A}ui/over/output_icon_1`, 0, 160, 160);
-        label(overlay, 'CompletedLevel', `第 ${level} 关完成`, 0, 10, 37, 550, '#fff1cd');
+        await popupIcon(overlay, 'SuccessStar', 'victory', 0, 216, 220);
+        label(overlay, 'CompletedLevel', `第 ${level} 关完成`, 0, 66, 41, 550, '#2b67a9', 'display');
     }
 
-    const reward = uiNode(overlay, 'Rewards', 0, screenY(1365), 760 * SCALE, 350 * SCALE);
-    const rewardVisual = await sprite(reward, 'Visual', `${A}ui/over/bg`, 0, 0,
-        760 * SCALE / UNITY_SCALE, 350 * SCALE / UNITY_SCALE);
-    rewardVisual.setScale(UNITY_SCALE, UNITY_SCALE, 1);
-    const rewardSprite = rewardVisual.getComponent(Sprite)!;
-    const rewardFrame = rewardSprite.spriteFrame!.clone();
-    rewardFrame.insetLeft = 167; rewardFrame.insetRight = 163; rewardFrame.insetTop = 0; rewardFrame.insetBottom = 0;
-    rewardSprite.spriteFrame = rewardFrame;
-    rewardSprite.type = Sprite.Type.SLICED;
-    rewardVisual.on(Node.EventType.NODE_DESTROYED, () => rewardFrame.destroy());
-    label(reward, 'Title', '通关奖励', 0, 81.3, 36.1, 480, '#af6c35');
-    await sprite(reward, 'CoinsIcon', `${A}ui/itemicon/gold`, -104.2, 0, 83.3, 83.3);
-    label(reward, 'CoinsEarned', `+${Math.max(0, coinsReward)}`, -104.2, -69.4, 27.8, 125, '#7b6534');
-    await sprite(reward, 'StarsIcon', `${A}ui/over/output_icon_1`, 104.2, 0, 88.9, 88.9);
-    label(reward, 'StarsEarned', `+${Math.max(0, stars)}`, 104.2, -69.4, 27.8, 125, '#7b6534');
+    const reward = await popupInset(overlay, 'Rewards', 0, preview ? -158 : -100, 523, 152);
+    label(reward, 'Title', '通关奖励', 0, 41, 31, 420, '#80512a', 'display');
+    await popupIcon(reward, 'CoinsIcon', 'coin', -159, -20, 67);
+    label(reward, 'CoinsEarned', `+${Math.max(0, coinsReward)}`, -71, -20, 35, 113, '#80512a', 'display');
+    await popupIcon(reward, 'StarsIcon', 'star', 62, -20, 67);
+    label(reward, 'StarsEarned', `+${Math.max(0, stars)}`, 151, -20, 35, 113, '#80512a', 'display');
 
-    const next = await slicedSprite(overlay, 'NextLevel', `${A}extras/green_button_931`, 0, screenY(1660), 370 * SCALE, 165 * SCALE);
-    label(next, 'Text', nextLabel, 0, 3, 41, 250, '#548a1a');
+    const next = await popupButton(overlay, 'NextLevel', nextLabel, 0, preview ? -348 : -257, 309, 105);
     let leaving = false;
     const leave = (callback: () => void) => {
         if (leaving) return;
@@ -149,7 +137,7 @@ export async function createWinResult(
     const nextButton = tap(next, () => leave(onNext));
     // The first-level reference has exactly one action.
     if (!preview && level !== 1 && onHome) {
-        const home = label(overlay, 'BackHome', '返回主页', 0, -560, 25, 280, '#fff1cd');
+        const home = await popupButton(overlay, 'BackHome', '返回主页', 0, -350, 204, 72, 'blue');
         tap(home, () => leave(onHome));
     }
     presentPopup(overlay, {openDuration: 0.5, closeDuration: 0.3, openSound: true});

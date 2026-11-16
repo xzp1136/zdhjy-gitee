@@ -5838,7 +5838,7 @@
           "cdtx_xrk_02",
           "cdtx_xrk_03"
         ],
-        "name": "向日葵",
+        "name": "重瓣向日葵",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -5907,7 +5907,7 @@
           "cdtx_xrzh_02",
           "cdtx_xrzh_03"
         ],
-        "name": "仙人掌花",
+        "name": "令箭荷花",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6137,7 +6137,7 @@
           "cdcs_jyc_02",
           "cdcs_jyc_03"
         ],
-        "name": "金鱼草",
+        "name": "粉白羽扇豆",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6275,7 +6275,7 @@
           "cdy_lxq_02",
           "cdy_lxq_03"
         ],
-        "name": "蓝绣球",
+        "name": "蓝花丹",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6459,7 +6459,7 @@
           "cdsy_fhbhh_02",
           "cdsy_fhbhh_03"
         ],
-        "name": "荷花",
+        "name": "粉花荷花",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6482,7 +6482,7 @@
           "cdsy_blh_02",
           "cdsy_blh_03"
         ],
-        "name": "白莲花",
+        "name": "白睡莲",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6505,7 +6505,7 @@
           "cdsy_llh_02",
           "cdsy_llh_03"
         ],
-        "name": "蓝莲花",
+        "name": "蓝睡莲",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6574,7 +6574,7 @@
           "cdsy_dhmd_02",
           "cdsy_dhmd_03"
         ],
-        "name": "大红牡丹",
+        "name": "朱顶红",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6712,7 +6712,7 @@
           "dys_bbh_02",
           "dys_bbh_03"
         ],
-        "name": "白百合",
+        "name": "麝香百合",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6758,7 +6758,7 @@
           "dys_hbh_02",
           "dys_hbh_03"
         ],
-        "name": "绯梦百合",
+        "name": "艳红鹿子百合",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6827,7 +6827,7 @@
           "dys_jsj_02",
           "dys_jsj_03"
         ],
-        "name": "金丝菊",
+        "name": "金光菊",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6850,7 +6850,7 @@
           "dy_zmj_02",
           "dy_zmj_03"
         ],
-        "name": "紫木槿",
+        "name": "冠状银莲花",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -7632,7 +7632,7 @@
           "zy_hmg_02",
           "zy_hmg_03"
         ],
-        "name": "红玫瑰",
+        "name": "红色月季",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -7655,7 +7655,7 @@
           "zy_lmg_02",
           "zy_lmg_03"
         ],
-        "name": "蓝色妖姬",
+        "name": "蓝紫月季",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -7747,7 +7747,7 @@
           "zy_zzh_02",
           "zy_zzh_03"
         ],
-        "name": "栀子花",
+        "name": "栀子",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -7770,7 +7770,7 @@
           "zy_jzj_02",
           "zy_jzj_03"
         ],
-        "name": "金盏菊",
+        "name": "金鸡菊",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -7816,7 +7816,7 @@
           "zy_yj_02",
           "zy_yj_03"
         ],
-        "name": "月季",
+        "name": "茶花",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -7908,7 +7908,7 @@
           "zy_hxj_02",
           "zy_hxj_03"
         ],
-        "name": "黑心菊",
+        "name": "三裂叶金光菊",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -7977,7 +7977,7 @@
           "zyj_fyjx_02",
           "zyj_fyjx_03"
         ],
-        "name": "粉郁金香",
+        "name": "粉色郁金香",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -8000,7 +8000,7 @@
           "zyj_dfyjx_02",
           "zyj_dfyjx_03"
         ],
-        "name": "丹粉郁金香",
+        "name": "鹦鹉郁金香",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -8023,7 +8023,7 @@
           "zyj_byjx_02",
           "zyj_byjx_03"
         ],
-        "name": "白郁金香",
+        "name": "白色郁金香",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -8046,7 +8046,7 @@
           "zyj_bmtl_02",
           "zyj_bmtl_03"
         ],
-        "name": "马蹄莲",
+        "name": "白马蹄莲",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -8115,7 +8115,7 @@
           "zyj_llbh_02",
           "zyj_llbh_03"
         ],
-        "name": "蓝喇叭花",
+        "name": "蓝花牵牛",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -8552,7 +8552,7 @@
           "xy_zyjg_02",
           "xy_zyjg_03"
         ],
-        "name": "紫桔梗",
+        "name": "紫花桔梗",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.2000000476837158,
@@ -8598,7 +8598,7 @@
           "xy_hgssj_02",
           "xy_hgssj_03"
         ],
-        "name": "暮霞三色堇",
+        "name": "黄色三色堇",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.2000000476837158,
@@ -8621,7 +8621,7 @@
           "xy_hssj_02",
           "xy_hssj_03"
         ],
-        "name": "赤焰三色堇",
+        "name": "红褐三色堇",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.2000000476837158,
@@ -8667,7 +8667,7 @@
           "xy_zssj_02",
           "xy_zssj_03"
         ],
-        "name": "星蓝三色堇",
+        "name": "蓝紫三色堇",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.2000000476837158,
