@@ -64,11 +64,14 @@ function loadRuntime(buildRoot) {
     class Component {}
     class Node {
         static EventType = {NODE_DESTROYED: 'destroyed'};
-        constructor(name = '') { Object.assign(this, {name, layer: 1, isValid: true, children: [], components: [], position: {x: 0, y: 0, z: 0}}); }
+        constructor(name = '') { Object.assign(this, {name, layer: 1, isValid: true, active: true, angle: 0, scale: {x:1,y:1,z:1}, children: [], components: [], position: {x: 0, y: 0, z: 0}}); }
         addChild(node) { this.children.push(node); node.parent = this; }
         addComponent(Type) { const value = new Type(); value.node = this; this.components.push(value); return value; }
         getComponent(Type) { return this.components.find(value => value instanceof Type) || null; }
         setPosition(x, y, z = 0) { this.position = {x, y, z}; }
+        setScale(x,y,z=1){this.scale={x,y,z};}
+        get activeInHierarchy(){return this.active&&(!this.parent||this.parent.activeInHierarchy);}
+        destroy(){this.isValid=false;for(const n of this.children)n.destroy();}
     }
     class UITransform { setContentSize(width, height) { Object.assign(this, {width, height}); } }
     class Label {
@@ -76,7 +79,8 @@ function loadRuntime(buildRoot) {
         useSystemFont = true;
     }
     class Color { fromHEX() { return this; } }
-    class JsonAsset {} class Font {} class SpriteFrame {} class SkeletonData {} class AudioClip {}
+    class JsonAsset {} class Font {} class SpriteFrame {} class SkeletonData {} class AudioClip {} class EffectAsset {}
+    class Texture2D {static WrapMode={REPEAT:0,MIRRORED_REPEAT:2,CLAMP_TO_EDGE:1};static Filter={NEAREST:0,LINEAR:1};setWrapMode(){}setFilters(){}}
     const storage = new Map();
     const owner = name => ({load(logical, Type, callback) {
         requests.push({bundle: name, logical});
@@ -90,7 +94,7 @@ function loadRuntime(buildRoot) {
     const cc = {
         cclegacy: {_RF: {push() {}, pop() {}}},
         _decorator: {ccclass: () => value => value, property: () => () => {}},
-        Component, Node, UITransform, Label, Color, JsonAsset, Font, SpriteFrame, AudioClip,
+        Component, Node, UITransform, Label, Color, JsonAsset, Font, SpriteFrame, AudioClip, EffectAsset, Texture2D,
         Vec3: class {constructor(x = 0, y = 0, z = 0) { Object.assign(this, {x, y, z}); }},
         sp: {SkeletonData},
         sys: {isBrowser: false, platform: 'wechat', Platform: {WECHAT_GAME: 'wechat'},
@@ -100,6 +104,9 @@ function loadRuntime(buildRoot) {
         assetManager: {downloader: {remoteServerAddress: settings.assets.server}, getBundle: name => openedBundles.get(name),
             loadBundle(name, callback) { queueMicrotask(() => { try { config(name); const value = owner(name); openedBundles.set(name, value); callback(null, value); } catch (error) { callback(error); } }); }},
     };
+    // Component plumbing is mocked; collision integration uses Creator's exact
+    // bundled Box2D package, exercising the emitted code rather than TS source.
+    Object.assign(cc,require('../tests/physics-cc.cjs')(Node));
     const context = vm.createContext({console: {warn: (...args) => warnings.push(args.join(' ')), error: (...args) => warnings.push(args.join(' ')), info() {}},
         System: {register(name, dependencies, declare) {
             if (Array.isArray(name)) {
@@ -214,16 +221,45 @@ async function checkRuntime(buildRoot = path.join(PROJECT, 'build/wechatgame')) 
         }
         assert(!requests.some(request => /^greenhouse\/basket-/.test(request.logical)));
     });
-    await check('compiled Spine preload expands seven real effect resource names from its Set', async () => {
+    await check('compiled Spine preload expands the current emitted effect manifest without duplicate loads', async () => {
         const before = runtime.requests.length; await load('FlowerEffects').FlowerEffects.preload();
         const skeletons = runtime.requests.slice(before).filter(request => request.logical.startsWith('original/effects/spine/'));
-        assert.equal(skeletons.length, 7); assert(skeletons.every(request => typeof request.logical === 'string'));
+        const manifest=await new Promise((resolve,reject)=>load('FlowerAssets').loadFlowerAsset('original/data/order-spine-effects',runtime.cc.JsonAsset,(error,asset)=>error?reject(error):resolve(asset.json)));
+        const expected=Array.from(new Set(Object.values(manifest.roles).flatMap(role=>role.choices.map(choice=>choice.resource)))).sort();
+        assert.deepEqual(skeletons.map(request=>request.logical).sort(),expected);
     });
     await check('compiled pool preload expands original frame and ripple Sets', async () => {
         const before = runtime.requests.length;
         await load('FlowerPool').FlowerPoolView.preload([{kind: 'cdy_lxq', variant: 1}, {kind: 'cdy_lxq', variant: 1}]);
         const frames = runtime.requests.slice(before).filter(request => request.logical.endsWith('/spriteFrame'));
         assert(frames.length > 0); assert.equal(new Set(frames.map(request => request.logical)).size, frames.length);
+    });
+    await check('compiled physics iterates native body Maps, keeps original mass and pushes through the true centre',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit}=load('FlowerPhysics'),data=await FlowerPhysics.preload();
+        const p=new FlowerPhysics(new runtime.cc.Node('NativePhysicsCheck'),data,()=>.8);
+        try{
+            p.add('rose','original/flower/zy_lmg_01',0,-2*unit,155,1.1,0,{x:0,y:.3});p.sync('rose',0,1,true);p.update(.02);
+            const state=p.states.get('rose');assert(state.active);assert(Math.abs(state.body.getMass()-1)<1e-6);
+            assert(Math.abs(state.body.angularVelocity)<1e-10,'linear impulses must not spin the off-centre native body');
+            state.body.angularVelocity=1;p.update(.03);const native=state.body.impl.GetAngle()*180/Math.PI,alpha=p.accumulator/.02;
+            const expected=state.previous.angle+(((native-state.previous.angle+540)%360)-180)*alpha;
+            assert(Math.abs(((p.pose('rose').angle-expected+540)%360)-180)<1e-6,'full planar angle must survive the emitted helpers');
+        }finally{p.dispose();}
+    });
+    await check('compiled original rose/lily overlaps separate and sleep at 15, 30 and 60 fps',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit}=load('FlowerPhysics'),data=JSON.parse(JSON.stringify(await FlowerPhysics.preload()));
+        data.flow.torqueImpulse=0;for(const layer of data.flow.layers)layer.strength=0;
+        for(const fps of [15,30,60])for(const variant of [1,2,3]){
+            const p=new FlowerPhysics(new runtime.cc.Node('NativeOverlapCheck'),data,()=>.8);
+            try{
+                p.add('rose','original/flower/zy_lmg_0'+variant,-2.8*unit,-5.8*unit,155,1.1,0,{x:0,y:0});p.sync('rose',0,1,true);
+                p.add('lily','original/flower/cdtx_sl_0'+variant,-2.7*unit,-5.7*unit,-155,1,0,{x:0,y:0});p.sync('lily',0,1,true);
+                for(let frame=0;frame<fps*30;frame++)p.update(1/fps);
+                const a=p.states.get('rose'),b=p.states.get('lily');
+                assert(Math.hypot(a.node.position.x-b.node.position.x,a.node.position.y-b.node.position.y)/32>1.5);
+                assert(!a.body.isAwake()&&!b.body.isAwake(),'the generated code must settle real bodies, not just cache a stationary picture');
+            }finally{p.dispose();}
+        }
     });
     await check('compiled cancellation invokes every callback in a Set before clearing it', () => {
         const calls = [], pendingAnimations = new Set([() => calls.push(1), () => calls.push(2)]);
