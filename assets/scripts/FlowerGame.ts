@@ -105,6 +105,7 @@ export class FlowerGame extends Component {
     private revision = 0;
     private catalog: FlowerCatalog | null = null;
     private pool: FlowerPoolView | null = null;
+    private buildingPool: FlowerPoolView | null = null;
     private orderEffects: FlowerEffects | null = null;
     private toolsRoot!: Node;
     private ordersRoot!: Node;
@@ -180,7 +181,7 @@ export class FlowerGame extends Component {
             loading?.setError(() => this.loadStartup());
         }
     }
-    onDestroy() { this.startupRevision++; this.startupLoading?.dispose(); this.revision++; this.collectionWork = null; this.cancelAnimations(); Tween.stopAllByTarget(this.progressTween); this.pool?.dispose(); this.orderEffects?.dispose(); this.music?.stop(); game.off('flower-settings-changed', this.applyAudioSettings, this); game.off('flower-ui-sound', this.onUISound, this); }
+    onDestroy() { this.startupRevision++; this.startupLoading?.dispose(); this.revision++; this.collectionWork = null; this.cancelAnimations(); Tween.stopAllByTarget(this.progressTween); this.buildingPool?.dispose(); this.pool?.dispose(); this.orderEffects?.dispose(); this.music?.stop(); game.off('flower-settings-changed', this.applyAudioSettings, this); game.off('flower-ui-sound', this.onUISound, this); }
     private current(rev: number): boolean { return this.isValid && this.revision === rev; }
     private cancelAnimations(): void { for (const cancel of Array.from(this.pendingAnimations)) cancel(); this.pendingAnimations.clear(); }
     private animate(node: Node, duration: number, properties: Record<string, unknown>, easing = 'quadOut'): Promise<boolean> {
@@ -275,6 +276,7 @@ export class FlowerGame extends Component {
         this.collectionWork = null;
         this.cancelAnimations(); this.visual = null; this.orderViews.clear(); this.trayCells = []; this.trayCapacity = 0; this.progressTarget = -1;
         this.firstPlayFrame = false;
+        this.buildingPool?.dispose(); this.buildingPool = null;
         this.pool?.dispose(); this.pool = null;
         this.orderEffects?.dispose(); this.orderEffects = null;
         Tween.stopAllByTarget(this.progressTween); this.progressTween.percent = 0;
@@ -413,8 +415,11 @@ export class FlowerGame extends Component {
             await this.buildHUD(); if (!this.current(rev)) return;
             await this.renderOrders(); if (!this.current(rev)) return;
             await this.renderTray(); if (!this.current(rev)) return;
-            await this.spawnFlowers(); if (!this.current(rev)) return;
-            await this.buildTools();
+            await this.buildTools(); if (!this.current(rev)) return;
+            // Present the room while node/fixture creation yields to real frames.
+            // ready stays false, so neither gameplay nor the countdown can start.
+            this.updateHUD(); board.active = true;
+            await this.spawnFlowers();
             if (!this.isValid || rev !== this.revision) return;
             // Original SpawnFlower emits 3–4 flowers every .05s, each scaling
             // from zero over .35s. Reveal the room before playing that sequence.
@@ -423,12 +428,13 @@ export class FlowerGame extends Component {
             this.ready = true; this.bgm('bgm_level'); this.updateHUD();
             board.active = true;
             if (DEBUG) console.info(`[FlowerGame] level ${level} visible in ${Date.now() - entryStarted}ms (build ${Date.now() - buildStarted}ms)`);
-            if (this.catalog?.levels.has(level + 1)) void this.prepareLevelAssets(level + 1)
-                .catch(error => console.warn('[FlowerGame] next level preload', error));
             this.sound('flowerstart');
             const entrance = await Promise.all([this.waitForPoolEntrance(),
                 ...Array.from(this.orderViews.keys()).map(slot => this.enterBouquet(slot, slot * 0.06))]);
             if (entrance.some(completed => !completed) || !this.current(rev)) return;
+            // Do not compete with flower activation/first render on the phone.
+            if (this.catalog?.levels.has(level + 1)) void this.prepareLevelAssets(level + 1)
+                .catch(error => console.warn('[FlowerGame] next level preload', error));
             if (level === 1) await this.showGuide();
         } catch (e) {
             if (!this.current(rev)) return;
@@ -591,16 +597,21 @@ export class FlowerGame extends Component {
     }
     private async spawnFlowers() {
         const rev = this.revision, rules = this.rules!;
-        const pool = await FlowerPoolView.create(this.poolRoot, rules.flowers, rules.level,
-            id => { if (this.current(rev)) void this.collect(id); }, rules.layerMaxCounts, this.belowWaterRoot);
-        if (!this.current(rev)) { pool.dispose(); return; }
-        pool.setSurfaceListener(flower => {
-            if (!this.current(rev)) return;
-            const name = this.catalog?.flowersByKind.get(flower.kind)?.playUpSound;
-            if (typeof name === 'string' && name) this.sound(name);
-        });
-        this.pool = pool;
-        pool.setWaterSurface(this.waterSurface);
+        let building: FlowerPoolView | null = null;
+        try {
+            const pool = await FlowerPoolView.create(this.poolRoot, rules.flowers, rules.level,
+                id => { if (this.current(rev)) void this.collect(id); }, rules.layerMaxCounts, this.belowWaterRoot,
+                {isCurrent: () => this.current(rev), deferEntrance: true,
+                    onCreate: pool => { building = pool; this.buildingPool = pool; }});
+            if (!this.current(rev)) { pool.dispose(); return; }
+            pool.setSurfaceListener(flower => {
+                if (!this.current(rev)) return;
+                const name = this.catalog?.flowersByKind.get(flower.kind)?.playUpSound;
+                if (typeof name === 'string' && name) this.sound(name);
+            });
+            this.pool = pool;
+            pool.setWaterSurface(this.waterSurface);
+        } finally { if (this.buildingPool === building) this.buildingPool = null; }
     }
     private async showGuide() {
         const rev = this.revision;

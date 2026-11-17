@@ -92,6 +92,7 @@ function loadRuntime(buildRoot) {
         });
     }});
     const cc = {
+        Director:{EVENT_AFTER_DRAW:'after-draw'},director:{once(_event,callback){queueMicrotask(callback);}},
         cclegacy: {_RF: {push() {}, pop() {}}},
         _decorator: {ccclass: () => value => value, property: () => () => {}},
         Component, Node, UITransform, Label, Color, JsonAsset, Font, SpriteFrame, AudioClip, EffectAsset, Texture2D,
@@ -227,6 +228,18 @@ async function checkRuntime(buildRoot = path.join(PROJECT, 'build/wechatgame')) 
         const manifest=await new Promise((resolve,reject)=>load('FlowerAssets').loadFlowerAsset('original/data/order-spine-effects',runtime.cc.JsonAsset,(error,asset)=>error?reject(error):resolve(asset.json)));
         const expected=Array.from(new Set(Object.values(manifest.roles).flatMap(role=>role.choices.map(choice=>choice.resource)))).sort();
         assert.deepEqual(skeletons.map(request=>request.logical).sort(),expected);
+    });
+    await check('compiled cached creation jobs yield at the renderer frame boundary',async()=>{
+        const created=[],frames=[];
+        const completed=await load('FlowerStartup').runFrameWork([0,1,2,3,4,5,6,7],i=>{created.push(i);},
+            {maxItems:3,budgetMs:4,now:()=>0,nextFrame:async()=>{frames.push(created.length);}});
+        assert(completed);assert.deepEqual(created,[0,1,2,3,4,5,6,7]);assert.deepEqual(frames,[3,6]);
+    });
+    await check('compiled concurrent reveals share the same bounded frame queue',async()=>{
+        const created=[],frames=[];
+        const queue=new (load('FlowerStartup').FrameTaskQueue)({maxItems:3,now:()=>0,nextFrame:async()=>{frames.push(created.length);}});
+        await Promise.all([0,1,2,3,4,5,6,7].map(i=>queue.enqueue(()=>{created.push(i);return i;})));
+        assert.deepEqual(created,[0,1,2,3,4,5,6,7]);assert.deepEqual(frames,[0,3,6]);queue.dispose();
     });
     await check('compiled pool preload expands original frame and ripple Sets', async () => {
         const before = runtime.requests.length;

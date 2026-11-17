@@ -43,6 +43,7 @@ function harness(options = {}) {
   class JsonAsset {} class Font {} class AudioClip {} class SkeletonData {}
   const storage = new Map();
   const cc = {
+    Director:{EVENT_AFTER_DRAW:'after-draw'},director:{once(_event,callback){options.onFrame?.(requests);queueMicrotask(callback);}},
     _decorator: {ccclass: () => value => value, property: () => () => {}},
     Component, Node, Vec3, UITransform, SpriteFrame, Sprite, Color, Graphics, Mask, AudioSource, AudioClip, JsonAsset, Font,
     sp: {SkeletonData}, BlockInputEvents: class {}, UIOpacity: class {},
@@ -169,6 +170,29 @@ test('next-level preparation deduplicates concurrent requests without changing t
   }
   assert(h.requests.includes('original/butterfly/qipao/spriteFrame'), 'the butterfly retains its transparent bubble');
   const requests = h.requests.length; await h.game.prepareLevelAssets(2); assert.equal(h.requests.length, requests);
+});
+
+test('flower frame warmup limits each batch to four even when all callbacks are cached',async()=>{
+  const counts=[],h=harness({onFrame:requests=>counts.push(requests.filter(p=>p.endsWith('/spriteFrame')).length)});
+  await h.load('FlowerCatalog').FlowerCatalog.load();
+  const flowers=[];for(const kind of ['cdy_lxq','dy_zmj','cdcs_jyc','zy_lmg'])for(let variant=1;variant<=3;variant++)flowers.push({kind,variant});
+  await h.load('FlowerPool').FlowerPoolView.preload(flowers);
+  const total=h.requests.filter(p=>p.endsWith('/spriteFrame')).length;
+  let previous=0;for(const count of [...counts,total]){assert(count-previous<=4);previous=count;}
+  assert(counts.length>1);
+});
+
+test('the room renders during pool construction without starting gameplay or its countdown',async()=>{
+  const h=harness();await h.game.loadStartup();h.game.catalog.levels.delete(2);
+  let release,started;const gate=new Promise(resolve=>{release=resolve;}),building=new Promise(resolve=>{started=resolve;});
+  const spawn=h.game.spawnFlowers.bind(h.game);
+  h.game.spawnFlowers=async()=>{started();await gate;await spawn();};
+  const pending=h.game.startLevel(1);await building;
+  const board=h.game.content.children.find(n=>n.name==='LevelBoard');
+  assert(board.active);assert.equal(h.game.ready,false);assert.equal(h.game.busy,true);
+  const remaining=h.game.rules.remainingSeconds;h.game.update(2);
+  assert.equal(h.game.rules.remainingSeconds,remaining,'creation time cannot consume the level timer');
+  release();await pending;assert.equal(h.game.ready,true);assert.equal(h.game.pool.entering,false);
 });
 
 test('the level five graduation bear uses the new sprite in the pool and gift box', async () => {

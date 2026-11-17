@@ -34,10 +34,12 @@ class Color {constructor(r,g,b,a){this.set(r,g,b,a);}set(r,g,b,a){Object.assign(
 function uiNode(parent,name,x=0,y=0,w=750,h=1334){const n=new Node(name);n.layer=parent.layer;n.addComponent(UITransform).setContentSize(w,h);n.setPosition(x,y);parent.addChild(n);return n;}
 async function loadFrame(path) { const file=resourceFile(path+'.png');if(!fs.existsSync(file+'.meta')){const png=fs.readFileSync(file);return {originalSize:{width:png.readUInt32BE(16),height:png.readUInt32BE(20)}};}const meta=JSON.parse(fs.readFileSync(file+'.meta','utf8')); const d=Object.values(meta.subMetas).find(s=>s.importer==='sprite-frame').userData;return {originalSize:{width:d.rawWidth,height:d.rawHeight}}; }
 const cc={Node,Button,Sprite,UITransform,UIOpacity,Graphics,Color,Vec3,JsonAsset:class{},resources:{load(path,type,done){done(null,{json:JSON.parse(fs.readFileSync(resourceFile(path+'.json'),'utf8'))});}},Tween:{stopAllByTarget(){}}};
+cc.Director={EVENT_AFTER_DRAW:'after-draw'};cc.director={once(_event,callback){queueMicrotask(callback);}};
 Object.assign(cc,require('./physics-cc.cjs')(Node));
 const moduleCache={};
 function moduleLoad(name){if(moduleCache[name])return moduleCache[name];const scope={exports:{},require(path){if(path==='cc')return cc;if(path==='./FlowerWater')return require('./water-fixture.cjs');if(path==='./FlowerAssets')return {loadFlowerAsset:cc.resources.load};if(path==='./FlowerUI')return {loadFrame,uiNode};if(path.startsWith('./'))return moduleLoad(path.slice(2));throw Error(path);},console:{warn(){}}};moduleCache[name]=scope.exports;vm.runInNewContext(ts.transpileModule(fs.readFileSync(project+'/assets/scripts/'+name+'.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.CommonJS}}).outputText,scope);return scope.exports;}
 const Pool=moduleLoad('FlowerPool').FlowerPoolView;
+const renderFrame=()=>new Promise(setImmediate);
 Node.prototype.getChildByName=function(name){return this.children.find(n=>n.name===name)||null;};
 test('original flower shapes pass transparent corners, prioritize the foreground and keep butterfly bubble hits stable', async () => {
  const shapeContains=moduleLoad('FlowerPool').flowerShapeContains;
@@ -66,6 +68,84 @@ function layeredFlowers(counts) {
  for(let layer=0;layer<counts.length;layer++)for(let i=0;i<counts[layer];i++)flowers.push({id:`layer-${layer}-${i}`,kind:['cdcs_jyc','cdy_lxq','dy_zmj'][i%3],variant:i%3+1,status:'pool',initialLayer:layer});
  return flowers;
 }
+
+test('the real second level builds at most three flowers per frame without changing layout or entrance timing',async()=>{
+ const catalog=await moduleLoad('FlowerCatalog').FlowerCatalog.load(),config=catalog.level(2);
+ const {FlowerRules}=moduleLoad('FlowerRules'),flowers=new FlowerRules(config).flowers;
+ let building;const counts=[];
+ const p=await Pool.create(new Node(),flowers,2,()=>{},config.layerMaxCounts,undefined,
+  {deferEntrance:true,onCreate:pool=>{building=pool;},nextFrame:async()=>{
+    counts.push(building.nodeMap.size);
+    assert(building.ordered.every(e=>!e.node.active),'future flowers must not activate while building');
+  }});
+ assert(counts.length>1,'the real second level spans multiple render frames');
+ let previous=0;for(const count of [...counts,p.nodeMap.size]){assert(count-previous<=3);previous=count;}
+ const reference=await Pool.create(new Node(),flowers,2,()=>{},config.layerMaxCounts);
+ const layout=pool=>pool.ordered.map(e=>({id:e.flower.id,x:e.x,y:e.y,angle:e.angle,band:e.band,scale:e.physicalScale}));
+ assert.deepEqual(layout(p),layout(reference));
+ assert(p.ordered.every(e=>!e.node.active));
+ assert.equal(p.playEntrance(),reference.playEntrance());
+ assert.deepEqual(p.ordered.map(e=>e.bornAt),reference.ordered.map(e=>e.bornAt));
+ console.log(JSON.stringify({level:2,flowers:p.nodeMap.size,creationSlices:counts.length+1,maxFlowersPerSlice:3}));
+ p.dispose();reference.dispose();
+});
+
+test('later levels use the same sliced creation path rather than a level-two special case',async()=>{
+ const catalog=await moduleLoad('FlowerCatalog').FlowerCatalog.load(),Rules=moduleLoad('FlowerRules').FlowerRules;
+ for(const level of [3,5,10]){
+  const config=catalog.level(level),flowers=new Rules(config).flowers;let building,last=0,frames=0;
+  const pool=await Pool.create(new Node(),flowers,level,()=>{},config.layerMaxCounts,undefined,
+   {deferEntrance:true,onCreate:p=>{building=p;},nextFrame:async()=>{const count=building.nodeMap.size;assert(count-last<=3);last=count;frames++;}});
+  assert(pool.nodeMap.size-last<=3);assert(frames>1);assert.equal(pool.nodeMap.size,flowers.filter(f=>f.status==='pool').length);pool.dispose();
+ }
+});
+
+test('simultaneous hidden-flower releases cannot allocate an entire burst in one render frame',async()=>{
+ const gates=[];const p=await Pool.create(new Node(),[],3,()=>{},[21,16,16,0],undefined,
+  {nextFrame:()=>new Promise(resolve=>gates.push(resolve))});
+ const jobs=Array.from({length:12},(_,i)=>p.reveal({id:'queued-'+i,kind:'dy_zmj',variant:1,status:'pool',initialLayer:2}));
+ await renderFrame();assert.equal(p.nodeMap.size,0);
+ for(const expected of [3,6,9]){gates.shift()();await renderFrame();assert.equal(p.nodeMap.size,expected);}
+ p.dispose();const nodes=await Promise.all(jobs);assert.equal(nodes.filter(Boolean).length,9);assert(nodes.slice(9).every(n=>n===null));
+ gates.shift()();await renderFrame();assert.equal(p.nodeMap.size,0);
+});
+
+test('overdue entrance batches cannot all activate after one stalled phone frame',async()=>{
+ const p=await Pool.create(new Node(),layeredFlowers([30,20,20,10]),2,()=>{},[30,20,20,10],undefined,{deferEntrance:true});
+ p.playEntrance();
+ let active=new Set(p.ordered.filter(e=>e.node.active).map(e=>e.flower.id));
+ for(let frame=0;frame<40;frame++){
+  p.update(frame===0?.75:1/60);
+  const next=new Set(p.ordered.filter(e=>e.node.active).map(e=>e.flower.id));
+  assert([...next].filter(id=>!active.has(id)).length<=4,'native activation obeys the per-frame quota even with a backlog');
+  const count=next.size;p.refreshBands();assert.equal(p.ordered.filter(e=>e.node.active).length,count,'click/refill refresh cannot bypass deferred admission');
+  for(const e of p.ordered)if(e.entranceAt!==null&&!e.node.active)assert.equal(p.physics.states.get(e.flower.id).ready,false,'invisible waiting flowers cannot create active fixtures');
+  active=next;
+ }
+ for(let i=0;i<180;i++)p.update(1/60);
+ assert.equal(p.entering,false);assert.equal(p.ordered.filter(e=>e.band<3&&e.node.active).length,70);p.dispose();
+});
+
+test('water effects share the runtime queue and a taken flower cannot regain queued ripples',async()=>{
+ let preparing=true;const gates=[];
+ const p=await Pool.create(new Node(),layeredFlowers([8,8,0,0]),2,()=>{},[8,8,0,0],undefined,
+  {nextFrame:()=>preparing?Promise.resolve():new Promise(resolve=>gates.push(resolve))});
+ preparing=false;p.update(.5);await renderFrame();
+ assert(p.ordered.every(e=>e.ripplePlayers.length===0));
+ gates.shift()();await renderFrame();assert.equal(p.ordered.filter(e=>e.ripplePlayers.length).length,3);
+ const waiting=p.ordered.find(e=>e.rippleQueued);const id=waiting.flower.id;p.take(id);
+ gates.shift()();await renderFrame();assert.equal(waiting.ripplePlayers.length,0);
+ p.dispose();for(const resolve of gates)resolve();await renderFrame();
+ assert.equal(waiting.ripplePlayers.length,0);
+});
+
+test('cancelling a partial pool stops allocations and releases its native physics world',async()=>{
+ let building,current=true,yields=0;const parent=new Node();
+ await assert.rejects(Pool.create(parent,layeredFlowers([12,12,12,12]),2,()=>{},[12,12,12,12],undefined,
+  {onCreate:pool=>{building=pool;},isCurrent:()=>current,nextFrame:async()=>{yields++;current=false;}}),/cancelled/);
+ assert.equal(yields,1);assert.equal(building.nodeMap.size,0);assert.equal(building.root.isValid,false);
+ assert.equal(building.physics.root.isValid,false);
+});
 
 test('new artwork keeps its fitted dimensions while physical fixtures follow the same scale', async () => {
  await moduleLoad('FlowerCatalog').FlowerCatalog.load();
@@ -158,7 +238,7 @@ test('original water sprites start after a delay, switch on promotion and stop o
  const graphicsCount=()=>p.ordered.reduce((count,e)=>count+e.ripple.components.filter(c=>c instanceof Graphics).length,0);
  assert.equal(graphicsCount(),0,'no approximate Graphics water arcs remain');
  assert(p.ordered.every(e=>!e.ripple.active),'original initial water delay has not elapsed');
- p.update(.5);
+ p.update(.5);await renderFrame();
  assert(p.inLayer(0).every(e=>e.ripplePlayers.length===e.rippleProfile.up.length),'Up uses its original per-flower water points');
  assert(p.inLayer(1).every(e=>e.ripplePlayers.length===1),'Middle plays its own narrow water animation');
  assert(p.inLayer(2).concat(p.inLayer(3)).every(e=>!e.ripple.active),'Bottom and Down have no water animator');
@@ -172,10 +252,10 @@ test('original water sprites start after a delay, switch on promotion and stop o
  let alpha=promoted.entry.alpha;
  for(let i=0;i<20;i++){p.update(.025);assert(promoted.entry.alpha>=alpha,'brightness rises monotonically');alpha=promoted.entry.alpha;}
  assert.equal(promoted.entry.image.grayscale,false,'submerged appearance retains the original RGB');
- p.update(.1);
+ p.update(.1);await renderFrame();
  assert.equal(promoted.entry.rippleStage,'promotion','Up promotion plays the original short bowen clip');
  assert.equal(promoted.entry.ripplePlayers[0].player.clip.loop,false);
- p.update(1);assert.equal(promoted.entry.rippleStage,'steady','bowen ends before returning to the Up sequence');
+ p.update(1);await renderFrame();assert.equal(promoted.entry.rippleStage,'steady','bowen ends before returning to the Up sequence');
  const players=promoted.entry.ripplePlayers.slice();p.refreshBands();p.refreshBands();
  assert.deepEqual(promoted.entry.ripplePlayers,players,'unchanged layers keep their water phase');
  assert.equal(removed.getChildByName('Ripple').active,false,'click removes water instead of carrying a synthetic trail');
@@ -192,7 +272,8 @@ test('entrance uses staggered OutCubic scale, pauses with the pool clock and can
  p.root.emit(Node.EventType.TOUCH_END,{getUILocation:()=>({x:first.x,y:first.y})});assert.equal(picked.length,0,'zero-scale flowers are not clickable');
  p.update(.035);assert(Math.abs(first.node.scale.x-([1,.9,.8][first.band]*(1-.9**3)))<1e-8,'original .35-second OutCubic scale');
  const flight=p.take(later.flower.id);assert(flight);const flightPosition={...flight.position};
- p.update(duration);assert.equal(p.entering,false);assert.deepEqual(flight.position,flightPosition,'cancelled delayed piece never returns');
+ for(let i=0;i<Math.ceil((duration+.5)*60);i++)p.update(1/60);
+ assert.equal(p.entering,false);assert.deepEqual(flight.position,flightPosition,'cancelled delayed piece never returns');
  assert(p.inLayer(3).every(e=>!e.node.active),'Down stays hidden after entrance');
  assert(p.ordered.filter(e=>e.band<3).every(e=>e.entranceAt===null&&e.node.active));
  assert.equal(p.playEntrance(),0,'entrance cannot restart on the same live board');
@@ -200,7 +281,7 @@ test('entrance uses staggered OutCubic scale, pauses with the pool clock and can
  const q=await Pool.create(new Node(),layeredFlowers([8,4,4,6]),2,()=>{},[8,4,4,6]);
  assert.equal(q.playEntrance(),duration,'a fresh level gets its own reproducible entrance');q.dispose();
  const samples=[];
- for(const fps of [15,60]){const board=await Pool.create(new Node(),layeredFlowers([8,4,4,6]),2,()=>{},[8,4,4,6]);board.playEntrance();for(let i=0;i<fps*.4;i++)board.update(1/fps);samples.push(snapshot(board));board.dispose();}
+ for(const fps of [15,60]){const board=await Pool.create(new Node(),layeredFlowers([8,4,4,6]),2,()=>{},[8,4,4,6]);board.playEntrance();for(let i=0;i<fps*2;i++)board.update(1/fps);samples.push(snapshot(board));board.dispose();}
  for(let i=0;i<samples[0].length;i++)for(const key of ['scale','alpha'])assert(Math.abs(samples[0][i][key]-samples[1][i][key])<1e-6,'entrance scale is independent of render fps');
 });
 
@@ -253,7 +334,7 @@ test('water playback uses original sprite keys, cubic opacity and cropped sprite
  const c=opacity.keys[0].coefficients,t=.15;
  assert(Math.abs(sample(opacity,t)-(((c[0]*t+c[1])*t+c[2])*t+c[3]))<1e-12,'decoded cubic coefficients are absolute values');
  const p=await Pool.create(new Node(),[{id:'geometry',kind:'cdy_lxq',variant:1,status:'pool',initialLayer:0}],2,()=>{},[1,0,0,0]);
- p.update(.5);const entry=p.inLayer(0)[0],player=entry.ripplePlayers[0].player;
+ p.update(.5);await renderFrame();const entry=p.inLayer(0)[0],player=entry.ripplePlayers[0].player;
  player.sample(.101);const state=player.nodes.get('New Sprite');assert.equal(state.frame,track.keys[1].value);
  player.sample(clip.duration+.101);assert.equal(state.frame,track.keys[1].value,'loop wraps by original clip length');
  const geometry=data.sprites[state.frame],size=state.art.getComponent(UITransform);

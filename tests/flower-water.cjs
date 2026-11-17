@@ -1,17 +1,18 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('fs'),path=require('path'),vm=require('vm'),ts=require('./typescript.cjs'),resourceFile=require('./resource-file.cjs');
 const sourceData=JSON.parse(fs.readFileSync(resourceFile('original/data/flower-water-materials.json')));
 function harness(){
+ const stats={materials:0,properties:0};
  class Node{constructor(name='Root'){Object.assign(this,{name,children:[],components:[],isValid:true,active:true,position:{x:0,y:0},scale:{x:1,y:1},angle:0});}addChild(n){n.parent=this;this.children.push(n);}addComponent(T){const c=new T();c.node=this;this.components.push(c);return c;}getComponent(T){return this.components.find(c=>c instanceof T);}setPosition(x,y){this.position={x,y};}setScale(x,y){this.scale={x,y};}setSiblingIndex(i){if(!this.parent)return;const a=this.parent.children;a.splice(a.indexOf(this),1);a.splice(i,0,this);}destroy(){this.isValid=false;for(const c of this.children)c.destroy();}}
  class UITransform{setContentSize(width,height){Object.assign(this,{width,height});}}
  class Frame{constructor(){this.packable=true;this.uv=[0,1,1,1,0,0,1,0];}clone(){const f=new Frame();f.uv=this.uv.slice();return f;}destroy(){this.destroyed=true;}}
  class Sprite{static SizeMode={CUSTOM:0};grayscale=true;customMaterial=null;}
  class Vec4{constructor(x,y,z,w){Object.assign(this,{x,y,z,w});}}
- class Material{constructor(){this.properties={};}initialize(v){this.effect=v.effectAsset;}setProperty(k,v){this.properties[k]=v;}destroy(){this.destroyed=true;}}
+ class Material{constructor(){stats.materials++;this.properties={};}initialize(v){this.effect=v.effectAsset;}setProperty(k,v){stats.properties++;this.properties[k]=v;}destroy(){this.destroyed=true;}}
  class EffectAsset{}class JsonAsset{}class Texture2D{static WrapMode={REPEAT:0,CLAMP_TO_EDGE:1,MIRRORED_REPEAT:2};static Filter={NEAREST:0,LINEAR:1};setWrapMode(u,v){this.wrap=[u,v];}setFilters(a,b){this.filters=[a,b];}}
  const uiNode=(parent,name,x=0,y=0,width=1,height=1)=>{const n=new Node(name);parent.addChild(n);n.setPosition(x,y);n.addComponent(UITransform).setContentSize(width,height);return n;};
  const cc={Node,UITransform,Sprite,Vec4,Material,EffectAsset,JsonAsset,Texture2D};
  const exports={};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.join(__dirname,'../assets/scripts/FlowerWater.ts'),'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.CommonJS}}).outputText,{exports,Math,Map,Promise,require(p){if(p==='cc')return cc;if(p==='./FlowerUI')return {uiNode};if(p==='./FlowerAssets')return {loadFlowerAsset(path,Type,done){done(null,Type===JsonAsset?{json:sourceData}:new Type());}};throw Error(p);}});
- return {...cc,...exports,uiNode,Frame};
+ return {...cc,...exports,uiNode,Frame,stats};
 }
 
 test('original half-submerged shader preserves complementary alpha and the original curved waterline',()=>{
@@ -49,4 +50,27 @@ test('surface material uses original textures, alpha and UV bases rather than op
  const files=['flower-half-water','flower-water-surface'].map(name=>fs.readFileSync(resourceFile('original/materials/'+name)+'.effect','utf8'));
  assert(files.every(text=>!text.includes('IS_GRAY')));assert(files[1].includes('0.680000007'),'source arithmetic is retained');
  const material=water.customMaterial;renderer.dispose();assert(material.destroyed);
+});
+
+test('prepared water copies and shader constants are reused across hundreds of frames and layer changes',async()=>{
+ const h=harness(),root=new h.Node(),below=h.uiNode(root,'Below'),entry=h.uiNode(root,'Flower'),image=h.uiNode(entry,'Image',0,0,180,200).addComponent(h.Sprite);
+ image.spriteFrame=new h.Frame();const renderer=await h.FlowerWaterRenderer.create(below);
+ renderer.prepare('flower',image,1);assert.equal(below.children.length,1);assert.equal(below.children[0].active,false);
+ const before={...h.stats};assert.equal(before.materials,2);assert.equal(before.properties,10);
+ for(let i=0;i<300;i++){entry.setPosition(i,-i);renderer.sync('flower',image,1,true);}
+ assert.deepEqual(h.stats,before,'no per-frame material allocation or constant/UV uploads');
+ renderer.sync('flower',image,0,true);renderer.sync('flower',image,1,true);
+ assert.deepEqual(h.stats,before,'returning to Middle restores existing material without reconfiguring it');
+ image.spriteFrame=new h.Frame();renderer.sync('flower',image,1,true);
+ assert.equal(h.stats.materials,before.materials);assert.equal(h.stats.properties,before.properties+5,'changed frame refreshes its UV configuration');
+ renderer.dispose();
+});
+
+test('surface and inactive deep flowers allocate no unused submerged sprites',async()=>{
+ const h=harness(),root=new h.Node(),below=h.uiNode(root,'Below'),renderer=await h.FlowerWaterRenderer.create(below);
+ for(let i=0;i<40;i++){
+  const entry=h.uiNode(root,'Flower-'+i),image=h.uiNode(entry,'Image').addComponent(h.Sprite);image.spriteFrame=new h.Frame();
+  renderer.prepare(String(i),image,i%2?0:3);renderer.sync(String(i),image,i%2?0:3,true);
+ }
+ assert.equal(below.children.length,0);assert.equal(h.stats.materials,0);renderer.dispose();
 });

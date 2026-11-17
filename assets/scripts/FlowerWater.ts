@@ -42,6 +42,7 @@ export function originalWaterMask(uv: {x:number;y:number},time: number,p: HalfPa
 /** Real RGB textures with independent water-above/water-below render roots. */
 export class FlowerWaterRenderer {
     private readonly materials=new Map<Sprite,Material>();
+    private readonly halfSettings=new Map<Sprite,{frame:SpriteFrame;under:boolean}>();
     private readonly frames=new Map<SpriteFrame,SpriteFrame>();
     private readonly down=new Map<string,{node:Node;image:Sprite}>();
     constructor(private readonly source: Assets,private readonly belowRoot: Node) {}
@@ -60,12 +61,16 @@ export class FlowerWaterRenderer {
     private half(sprite: Sprite,under: boolean): void {
         let material=this.materials.get(sprite);
         if(!material){material=new Material();material.initialize({effectAsset:this.source.half});this.materials.set(sprite,material);}
-        sprite.customMaterial=material;
-        this.uv(material,sprite.spriteFrame!);
-        const p=this.source.source.half;
-        material.setProperty('cut',new Vec4(p.waterCut,p.cutSoftness,p.cutTilt,under?1:0));
-        material.setProperty('curve',new Vec4(p.curveStrength,p.curveCenter,p.curveWidth,p.curvePower));
-        material.setProperty('wave',new Vec4(p.waveStrength,p.waveSpeed,p.waveDensity,0));
+        if(sprite.customMaterial!==material)sprite.customMaterial=material;
+        const frame=sprite.spriteFrame!,configured=this.halfSettings.get(sprite);
+        if(!configured||configured.frame!==frame||configured.under!==under){
+            this.uv(material,frame);
+            const p=this.source.source.half;
+            material.setProperty('cut',new Vec4(p.waterCut,p.cutSoftness,p.cutTilt,under?1:0));
+            material.setProperty('curve',new Vec4(p.curveStrength,p.curveCenter,p.curveWidth,p.curvePower));
+            material.setProperty('wave',new Vec4(p.waveStrength,p.waveSpeed,p.waveDensity,0));
+            this.halfSettings.set(sprite,{frame,under});
+        }
     }
     applySurface(sprite: Sprite): void {
         sprite.spriteFrame=this.frozen(sprite.spriteFrame!);
@@ -76,20 +81,31 @@ export class FlowerWaterRenderer {
         vectors.forEach((name,i)=>{const c=water.colors[name];material.setProperty('inputs'+i,new Vec4(c.r,c.g,c.b,c.a));});
         material.setProperty('flowTexture',this.source.flow);material.setProperty('detailTexture',this.source.detail);
     }
-    sync(id: string,image: Sprite,band: number,visible: boolean): void {
+    /** Called in the pool's bounded creation slices, before its first update. */
+    prepare(id: string,image: Sprite,band: number): void {
+        if(band!==1&&band!==2)return;
         let copy=this.down.get(id);
         if(!copy){
             const size=image.node.getComponent(UITransform)!;
             const node=uiNode(this.belowRoot,'Submerged-'+id,0,0,size.width,size.height);
+            node.active=false;
             const sprite=node.addComponent(Sprite);sprite.sizeMode=Sprite.SizeMode.CUSTOM;sprite.spriteFrame=this.frozen(image.spriteFrame!);
             copy={node,image:sprite};this.down.set(id,copy);
             image.spriteFrame=this.frozen(image.spriteFrame!);
         }
-        image.grayscale=false;copy.image.grayscale=false;copy.image.trim=image.trim;
-        image.node.active=visible&&band<2;
-        copy.node.active=visible&&(band===1||band===2);
         if(band===1){this.half(image,false);this.half(copy.image,true);}
-        else {image.customMaterial=null;copy.image.customMaterial=null;}
+    }
+    sync(id: string,image: Sprite,band: number,visible: boolean): void {
+        // Surface and inactive deep flowers need no submerged node at all.
+        this.prepare(id,image,band);
+        const copy=this.down.get(id);
+        image.grayscale=false;
+        image.node.active=visible&&band<2;
+        if(band!==1&&image.customMaterial)image.customMaterial=null;
+        if(!copy)return;
+        copy.image.grayscale=false;copy.image.trim=image.trim;
+        copy.node.active=visible&&(band===1||band===2);
+        if(band!==1&&copy.image.customMaterial)copy.image.customMaterial=null;
         const entry=image.node.parent!;
         copy.node.setPosition(entry.position.x,entry.position.y,0);copy.node.angle=entry.angle;
         copy.node.setScale(entry.scale.x,entry.scale.y,1);
@@ -98,12 +114,13 @@ export class FlowerWaterRenderer {
     order(ids: readonly string[]): void {ids.forEach((id,i)=>this.down.get(id)?.node.setSiblingIndex(i));}
     take(id: string,image: Sprite): void {
         const copy=this.down.get(id);
-        if(copy){copy.node.active=false;copy.node.destroy();this.down.delete(id);const material=this.materials.get(copy.image);material?.destroy();this.materials.delete(copy.image);}
+        if(copy){copy.node.active=false;copy.node.destroy();this.down.delete(id);const material=this.materials.get(copy.image);material?.destroy();this.materials.delete(copy.image);this.halfSettings.delete(copy.image);}
         image.node.active=true;image.customMaterial=null;
         const material=this.materials.get(image);material?.destroy();this.materials.delete(image);
+        this.halfSettings.delete(image);
         // Collection flights outlive the pool. Return their borrowed shared frame
         // before the renderer disposes its private unpacked UV copies.
         for(const [original,frozen] of this.frames)if(image.spriteFrame===frozen){image.spriteFrame=original;break;}
     }
-    dispose(): void {for(const {node} of this.down.values()){node.active=false;node.destroy();}this.down.clear();for(const m of this.materials.values())m.destroy();this.materials.clear();for(const f of this.frames.values())f.destroy();this.frames.clear();}
+    dispose(): void {for(const {node} of this.down.values()){node.active=false;node.destroy();}this.down.clear();for(const m of this.materials.values())m.destroy();this.materials.clear();this.halfSettings.clear();for(const f of this.frames.values())f.destroy();this.frames.clear();}
 }
