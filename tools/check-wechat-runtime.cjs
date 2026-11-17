@@ -105,9 +105,8 @@ function loadRuntime(buildRoot) {
         assetManager: {downloader: {remoteServerAddress: settings.assets.server}, getBundle: name => openedBundles.get(name),
             loadBundle(name, callback) { queueMicrotask(() => { try { config(name); const value = owner(name); openedBundles.set(name, value); callback(null, value); } catch (error) { callback(error); } }); }},
     };
-    // Component plumbing is mocked; collision integration uses Creator's exact
-    // bundled Box2D package, exercising the emitted code rather than TS source.
-    Object.assign(cc,require('../tests/physics-cc.cjs')(Node));
+    // Flower collision is a project-level AABB simulation, so the emitted
+    // runtime must not need Creator's 2D physics classes or a Box2D test shim.
     const context = vm.createContext({console: {warn: (...args) => warnings.push(args.join(' ')), error: (...args) => warnings.push(args.join(' ')), info() {}},
         System: {register(name, dependencies, declare) {
             if (Array.isArray(name)) {
@@ -247,19 +246,18 @@ async function checkRuntime(buildRoot = path.join(PROJECT, 'build/wechatgame')) 
         const frames = runtime.requests.slice(before).filter(request => request.logical.endsWith('/spriteFrame'));
         assert(frames.length > 0); assert.equal(new Set(frames.map(request => request.logical)).size, frames.length);
     });
-    await check('compiled physics iterates native body Maps, keeps original mass and pushes through the true centre',async()=>{
+    await check('compiled AABB simulation activates logical states without native physics components',async()=>{
         const {FlowerPhysics,FLOWER_WORLD_UNIT:unit}=load('FlowerPhysics'),data=await FlowerPhysics.preload();
-        const p=new FlowerPhysics(new runtime.cc.Node('NativePhysicsCheck'),data,()=>.8);
+        const p=new FlowerPhysics(new runtime.cc.Node('AABBCheck'),data,()=>.8);
         try{
             p.add('rose','original/flower/zy_lmg_01',0,-2*unit,155,1.1,0,{x:0,y:.3});p.sync('rose',0,1,true);p.update(.02);
-            const state=p.states.get('rose');assert(state.active);assert(Math.abs(state.body.getMass()-1)<1e-6);
-            assert(Math.abs(state.body.angularVelocity)<1e-10,'linear impulses must not spin the off-centre native body');
-            state.body.angularVelocity=1;p.update(.03);const native=state.body.impl.GetAngle()*180/Math.PI,alpha=p.accumulator/.02;
-            const expected=state.previous.angle+(((native-state.previous.angle+540)%360)-180)*alpha;
-            assert(Math.abs(((p.pose('rose').angle-expected+540)%360)-180)<1e-6,'full planar angle must survive the emitted helpers');
+            const state=p.states.get('rose');assert(state.active);assert(Number.isFinite(state.x)&&Number.isFinite(state.y));
+            assert(state.local.maxX>state.local.minX&&state.local.maxY>state.local.minY);
+            assert.equal(state.body,undefined);assert.equal(p.root.children.length,0,'generated code must not allocate hidden rigid-body nodes');
+            assert(Math.hypot(state.vx,state.vy)>.2,'the source spawn impulse remains in the lightweight simulation');
         }finally{p.dispose();}
     });
-    await check('compiled original rose/lily overlaps separate and sleep at 15, 30 and 60 fps',async()=>{
+    await check('compiled AABB overlaps separate and settle at 15, 30 and 60 fps',async()=>{
         const {FlowerPhysics,FLOWER_WORLD_UNIT:unit}=load('FlowerPhysics'),data=JSON.parse(JSON.stringify(await FlowerPhysics.preload()));
         data.flow.torqueImpulse=0;for(const layer of data.flow.layers)layer.strength=0;
         for(const fps of [15,30,60])for(const variant of [1,2,3]){
@@ -269,8 +267,8 @@ async function checkRuntime(buildRoot = path.join(PROJECT, 'build/wechatgame')) 
                 p.add('lily','original/flower/cdtx_sl_0'+variant,-2.7*unit,-5.7*unit,-155,1,0,{x:0,y:0});p.sync('lily',0,1,true);
                 for(let frame=0;frame<fps*30;frame++)p.update(1/fps);
                 const a=p.states.get('rose'),b=p.states.get('lily');
-                assert(Math.hypot(a.node.position.x-b.node.position.x,a.node.position.y-b.node.position.y)/32>1.5);
-                assert(!a.body.isAwake()&&!b.body.isAwake(),'the generated code must settle real bodies, not just cache a stationary picture');
+                assert(Math.hypot(a.x-b.x,a.y-b.y)>1.5);
+                assert(a.resting&&b.resting,'the generated AABB pair must settle instead of visibly vibrating');
             }finally{p.dispose();}
         }
     });

@@ -35,7 +35,6 @@ function uiNode(parent,name,x=0,y=0,w=750,h=1334){const n=new Node(name);n.layer
 async function loadFrame(path) { const file=resourceFile(path+'.png');if(!fs.existsSync(file+'.meta')){const png=fs.readFileSync(file);return {originalSize:{width:png.readUInt32BE(16),height:png.readUInt32BE(20)}};}const meta=JSON.parse(fs.readFileSync(file+'.meta','utf8')); const d=Object.values(meta.subMetas).find(s=>s.importer==='sprite-frame').userData;return {originalSize:{width:d.rawWidth,height:d.rawHeight}}; }
 const cc={Node,Button,Sprite,UITransform,UIOpacity,Graphics,Color,Vec3,JsonAsset:class{},resources:{load(path,type,done){done(null,{json:JSON.parse(fs.readFileSync(resourceFile(path+'.json'),'utf8'))});}},Tween:{stopAllByTarget(){}}};
 cc.Director={EVENT_AFTER_DRAW:'after-draw'};cc.director={once(_event,callback){queueMicrotask(callback);}};
-Object.assign(cc,require('./physics-cc.cjs')(Node));
 const moduleCache={};
 function moduleLoad(name){if(moduleCache[name])return moduleCache[name];const scope={exports:{},require(path){if(path==='cc')return cc;if(path==='./FlowerWater')return require('./water-fixture.cjs');if(path==='./FlowerAssets')return {loadFlowerAsset:cc.resources.load};if(path==='./FlowerUI')return {loadFrame,uiNode};if(path.startsWith('./'))return moduleLoad(path.slice(2));throw Error(path);},console:{warn(){}}};moduleCache[name]=scope.exports;vm.runInNewContext(ts.transpileModule(fs.readFileSync(project+'/assets/scripts/'+name+'.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.CommonJS}}).outputText,scope);return scope.exports;}
 const Pool=moduleLoad('FlowerPool').FlowerPoolView;
@@ -139,7 +138,7 @@ test('water effects share the runtime queue and a taken flower cannot regain que
  assert.equal(waiting.ripplePlayers.length,0);
 });
 
-test('cancelling a partial pool stops allocations and releases its native physics world',async()=>{
+test('cancelling a partial pool stops allocations and releases its AABB world',async()=>{
  let building,current=true,yields=0;const parent=new Node();
  await assert.rejects(Pool.create(parent,layeredFlowers([12,12,12,12]),2,()=>{},[12,12,12,12],undefined,
   {onCreate:pool=>{building=pool;},isCurrent:()=>current,nextFrame:async()=>{yields++;current=false;}}),/cancelled/);
@@ -180,15 +179,15 @@ test('vacancy admission uses original layer count even during animation or with 
  p.update(2);assert.equal(p.inLayer(0).length,2);p.dispose();
 });
 
-test('pool movement uses original physical bodies while input covers the complete water', async () => {
+test('pool movement uses lightweight AABBs while input covers the complete water', async () => {
  const geometry=moduleLoad('FlowerPool').ORIGINAL_POOL_GEOMETRY;
  const p=await Pool.create(new Node(),layeredFlowers([3,2,2,1]),2,()=>{},[3,2,2,0]);
  const transform=p.root.getComponent(UITransform);
  assert.equal(transform.width,geometry.waterWidth);assert.equal(transform.height,geometry.waterHeight);
  const before=p.inLayer(0).map(e=>({x:e.x,y:e.y}));
  for(let i=0;i<60;i++)p.update(1/60);
- assert(p.inLayer(0).some((e,i)=>Math.hypot(e.x-before[i].x,e.y-before[i].y)>.1),'actual Box2D flow moves the flowers');
- for(const state of p.physics.states.values())if(state.active)assert(Math.abs(state.body.getMass()-1)<1e-5,'original explicit mass survives collider scaling');
+ assert(p.inLayer(0).some((e,i)=>Math.hypot(e.x-before[i].x,e.y-before[i].y)>.1),'AABB flow moves the flowers');
+ for(const state of p.physics.states.values())if(state.active){assert(Number.isFinite(state.x));assert(Number.isFinite(state.y));}
  assert.equal(typeof p.repackSurface,'undefined','no hand-written ellipse repacking remains');
  assert.equal(typeof p.limit,'undefined','no PNG or conservative wall clamp remains');
  p.dispose();
