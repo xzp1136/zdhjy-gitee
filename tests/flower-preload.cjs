@@ -33,7 +33,8 @@ function harness(options = {}) {
   }
   class Component { isValid = true; scheduleOnce() {} unschedule() {} }
   class UITransform { setContentSize(width, height) { Object.assign(this, {width, height}); } setAnchorPoint() {} }
-  class SpriteFrame { constructor(width = 100, height = 100) { this.originalSize = {width, height}; this.isValid = true; } clone() { return new SpriteFrame(this.originalSize.width, this.originalSize.height); } destroy() { this.isValid = false; } }
+  const cloneable=value=>Object.assign(value,{clone(){return cloneable({...this});}});
+  class SpriteFrame {constructor(width=100,height=100){this.originalSize=cloneable({width,height});this.rect=cloneable({x:0,y:0,width,height});this.offset=cloneable({x:0,y:0});this.isValid=true;}clone(){const f=new SpriteFrame(this.originalSize.width,this.originalSize.height);f.rect=this.rect.clone();f.offset=this.offset.clone();return f;}destroy(){this.isValid=false;}}
   class Sprite { static SizeMode = {CUSTOM: 0}; static Type = {SLICED: 1}; }
   class Color { fromHEX() { return this; } }
   class Graphics { clear() {} roundRect() {} fill() {} }
@@ -57,8 +58,15 @@ function harness(options = {}) {
           if (resource === 'bundle-routes' && !fs.existsSync(path.join(project, 'assets/resources/bundle-routes.json'))) value = {json: {routes: {}, bundles: {}}};
           else if (Type === JsonAsset) value = {json: JSON.parse(fs.readFileSync(resourceFile(resource + '.json'), 'utf8'))};
           else if (Type === SpriteFrame) {
-            const png = fs.readFileSync(resourceFile(resource.replace(/\/spriteFrame$/, '') + '.png'));
-            value = new SpriteFrame(png.readUInt32BE(16), png.readUInt32BE(20));
+            const logical = resource.replace(/\/spriteFrame$/, '');
+            if (logical === 'greenhouse/home/shop-room') {
+              const jpeg = fs.readFileSync(resourceFile(logical + '.jpg'));
+              assert.equal(jpeg.readUInt16BE(0), 0xffd8);
+              value = new SpriteFrame(1080, 2400);
+            } else {
+              const png = fs.readFileSync(resourceFile(logical + '.png'));
+              value = new SpriteFrame(png.readUInt32BE(16), png.readUInt32BE(20));
+            }
           } else value = new Type();
           cached.set(resource, value); downloads.push(resource);
         }
@@ -98,7 +106,7 @@ function harness(options = {}) {
   game.music = new AudioSource(); game.effects = new AudioSource();
   const ui = load('FlowerUI'), dialogs = [];
   ui.message = async (parent, title, body, action, callback) => { dialogs.push({title, body, action, callback}); return new Node('Dialog'); };
-  // Exercise the same preloaded vase/image paths without the unrelated HUD/tween machinery.
+  // Exercise the original vessel layers without the unrelated HUD/tween machinery.
   game.buildHUD = async () => {};
   game.renderOrders = async () => {
     for (const order of game.rules.orders.filter(Boolean)) await FlowerBouquetView.create(game.ordersRoot, order);
@@ -120,11 +128,11 @@ function harness(options = {}) {
 }
 
 test('a failed bouquet JSON preload is evicted so the same session can retry', async () => {
-  const h = harness(), resource = 'original/data/bouquet-layouts'; h.failures.set(resource, 1);
+  const h = harness(), resource = 'original/data/flower-sprite-metrics'; h.failures.set(resource, 1);
   const {preloadBouquets} = h.load('FlowerBouquet');
-  await assert.rejects(preloadBouquets([1301]), /Injected asset failure/);
-  const [layouts] = await preloadBouquets([1301]);
-  assert(layouts['1301']); assert.equal(h.requests.filter(path => path === resource).length, 2);
+  await assert.rejects(preloadBouquets(), /Injected asset failure/);
+  const [, metrics] = await preloadBouquets([1301]);
+  assert(metrics['original/flower/cdy_lxq_01']); assert.equal(h.requests.filter(path => path === resource).length, 2);
   const downloads = h.downloads.length; await preloadBouquets([1301]); assert.equal(h.downloads.length, downloads);
 });
 
@@ -139,8 +147,10 @@ test('startup prepares the first board once and entering it reuses frames, data,
   const before = h.downloads.length; await h.game.startLevel(1); await flush();
   assert.equal(h.game.rules.level, 1); assert.equal(h.game.ready, true);
   assert.deepEqual(h.downloads.slice(before), [], 'first entry has no cold asset fetch after startup preparation');
-  assert.equal(h.requests.filter(path => path === 'original/background/poor/spriteFrame').length, 1, 'UI cache avoids even a second frame loader call');
-  assert.equal(h.requests.filter(path => path === 'original/data/bouquet-layouts').length, 1);
+  assert.equal(h.requests.filter(path => path === 'greenhouse/pool/spriteFrame').length, 1, 'UI cache avoids even a second frame loader call');
+  assert.equal(h.requests.filter(path => path === 'original/data/flower-sprite-metrics').length, 1);
+  assert(h.requests.includes('original/vase/bkt1_3cdy_01_mask/spriteFrame'), 'the original basket foreground is preloaded');
+  assert(!h.requests.some(path => /^greenhouse\/basket-/.test(path)), 'the PSD basket is not requested');
 });
 
 test('next-level preparation deduplicates concurrent requests without changing the active rules or presentation', async () => {
@@ -153,11 +163,40 @@ test('next-level preparation deduplicates concurrent requests without changing t
   assert.equal(first, second); const config = await first;
   assert.equal(config.level, 2); assert.equal(h.game.rules, rules); assert.equal(h.game.visual, visual);
   assert.equal(JSON.stringify({rules, visual}), before); assert.equal(h.storage.size, 0);
+  for (const kind of ['hd_01', 'hd_02']) {
+    assert(h.requests.includes(`greenhouse/butterfly/${kind}/spriteFrame`), 'the second level warms the new butterfly artwork');
+    assert(!h.requests.includes(`original/flower/${kind}/spriteFrame`), 'legacy butterfly textures are not fetched');
+  }
+  assert(h.requests.includes('original/butterfly/qipao/spriteFrame'), 'the butterfly retains its transparent bubble');
   const requests = h.requests.length; await h.game.prepareLevelAssets(2); assert.equal(h.requests.length, requests);
 });
 
+test('the level five graduation bear uses the new sprite in the pool and gift box', async () => {
+  const h = harness();
+  const config = await h.game.prepareLevelAssets(5);
+  const kind = 'cdtxwj_bsx';
+  const frame = 'greenhouse/toys/cdtxwj_bsx_01/spriteFrame';
+  assert(config.flowers.some(group => group.kind === kind));
+  assert(h.cached.has(frame), 'the bear is warmed before presenting the pool');
+  const {flowerSpritePath} = h.load('FlowerCatalog');
+  assert.equal(flowerSpritePath(kind, 3) + '/spriteFrame', frame, 'the repeated bear slots still use the available pose');
+  const configured = config.orders.find(order => order.needs.some(need => need.kind === kind));
+  const order = {vaseId: configured.vaseId, needs: configured.needs.map(need => ({
+    kind: need.kind, required: need.count, filled: 0,
+  }))};
+  const {FlowerBouquetView} = h.load('FlowerBouquet');
+  const view = await FlowerBouquetView.create(new h.Node(), order);
+  const landing = view.landing(order);
+  assert(landing && landing.width > 0 && landing.height > 0, 'the toy keeps its original landing geometry');
+  order.needs.find(need => need.kind === kind).filled = 1;
+  await view.sync(order);
+  const [placed] = view.groupFlowers(order.needs.findIndex(need => need.kind === kind));
+  const sprite = placed.components.find(component => component.spriteFrame);
+  assert.equal(sprite.spriteFrame, h.cached.get(frame));
+});
+
 test('startup failure is visible and retry can complete without rebuilding successful frame downloads', async () => {
-  const h = harness(), resource = 'original/background/poor/spriteFrame'; h.failures.set(resource, 1);
+  const h = harness(), resource = 'greenhouse/pool/spriteFrame'; h.failures.set(resource, 1);
   await h.game.loadStartup(); await flush();
   assert.equal(h.loading.errors, 1); assert.equal(h.loading.finishes, 0); assert.equal(h.homeState.builds, 0);
   assert.equal(h.game.preparedLevels.has(1), false);
@@ -167,7 +206,7 @@ test('startup failure is visible and retry can complete without rebuilding succe
 });
 
 test('destroying the owner while startup waits prevents late UI creation and completion', async () => {
-  const h = harness(), resource = 'original/background/poor/spriteFrame'; h.delayed.set(resource, []);
+  const h = harness(), resource = 'greenhouse/pool/spriteFrame'; h.delayed.set(resource, []);
   const pending = h.game.loadStartup(); await flush(); assert.equal(h.delayed.get(resource).length, 1);
   h.game.isValid = false; h.game.onDestroy(); h.release(resource); await pending;
   assert.equal(h.loading.disposed, true); assert.equal(h.loading.finishes, 0); assert.equal(h.homeState.builds, 0);
@@ -175,7 +214,7 @@ test('destroying the owner while startup waits prevents late UI creation and com
 });
 
 test('leaving a waiting level preserves the replacement screen and a later retry uses the completed cache', async () => {
-  const h = harness(), resource = 'original/background/poor/spriteFrame'; h.game.startupLoading = null;
+  const h = harness(), resource = 'greenhouse/pool/spriteFrame'; h.game.startupLoading = null;
   h.game.clear('home'); h.delayed.set(resource, []);
   const pending = h.game.startLevel(1); await flush(); assert.equal(h.delayed.get(resource).length, 1);
   h.game.clear('home'); const replacement = h.game.content;
@@ -288,7 +327,7 @@ test('resizing short, tall and tablet views preserves world pool, flower and ord
   const h=harness();await h.game.loadStartup();await h.game.startLevel(2);
   assert(h.game.ready,h.logs.flat().map(String).join('\n'));
   const find=(root,name)=>root.name===name?root:root.children.map(child=>find(child,name)).find(Boolean);
-  const names=['WaterSurface','WaterCaustics','WoodenPool','FloatingFlowers','Orders','TemporarySlots','DisplayStand','OrderShadows'];
+  const names=['WaterSurface','WaterCaustics','WoodenPool','FloatingFlowers','UnderwaterFlowers','Orders','TemporarySlots'];
   const snapshot=()=>names.map(name=>{const node=find(h.game.node,name);assert(node,name);return {name,y:node.position.y,height:node.components.find(c=>'width' in c)?.height};});
   const baseline=snapshot(),rules=h.game.rules,flowers=JSON.stringify(rules.flowers),time=rules.remainingSeconds;
   for(const [width,height] of [[750,1334],[750,844/390*750],[750,800/360*750],[1334*768/1024,1334]]){
@@ -296,6 +335,15 @@ test('resizing short, tall and tablet views preserves world pool, flower and ord
     assert.deepEqual(snapshot(),baseline,'viewport only changes backdrop width/cover and edge HUD');
     assert.equal(h.game.rules,rules);assert.equal(JSON.stringify(rules.flowers),flowers);assert.equal(rules.remainingSeconds,time);
   }
+  const surface=find(h.game.node,'WaterCaustics').components.find(c=>c.spriteFrame)?.spriteFrame;
+  assert(surface,'the new pool artwork supplies the animated surface');
+  assert.deepEqual({x:surface.rect.x,y:surface.rect.y,width:surface.rect.width,height:surface.rect.height},{x:38,y:57,width:990,height:1060});
+  const source=await h.load('FlowerUI').loadFrame('greenhouse/pool');
+  assert.equal(source.rect.x,0);assert.equal(source.rect.y,0);assert.equal(source.rect.width,1060);assert.equal(source.rect.height,1133);
   const water=find(h.game.node,'WaterSurface'),geometry=h.load('FlowerPool').ORIGINAL_POOL_GEOMETRY;
-  assert.equal(water.position.y,geometry.waterY);assert.equal(water.components.find(c=>'width' in c).width,geometry.waterWidth);
+  const skin=h.load('FlowerBoardSkin');
+  assert.equal(water.position.y,skin.boardY(1420));assert.equal(water.components.find(c=>'width' in c).width,990*skin.BOARD_UNIT);
+  const above=find(h.game.node,'FloatingFlowers'),below=find(h.game.node,'UnderwaterFlowers');
+  assert.deepEqual(above.position,below.position);assert.deepEqual(above.scale,below.scale);
+  assert(Math.abs(above.position.y+geometry.waterY*above.scale.y)<1e-6,'the original local physics centre maps onto the new pool centre');
 });

@@ -1,19 +1,19 @@
 import { Color, Graphics, Label, Node, Sprite, sys, tween, Tween, UIOpacity, UITransform } from 'cc';
-import { dismissPopup, fade, label, message, modal, presentPopup, slicedSprite, sprite, tap, uiNode } from './FlowerUI';
+import { dismissPopup, fade, fittedSprite, label, loadFrame, loadGameFont, message, modal, popupButton, popupClose,
+    popupFrame, popupIcon, popupInset, preloadPopupFrames, presentPopup, sprite, tap, uiNode } from './FlowerUI';
 import { createPause } from './FlowerPause';
-import { FlowerHomeMotion } from './FlowerHomeMotion';
-import { bindFlowerViewport, coverFlowerArt } from './FlowerViewport';
+import { bindFlowerViewport, coverFlowerArt, fitFlowerPortrait } from './FlowerViewport';
 
-const A = 'original/';
-/** Visible homepage art, warmed before the startup screen is dismissed. */
+const HOME_ART = 'greenhouse/home/';
+const HOME_NUMBER_FONT = 'greenhouse/Baloo-Regular';
+const NAVIGATION_HEIGHT = 282;
+const NAVIGATION_TAB_WIDTH = 360;
+/** Visible homepage art is warmed before the startup screen is dismissed. */
 export const HOME_FRAME_PATHS = [
-    'ui/bg', 'order/setting', 'extras/topbar_639', 'extras/heart_336', 'ui/start/jmtili',
-    'extras/coin_165', 'order/star128', 'ui/start/boxbutton2', 'ui/start/baoxiang blue',
-    'ui/start/baoxiang purple', 'ui/start/progress_1', 'ui/start/progress_2',
-    'extras/bgbrand_863', 'extras/nameband_597', 'extras/share_340', 'extras/dailychallenge_351',
-    'extras/super_801', 'extras/present_628', 'extras/social_764', 'extras/green_button_931',
-    'extras/hl0_435', 'extras/hl_632', 'extras/shop_524', 'extras/home_900', 'extras/rank_723',
-].map(path => A + path);
+    'shop-room', 'settings', 'counters', 'share', 'daily', 'gift', 'welfare', 'community', 'play', 'navigation',
+    'navigation-store', 'navigation-home', 'navigation-rank',
+].map(name => HOME_ART + name);
+
 const read = (key: string, fallback: number) => {
     const stored = sys.localStorage.getItem(`zdhjy.${key}`);
     const value = stored == null || stored === '' ? fallback : Number(stored);
@@ -21,143 +21,126 @@ const read = (key: string, fallback: number) => {
 };
 const write = (key: string, value: number) => sys.localStorage.setItem(`zdhjy.${key}`, String(value));
 
-/** Rebuilt from the Unity artwork and the live 750 × 1334 home layout. */
+/** Homepage controls use the supplied Photoshop document's 1080×2400 coordinates. */
 export async function createHome(parent: Node, onPlay: () => void, level = 1): Promise<Node> {
     const home = uiNode(parent, 'Home');
     home.active = false;
-    const background = await sprite(home, 'FlowerShopBackground', `${A}ui/bg`, 0, 0, 750, 1334);
-    const top = uiNode(home, 'Top');
-    const middleLayouts: {node: Node; y: number}[] = [];
+    const [background, font] = await Promise.all([
+        sprite(home, 'FlowerShopBackground', HOME_ART + 'shop-room', 0, 0, 1080, 2400),
+        loadGameFont(HOME_NUMBER_FONT),
+    ]);
+    const artwork = uiNode(home, 'Artwork', 0, 0, 1080, 2400);
+    const top = uiNode(artwork, 'Top', 0, 0);
     let modalOpen = false, leaving = false;
     const today = () => new Date().toLocaleDateString('en-CA');
-    async function notice(title: string, body: string): Promise<void> {
+    async function notice(title: string, body: string, icon?: string): Promise<void> {
         if (modalOpen) return;
         modalOpen = true;
-        await message(home, title, body, '知道了', () => { modalOpen = false; });
+        await message(home, title, body, '知道了', () => { modalOpen = false; }, icon);
     }
-    const outlines = (node: Node, width = 1, color = '#694a37') => {
-        const text = node.getComponent(Label)!;
-        text.enableOutline = true; text.outlineColor = new Color().fromHEX(color); text.outlineWidth = width;
-    };
-    const pause = await sprite(top, 'Settings', `${A}order/setting`, -328, 542, 64, 64);
-    tap(pause, () => void settings());
 
-    for (const [name, x] of [['EnergyBar', -188], ['CoinsBar', -8], ['StarsBar', 164]] as [string, number][]) {
-        await sprite(top, name, `${A}extras/topbar_639`, x, 542, 158, 47);
-    }
-    await sprite(top, 'Heart', `${A}extras/heart_336`, -248, 542, 66, 66);
-    label(top, 'EnergyValue', String(read('energy', 5)), -248, 541, 27, 50);
-    label(top, 'EnergyTimer', read('energy', 5) >= 5 ? '已满' : `${read('energy', 5)}/5`, -167, 542, 28, 115);
-    const energyAdd = await sprite(top, 'AddEnergy', `${A}ui/start/jmtili`, -233, 529, 24, 24);
-    tap(energyAdd, () => void notice('体力', '当前版本可自由挑战关卡'));
-    await sprite(top, 'Coin', `${A}extras/coin_165`, -69, 542, 66, 66);
-    const coinsLabel = label(top, 'CoinsValue', String(read('coins', 0)), 12, 542, 28, 112).getComponent(Label)!;
-    const coinsAdd = await sprite(top, 'AddCoins', `${A}ui/start/jmtili`, -48, 529, 24, 24);
-    tap(coinsAdd, () => void store());
-    // The original star is trimmed inside a 128 px square; retain its optical center.
-    await sprite(top, 'Star', `${A}order/star128`, 104, 543.04, 60.79, 56.64);
-    label(top, 'StarsValue', String(read('stars', 0)), 176, 542, 28, 110);
-
-    const levelBox = await sprite(top, 'LevelChest', `${A}ui/start/boxbutton2`, -276, 398, 198, 123);
-    const levelChest = await sprite(levelBox, 'Chest', `${A}ui/start/baoxiang blue`, -39, 20, 120, 102);
-    // The local preview has no level-chest claim state yet. Never signal a claim
-    // that its action cannot grant; original HomeControl also gates boxAni on readiness.
-    levelChest.addComponent(FlowerHomeMotion).configure('boxAni', () => false);
-    const chestText = label(levelBox, 'Title', '关卡\n宝箱', 50, 7, 30, 92, '#383631').getComponent(Label)!;
-    chestText.node.getComponent(UITransform)!.setContentSize(92, 95);
-    chestText.lineHeight = 43;
-    await sprite(levelBox, 'ProgressTrack', `${A}ui/start/progress_1`, -12, -43, 171, 21);
-    const levelProgress = Math.min(1, Math.max(0, level % 5) / 5);
-    const progress = await sprite(levelBox, 'Progress', `${A}ui/start/progress_2`, -12, -43, 171, 21);
-    progress.getComponent(Sprite)!.type = Sprite.Type.FILLED;
-    progress.getComponent(Sprite)!.fillType = Sprite.FillType.HORIZONTAL;
-    progress.getComponent(Sprite)!.fillRange = levelProgress;
-    outlines(label(levelBox, 'ProgressText', `${level % 5}/5`, -12, -43, 18, 170), 1);
-    tap(levelBox, () => void notice('关卡宝箱', '当前版本暂不可领取宝箱奖励'));
-
-    const starBox = uiNode(top, 'StarChest', 276, 398, 198, 123);
-    const starPaper = await sprite(starBox, 'Paper', `${A}ui/start/boxbutton2`, 0, 0, 198, 123);
-    starPaper.setScale(-1, 1, 1);
-    const starChest = await sprite(starBox, 'Chest', `${A}ui/start/baoxiang purple`, 39, 20, 120, 102);
-    starChest.addComponent(FlowerHomeMotion).configure('boxAni', () => read('stars', 0) >= 1500);
-    const starText = label(starBox, 'Title', '星星\n宝箱', -49, 7, 30, 92, '#383631').getComponent(Label)!;
-    starText.node.getComponent(UITransform)!.setContentSize(92, 95); starText.lineHeight = 43;
-    await sprite(starBox, 'ProgressTrack', `${A}ui/start/progress_1`, 0, -43, 171, 21);
-    const starProgress = await sprite(starBox, 'Progress', `${A}ui/start/progress_2`, 0, -43, 171, 21);
-    const starFill = starProgress.getComponent(Sprite)!;
-    starFill.type = Sprite.Type.FILLED; starFill.fillType = Sprite.FillType.HORIZONTAL;
-    starFill.fillRange = Math.min(1, read('stars', 0) / 1500);
-    outlines(label(starBox, 'ProgressText', `${read('stars', 0)}/1500`, 0, -43, 18, 171, '#fff1bd'), 1);
-    tap(starBox, () => void notice('星星宝箱', `当前 ${read('stars', 0)} / 1500\n当前版本暂不可领取宝箱奖励`));
-
-    async function badge(name: string, path: string, text: string, x: number, y: number, artWidth: number, callback: () => void, ready?: () => boolean): Promise<Node> {
-        const layout = uiNode(home, `${name}Layout`);
-        middleLayouts.push({node: layout, y});
-        const node = await sprite(layout, name, `${A}extras/bgbrand_863`, x, y, 131, 131);
-        const illustration = await sprite(node, 'Illustration', `${A}${path}`, 0, 13, artWidth);
-        if (ready) illustration.addComponent(FlowerHomeMotion).configure('StartIconAni', ready);
-        await sprite(node, 'Ribbon', `${A}extras/nameband_597`, 0, -39, 114, 53);
-        label(node, 'Text', text, 0, -39, 25, 114);
-        tap(node, callback);
+    async function part(owner: Node, name: string, key: string,
+        left: number, upper: number, width: number, height: number): Promise<Node> {
+        const node = await sprite(owner, name, HOME_ART + key, left + width / 2 - 540, 1200 - upper - height / 2, width, height);
+        node.getComponent(Sprite)!.trim = false;
         return node;
     }
-    await badge('ShareReward', 'extras/share_340', '分享奖励', -299, 229, 123, () => void notice('分享奖励', '请在微信小游戏中分享给好友\n当前预览未连接微信分享服务'), () => false);
-    // Original online/super-gift readiness comes from timers. The preview retains
-    // its existing local daily/one-time rewards, using those states for motion.
-    const dailyBadge = await badge('DailyReward', 'extras/dailychallenge_351', sys.localStorage.getItem('zdhjy.daily') === today() ? '已领取' : '可领取', 299, 229, 135, () => void dailyReward(), () => sys.localStorage.getItem('zdhjy.daily') !== today());
-    const welcomeBadge = await badge('WelcomeGift', 'extras/super_801', sys.localStorage.getItem('zdhjy.welcome') ? '已领取' : '可领取', -299, 20, 134, () => void welcomeGift(), () => !sys.localStorage.getItem('zdhjy.welcome'));
-    await badge('Welfare', 'extras/present_628', '福利礼袋', 299, 20, 136, () => void notice('福利礼袋', '每日登录领取金币\n完成订单获得星星'));
-    await badge('GameCommunity', 'extras/social_764', '游戏圈', -299, -189, 88, () => void notice('游戏圈', '请在微信小游戏中查看游戏圈\n当前预览未连接微信服务'));
+    function counter(name: string, value: number, left: number, y: number, width: number): Label {
+        const node = label(top, name, String(value), left - 540, 1200 - y, 48, width);
+        const transform = node.getComponent(UITransform)!;
+        transform.setAnchorPoint(0, 0.5);
+        // Fit the rendered line, including its outline, into the counter's slot.
+        node.on(Node.EventType.SIZE_CHANGED, () => {
+            const scale = width / Math.max(width, transform.width);
+            node.setScale(scale, scale, 1);
+        });
+        const text = node.getComponent(Label)!;
+        text.font = font;
+        text.useSystemFont = false;
+        text.horizontalAlign = Label.HorizontalAlign.LEFT;
+        text.enableWrapText = false;
+        text.enableOutline = true;
+        text.outlineColor = new Color(0, 0, 0, 255);
+        text.outlineWidth = 3.5;
+        return text;
+    }
 
-    const playLayout = uiNode(home, 'PlayLayout');
-    middleLayouts.push({node: playLayout, y: -250});
-    const play = await sprite(playLayout, 'Play', `${A}extras/green_button_931`, 0, -250, 310, 131);
-    label(play, 'Level', `关卡 ${level}`, 0, 3, 46, 285, '#518823');
+    await part(top, 'CountersArt', 'counters', 153, 201, 695, 89);
+    const settingsButton = await part(top, 'Settings', 'settings', 18, 178, 129, 129);
+    tap(settingsButton, () => void settings());
+    counter('EnergyValue', read('energy', 5), 271, 241, 91);
+    const coinsLabel = counter('CoinsValue', read('coins', 0), 499, 241, 91);
+    counter('StarsValue', read('stars', 0), 730, 244, 91);
+    tap(uiNode(top, 'EnergyInfo', 274 - 540, 1200 - 245, 214, 79), () => void notice('体力', '当前版本可自由挑战关卡', 'heart'));
+    tap(uiNode(top, 'CoinsInfo', 514 - 540, 1200 - 245, 207, 79), () => void store());
+
+    async function badge(name: string, key: string, left: number, upper: number,
+        width: number, height: number, callback: () => void): Promise<void> {
+        tap(await part(artwork, name, key, left, upper, width, height), callback);
+    }
+    await badge('ShareReward', 'share', 23, 417, 224, 253,
+        () => void notice('分享有礼', '请在微信小游戏中分享给好友\n当前预览未连接微信分享服务', 'share'));
+    await badge('DailyReward', 'daily', 828, 417, 226, 253, () => void dailyReward());
+    await badge('WelcomeGift', 'gift', 23, 724, 224, 254, () => void welcomeGift());
+    await badge('Welfare', 'welfare', 828, 724, 226, 254,
+        () => void notice('福利任务', '每日登录领取金币\n完成订单获得星星', 'welfare'));
+    await badge('GameCommunity', 'community', 23, 1031, 224, 256,
+        () => void notice('游戏圈', '请在微信小游戏中查看游戏圈\n当前预览未连接微信服务', 'community'));
+
+    const play = await part(artwork, 'Play', 'play', 259, 1746, 567, 234);
+    label(play, 'Level', `第${level}关`, 0, 1863 - 1908, 53, 460, '#3a8d0e');
     tap(play, () => {
         if (modalOpen || leaving || !home.isValid) return;
         leaving = true;
         onPlay();
-    }, {pressScale: 0.94, idlePulse: true});
+    }, {pressScale: 0.94});
 
     const navigationExtension = uiNode(home, 'NavigationSafeArea');
     const navigationFill = navigationExtension.addComponent(Graphics);
-    // Match the bottom-center pixel of the original navigation paper.
-    navigationFill.fillColor = new Color(222, 168, 105, 255);
     const bottom = uiNode(home, 'Bottom');
-    const navigation = await slicedSprite(bottom, 'NavigationBackground', `${A}extras/hl0_435`, 0, -599, 750, 136);
-    await sprite(bottom, 'SelectedHomeTab', `${A}extras/hl_632`, 0, -588, 248, 158);
-    for (const item of [
-        {name: 'StoreTab', text: '商城', art: 'shop_524', x: -250, width: 111, action: () => void store()},
-        {name: 'HomeTab', text: '主页', art: 'home_900', x: 0, width: 139, action: () => {}},
-        {name: 'RankTab', text: '排行榜', art: 'rank_723', x: 250, width: 112, action: () => void rankings()},
-    ]) {
-        const tab = uiNode(bottom, item.name, item.x, -595, 245, 143);
-        await sprite(tab, 'Icon', `${A}extras/${item.art}`, 0, 16, item.width);
-        outlines(label(tab, 'Title', item.text, 0, -52, 32, 230), 1);
-        tap(tab, item.action);
+    const bar = await part(bottom, 'NavigationBackground', 'navigation', 0, 2118, 1080, NAVIGATION_HEIGHT);
+    const tabs: {hit: Node; artwork: Node}[] = [];
+    for (const [name, key, action] of [
+        ['StoreTab', 'navigation-store', () => void store()],
+        ['HomeTab', 'navigation-home', () => {}],
+        ['RankTab', 'navigation-rank', () => void rankings()],
+    ] as const) {
+        const tab = uiNode(bottom, name, 0, 0, NAVIGATION_TAB_WIDTH, NAVIGATION_HEIGHT);
+        const icon = await part(tab, 'Artwork', key, 0, 2118, NAVIGATION_TAB_WIDTH, NAVIGATION_HEIGHT);
+        icon.setPosition(0, 0, 0);
+        tabs.push({hit: tap(tab, action).node, artwork: icon});
     }
 
     bindFlowerViewport(home, viewport => {
         home.getComponent(UITransform)!.setContentSize(viewport.width, viewport.height);
-        coverFlowerArt(background, viewport);
-        top.setPosition(0, viewport.topShift, 0);
-        bottom.setPosition(0, viewport.bottomShift, 0);
-        for (const {node, y} of middleLayouts) {
-            const weight = Math.max(0, Math.min(1, (y + 531) / 929));
-            node.setPosition(0, viewport.bottomShift + (viewport.topShift - viewport.bottomShift) * weight, 0);
+        coverFlowerArt(background, viewport, 1080, 2400);
+        const scale = fitFlowerPortrait(artwork, viewport);
+        top.setPosition(0, Math.min(0, viewport.safeTop / scale - 1022), 0);
+        const tabWidth = viewport.width / tabs.length;
+        const barHeight = NAVIGATION_HEIGHT * scale;
+        bottom.setPosition(0, viewport.safeBottom, 0);
+        bar.setPosition(0, barHeight / 2, 0);
+        bar.getComponent(UITransform)!.setContentSize(viewport.width, barHeight);
+        for (const [i, {hit, artwork: icon}] of tabs.entries()) {
+            const left = -viewport.width / 2 + i * tabWidth;
+            const safeLeft = Math.max(left, viewport.safeLeft);
+            const safeRight = Math.min(left + tabWidth, viewport.safeRight);
+            hit.active = safeRight > safeLeft;
+            hit.setPosition((safeLeft + safeRight) / 2, barHeight / 2, 0);
+            hit.getComponent(UITransform)!.setContentSize(Math.max(0, safeRight - safeLeft), barHeight);
+            icon.setScale(scale, scale, 1);
         }
-        navigation.getComponent(UITransform)!.setContentSize(viewport.width, 136);
-        navigation.getChildByName('SlicedVisual')!.getComponent(UITransform)!
-            .setContentSize(viewport.width / (750 / 1080), 136 / (750 / 1080));
-        // The interactive tabs sit above the gesture area; their paper continues
-        // to the physical edge instead of uncovering a strip of the shop art.
+
         const extensionHeight = Math.max(0, viewport.safeBottom + viewport.height / 2);
-        const fillHeight = extensionHeight > 0 ? extensionHeight + 1 : 0;
-        navigationExtension.getComponent(UITransform)!.setContentSize(viewport.width, fillHeight);
-        navigationExtension.setPosition(0, -viewport.height / 2 + fillHeight / 2, 0);
+        navigationExtension.setPosition(0, -viewport.height / 2, 0);
         navigationFill.clear();
         if (extensionHeight > 0) {
-            navigationFill.rect(-viewport.width / 2, -fillHeight / 2, viewport.width, fillHeight);
+            // Continue the final row of the PSD below the gesture area while keeping taps above it.
+            navigationFill.fillColor = new Color(35, 99, 208, 255);
+            navigationFill.rect(-viewport.width / 2, 0, viewport.width, extensionHeight + 1);
+            navigationFill.fill();
+            navigationFill.fillColor = new Color(75, 143, 244, 255);
+            navigationFill.rect(-tabWidth / 2, 0, tabWidth, extensionHeight + 1);
             navigationFill.fill();
         }
     });
@@ -169,54 +152,62 @@ export async function createHome(parent: Node, onPlay: () => void, level = 1): P
     }
     async function dailyReward(): Promise<void> {
         const date = today();
-        if (sys.localStorage.getItem('zdhjy.daily') === date) return notice('每日奖励', '今日奖励已经领取\n明天再来吧');
+        if (sys.localStorage.getItem('zdhjy.daily') === date) return notice('每日奖励', '今日奖励已经领取\n明天再来吧', 'calendar');
         if (modalOpen) return; modalOpen = true;
         await message(home, '每日奖励', '今日登录奖励\n金币 × 50', '领取', () => {
             sys.localStorage.setItem('zdhjy.daily', date); write('coins', read('coins', 0) + 50);
             coinsLabel.string = String(read('coins', 0)); modalOpen = false;
-            dailyBadge.getChildByName('Text')!.getComponent(Label)!.string = '已领取';
-        });
+        }, 'calendar');
     }
     async function welcomeGift(): Promise<void> {
-        if (sys.localStorage.getItem('zdhjy.welcome')) return notice('花店礼物', '欢迎礼物已经领取\n通关可获得更多奖励');
+        if (sys.localStorage.getItem('zdhjy.welcome')) return notice('新手礼物', '欢迎礼物已经领取\n通关可获得更多奖励', 'gift');
         if (modalOpen) return; modalOpen = true;
-        await message(home, '花店礼物', '欢迎来到花店\n金币 × 100', '领取', () => {
+        await message(home, '新手礼物', '欢迎来到花店\n金币 × 100', '领取', () => {
             sys.localStorage.setItem('zdhjy.welcome', '1'); write('coins', read('coins', 0) + 100);
             coinsLabel.string = String(read('coins', 0)); modalOpen = false;
-            welcomeBadge.getChildByName('Text')!.getComponent(Label)!.string = '已领取';
-        });
+        }, 'gift');
     }
     async function store(): Promise<void> {
         if (modalOpen) return; modalOpen = true;
+        const items = [{type: 'compose', unlock: 2}, {type: 'shuffle', unlock: 3}, {type: 'clear', unlock: 4}];
+        await Promise.all([preloadPopupFrames(['shop', 'coin']), ...items.map(item => loadFrame(`greenhouse/tool-${item.type}`))]);
+        if (!home.isValid) return;
         const overlay = modal(home, 'StoreOverlay');
-        await slicedSprite(overlay, 'Paper', `${A}extras/bg1_816`, 0, 10, 680, 850);
-        await sprite(overlay, 'ShopAwning', `${A}ui/store/frame`, 0, 240, 650, 300);
-        label(overlay, 'Balance', `金币 ${read('coins', 0)}`, 0, 190, 30, 550, '#fff4db');
-        const items = [{type: 'compose', title: '合成', unlock: 2}, {type: 'shuffle', title: '打乱', unlock: 3}, {type: 'clear', title: '清除', unlock: 4}];
+        await popupFrame(overlay, '商城', 670, 834);
+        await popupIcon(overlay, 'Shop', 'shop', 0, 258, 147);
+        const balance = await popupInset(overlay, 'Balance', 0, 131, 245, 62);
+        await popupIcon(balance, 'Coin', 'coin', -78, 0, 49);
+        label(balance, 'Value', String(read('coins', 0)), 24, 0, 32, 142, '#754524');
         for (let i = 0; i < items.length; i++) {
-            const item = items[i], x = (i - 1) * 195;
-            await sprite(overlay, item.type, `${A}ui/itemicon/${item.type}`, x, 15, 105, 105);
-            label(overlay, `${item.type}Title`, item.title, x, -65, 28, 180, '#754f27');
-            label(overlay, `${item.type}Unlock`, `${item.unlock} 关解锁`, x, -115, 23, 185, '#98744b');
+            const item = items[i], x = (i - 1) * 193;
+            const card = await popupInset(overlay, item.type, x, -37, 176, 224);
+            await fittedSprite(card, 'Icon', `greenhouse/tool-${item.type}`, 0, 23, 134, 132);
+            label(card, 'Unlock', `第 ${item.unlock} 关解锁`, 0, -67, 22, 150, '#915f32');
         }
-        label(overlay, 'StoreDescription', '通关解锁道具，在花池中使用', 0, -210, 26, 570, '#754f27');
-        const close = await slicedSprite(overlay, 'BackHome', `${A}extras/green_button_931`, 0, -325, 290, 95);
-        label(close, 'Text', '返回主页', 0, 0, 31, 265, '#56881d');
-        tap(close, () => dismissPopup(overlay, () => { modalOpen = false; }));
+        label(overlay, 'StoreDescription', '通关解锁道具，在花池中使用', 0, -204, 27, 570, '#694727');
+        const close = () => dismissPopup(overlay, () => { modalOpen = false; });
+        await popupClose(overlay, 'CloseStore', 284, 386, close);
+        tap(await popupButton(overlay, 'BackHome', '返回主页', 0, -310, 290, 96), close);
         presentPopup(overlay);
     }
     async function rankings(): Promise<void> {
         if (modalOpen) return; modalOpen = true;
+        await preloadPopupFrames(['rank', 'star']);
+        if (!home.isValid) return;
         const overlay = modal(home, 'RankOverlay');
-        await slicedSprite(overlay, 'Paper', `${A}extras/bg1_816`, 0, 0, 650, 740);
-        await sprite(overlay, 'Trophy', `${A}extras/rank_723`, 0, 220, 140);
-        label(overlay, 'Title', '排行榜', 0, 100, 39, 540, '#754f27');
-        label(overlay, 'YourProgress', `我的进度    第 ${level} 关`, 0, 5, 30, 540, '#754f27');
-        label(overlay, 'YourStars', `累计星星    ${read('stars', 0)}`, 0, -60, 30, 540, '#754f27');
-        label(overlay, 'ServiceState', '好友排名需在微信小游戏中查看', 0, -150, 24, 550, '#98744b');
-        const close = await slicedSprite(overlay, 'BackHome', `${A}extras/green_button_931`, 0, -265, 290, 95);
-        label(close, 'Text', '返回主页', 0, 0, 31, 265, '#56881d');
-        tap(close, () => dismissPopup(overlay, () => { modalOpen = false; }));
+        await popupFrame(overlay, '排行榜', 650, 736);
+        await popupIcon(overlay, 'Rank', 'rank', 0, 204, 150);
+        await popupInset(overlay, 'ProgressRow', 0, 60, 525, 87);
+        label(overlay, 'YourProgress', '我的进度', -128, 60, 31, 190, '#694727');
+        label(overlay, 'LevelValue', `第 ${level} 关`, 116, 60, 32, 190, '#2b67a9', 'display');
+        await popupInset(overlay, 'StarsRow', 0, -45, 525, 87);
+        label(overlay, 'YourStars', '累计星星', -128, -45, 31, 190, '#694727');
+        await popupIcon(overlay, 'Star', 'star', 63, -45, 56);
+        label(overlay, 'StarValue', String(read('stars', 0)), 149, -45, 32, 108, '#a06128', 'display');
+        label(overlay, 'ServiceState', '好友排名需在微信小游戏中查看', 0, -143, 26, 550, '#694727');
+        const close = () => dismissPopup(overlay, () => { modalOpen = false; });
+        await popupClose(overlay, 'CloseRank', 274, 337, close);
+        tap(await popupButton(overlay, 'BackHome', '返回主页', 0, -251, 290, 96), close);
         presentPopup(overlay);
     }
     if (!home.isValid || !parent.isValid) return home;

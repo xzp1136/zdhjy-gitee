@@ -55,7 +55,7 @@ test('concurrent original paths share the route table and named bundle, keeping 
 });
 
 test('unrouted first-paint assets stay in resources and never open a bundle', async () => {
-  const h = harness(); const value = await h.load('original/extras/bgLoad_8/spriteFrame');
+  const h = harness(); const value = await h.load('startup/garden/spriteFrame');
   assert.equal(value.owner, 'resources'); assert.deepEqual(h.bundleRequests, []);
 });
 

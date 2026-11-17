@@ -3,8 +3,10 @@ import { FlowerWaterRenderer } from './FlowerWater';
 import { loadFlowerAsset } from './FlowerAssets';
 import { Color, EventTouch, JsonAsset, Node, Sprite, SpriteFrame, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
 import { FlowerPiece } from './FlowerRules';
-import { flowerLocalSize, flowerSpritePath } from './FlowerCatalog';
+import { flowerSpritePath, originalFlowerSpritePath } from './FlowerCatalog';
 import { loadFrame, uiNode } from './FlowerUI';
+import { FlowerShuffleWater, SHUFFLE_BATCH_INTERVAL, SHUFFLE_CENTER_Y, SHUFFLE_GATHER,
+    SHUFFLE_RELEASE, SHUFFLE_RISE, SHUFFLE_WATER_TAIL } from './FlowerShuffleWater';
 
 // Unity CameraWidthAdapter: 10.8 world units across the 750-unit reference view.
 // level2/BackGround: Water (996x1077 @ 100 PPU), walls' INNER edges,
@@ -28,12 +30,9 @@ const LAYER_ALPHA = [255, 255, 255, 0];
 const FLOWER_PIXEL_SCALE = WORLD_UNIT / 100;
 const NEAR_RADIUS = 1.3 * WORLD_UNIT;
 const MOTION_RESPONSE = 9;
-const SHUFFLE_GATHER_TIME = 0.28;
-const SHUFFLE_BATCH_INTERVAL = 0.05;
-const SHUFFLE_SETTLE_TIME = 0.35;
-
 type Point = { x: number; y: number };
-type ScatterTarget = Point & { at: number; fromX?: number; fromY?: number };
+type ScatterTarget = Point & {at:number;fromX:number;fromY:number;fromAngle:number;fromScale:number;fromAlpha:number;toAngle:number};
+type ShuffleMotion = {start:number;duration:number;water:FlowerShuffleWater;onFinish?:(completed:boolean)=>void};
 type MotionData = {
     flowerManager: { values: Record<string, number> };
     spawn: { batchSizeMinInclusive: number; batchSizeMaxExclusive: number; batchInterval: number;
@@ -197,7 +196,7 @@ class RipplePlayer {
     dispose(): void { if (this.root.isValid) { this.root.active = false; this.root.destroy(); } }
 }
 export type FlowerClickShape =
-    | { type: 'polygon'; paths: number[][][] }
+    | { type: 'polygon'; paths: number[][][]; artPaths?: number[][][] }
     | { type: 'ellipse'; center: number[]; axisX: number[]; axisY: number[] };
 type FlowerClickShapes = Record<string, FlowerClickShape>;
 type ClickShapeData = { shapes: FlowerClickShapes };
@@ -223,7 +222,7 @@ export function flowerShapeContains(shape: FlowerClickShape, point: Point): bool
         const v = (shape.axisX[0] * y - shape.axisX[1] * x) / determinant;
         return u * u + v * v <= 1 + 1e-8;
     }
-    return shape.paths.some(path => {
+    return (shape.artPaths ?? shape.paths).some(path => {
         let inside = false;
         for (let i = 0, j = path.length - 1; i < path.length; j = i++) {
             const a = path[j], b = path[i];
@@ -312,6 +311,7 @@ export class FlowerPoolView {
     private entranceStarted = false;
     private entranceUntil = 0;
     private scatterTargets = new Map<PoolEntry, ScatterTarget>();
+    private shuffleMotion: ShuffleMotion | null = null;
     private readonly surfaceCount: number;
     private readonly firstLevel: boolean;
     private readonly configuredLayers: boolean;
@@ -322,7 +322,7 @@ export class FlowerPoolView {
     private surfaceListener: ((flower: FlowerPiece) => void) | null = null;
     private readonly touchStart = () => {};
     private readonly touchEnd = (event: EventTouch) => {
-        if (this.disposed) return;
+        if (this.disposed || this.shuffleMotion) return;
         const point = event.getUILocation();
         const world = new Vec3(point.x, point.y, 0);
         const candidates = this.ordered.filter(entry => entry.band < 3 && entry.node.isValid && entry.node.activeInHierarchy
@@ -529,7 +529,10 @@ export class FlowerPoolView {
         entry.revealPending = true;
         this.refreshBands();
         // SpawnDiffFlower calls the same animated SpawnOneFlower path.
-        entry.entranceAt = this.clock; entry.scale = 0; entry.alpha = LAYER_ALPHA[2];
+        const shuffle = this.shuffleMotion;
+        entry.entranceAt = shuffle ? shuffle.start + shuffle.duration : this.clock;
+        if (shuffle) entry.node.active = false;
+        entry.scale = 0; entry.alpha = LAYER_ALPHA[2];
         entry.opacity.opacity = entry.alpha; entry.node.setScale(0, 0, 1);
         return entry.node;
     }
@@ -547,14 +550,14 @@ export class FlowerPoolView {
     private makeEntry(flower: FlowerPiece, frame: SpriteFrame, random: () => number, bubbleFrame?: SpriteFrame): PoolEntry {
         const original = frame.originalSize;
         if (!(original.width > 0 && original.height > 0)) throw new Error(`Invalid flower dimensions: ${flower.kind}`);
-        const hitShape = this.shapes[this.path(flower)];
-        if (!hitShape) throw new Error(`Missing original flower click shape: ${this.path(flower)}`);
-        // SetFlower (44354): species size * Random.Range(.92, 1.08).
-        // Separate seed keeps the existing layout/motion random stream stable.
-        const sizeRandom = randomGenerator(seedOf(`flower-size:${this.level}:${flower.id}`));
-        const pixelScale = FLOWER_PIXEL_SCALE * flowerLocalSize(flower.kind) * (0.92 + sizeRandom() * 0.16);
-        const width = flower.specialId ? 126 : original.width * pixelScale;
-        const height = flower.specialId ? 132 : original.height * pixelScale;
+        const sourcePath=originalFlowerSpritePath(flower.kind,flower.variant);
+        const hitShape=this.shapes[sourcePath];
+        if(!hitShape)throw new Error(`Missing original flower click shape: ${sourcePath}`);
+        // Keep the new artwork's fitted dimensions; scale physical fixtures to
+        // match instead of restoring the previous skin's sprite-size policy.
+        const width=flower.specialId?126:Math.min(flower.kind==='cdy_lxq'?200:176,245*original.width/original.height);
+        const height=flower.specialId?132:width*original.height/original.width;
+        const pixelScale=width/original.width;
         const node = uiNode(this.root, `Flower-${flower.id}`, 0, 0, width, height);
         const ripple = uiNode(node, 'Ripple', 0, 0, width, height);
         if (flower.specialId && bubbleFrame) {
@@ -568,12 +571,12 @@ export class FlowerPoolView {
         // Unity SpriteRenderer opacity does not dim sibling water effects.
         const opacity = art.addComponent(UIOpacity);
         image.sizeMode = Sprite.SizeMode.CUSTOM;
+        if (hitShape.type === 'polygon' && hitShape.artPaths) image.trim = false;
         image.spriteFrame = frame;
-        const angle = this.firstLevel ? (flower.kind === 'cdcs_jyc' ? [-12, -48, 18][flower.variant - 1] : (random()-.5)*24)
-            : -180 + random()*360; // Original SetFlower / 44354 quaternion Z rotation.
+        const angle=flower.kind==='cdcs_jyc'?[-12,-48,18][flower.variant-1]:(random()-.5)*24;
         const entry: PoolEntry = {
             flower, node, image, opacity, ripple, hitShape, physicalScale: pixelScale/FLOWER_PIXEL_SCALE, initialImpulse: {x:0,y:0}, physicsResumeAt: 0,
-            rippleProfile: this.ripples.prefabs[this.path(flower)], rippleStage: 'none', rippleBand: 3, rippleStart: 0, ripplePlayers: [],
+            rippleProfile: this.ripples.prefabs[sourcePath], rippleStage: 'none', rippleBand: 3, rippleStart: 0, ripplePlayers: [],
             width, height, anchorX: 0, anchorY: 0, x: 0, y: 0,
             phase: random() * Math.PI * 2, angle, band: 0, displayedBand: -1, visualBand: 0, layerOrder: 0, alpha: 0, scale: 1,
             bornAt: this.clock, entranceAt: null, promotion: null, revealPending: false,
@@ -636,7 +639,7 @@ export class FlowerPoolView {
     }
 
     private addPhysics(entry: PoolEntry): void {
-        this.physics.add(entry.flower.id,this.path(entry.flower),entry.x,entry.y,entry.angle,entry.physicalScale,entry.band,entry.initialImpulse);
+        this.physics.add(entry.flower.id,originalFlowerSpritePath(entry.flower.kind,entry.flower.variant),entry.x,entry.y,entry.angle,entry.physicalScale,entry.band,entry.initialImpulse);
     }
     setWaterSurface(sprite: Sprite): void { this.waterRenderer.applySurface(sprite); }
 
@@ -835,12 +838,19 @@ export class FlowerPoolView {
 
     update(dt: number): void {
         if (this.disposed || !Number.isFinite(dt) || dt <= 0) return;
-        const previousTime = this.clock;
+        const previousTime=this.clock;
         this.clock += dt;
+        const shuffle = this.shuffleMotion;
+        const shuffleTime = shuffle ? this.clock - shuffle.start : 0;
         // Exponential response remains stable for long frames; clamping dt
         // slowed the entire pool clock below 20 fps.
         for (const entry of this.ordered) {
             if (entry.band === 3 || !entry.node.isValid) continue;
+            const scatter = this.scatterTargets.get(entry);
+            if (scatter && shuffle) {
+                this.updateShuffleFlower(entry, scatter, shuffleTime, shuffle.start);
+                continue;
+            }
             const appearing = entry.entranceAt !== null;
             // A frame may straddle a batch birth. Integrate anchor relaxation
             // only after birth, just as the analytic scale-in does.
@@ -863,24 +873,6 @@ export class FlowerPoolView {
             }
             const hadPromotion = !!entry.promotion;
             const promotionAngle = this.updatePromotion(entry);
-            const scatter = this.scatterTargets.get(entry);
-            if(scatter) {
-                if(this.clock<scatter.at) {
-                    entry.x+=(entry.anchorX-entry.x)*entryBlend;
-                    entry.y+=(entry.anchorY-entry.y)*entryBlend;
-                } else {
-                    if(scatter.fromX===undefined) {
-                        const before=clamp(scatter.at-previousTime,0,dt),blend=1-Math.exp(-before*MOTION_RESPONSE);
-                        scatter.fromX=entry.x+(entry.anchorX-entry.x)*blend;
-                        scatter.fromY=entry.y+(entry.anchorY-entry.y)*blend;
-                    }
-                    const p=clamp((this.clock-scatter.at)/SHUFFLE_SETTLE_TIME,0,1),travel=1-Math.pow(1-p,3);
-                    entry.x=scatter.fromX+(scatter.x-scatter.fromX)*travel;
-                    entry.y=scatter.fromY!+(scatter.y-scatter.fromY!)*travel;
-                    entry.anchorX=scatter.x;entry.anchorY=scatter.y;
-                    if(p===1){this.scatterTargets.delete(entry);entry.physicsResumeAt=scatter.at+SHUFFLE_SETTLE_TIME;}
-                }
-            }
             if (!hadPromotion) {
                 entry.alpha += (LAYER_ALPHA[entry.band] - entry.alpha) * entryBlend;
                 if (!appearing) entry.scale += (LAYER_SCALE[entry.band] - entry.scale) * entryBlend;
@@ -913,18 +905,79 @@ export class FlowerPoolView {
             this.waterRenderer.sync(entry.flower.id,entry.image,entry.visualBand,entry.node.activeInHierarchy);
         }
         this.waterRenderer.order([2,1].reduce<string[]>((ids,band)=>ids.concat(this.inLayer(band).slice().reverse().map(e=>e.flower.id)),[]));
-        this.promoteIdleFlowers();
+        if(shuffle){if(shuffleTime>=shuffle.duration)this.finishShuffle(true);else shuffle.water.draw(shuffleTime);}
+        if(!this.shuffleMotion)this.promoteIdleFlowers();
     }
 
-    /** Returns seconds until the final batch has settled; the caller owns busy state. */
-    shuffle(need?: {kind: string; count: number}): number {
-        if (this.disposed || this.entering || this.ordered.length < 2) return 0;
+    private updateShuffleFlower(entry: PoolEntry, target: ScatterTarget, time: number, start: number): void {
+        const node = entry.node;
+        if (time < SHUFFLE_GATHER) {
+            const delay = (Math.sin(entry.phase) + 1) * 0.024;
+            const p = clamp((time - delay) / (SHUFFLE_GATHER - delay), 0, 1);
+            const pull = p * p * (3 - 2 * p);
+            const spin = 1.35 * pull;
+            const dx = target.fromX, dy = (target.fromY - SHUFFLE_CENTER_Y) / 0.86;
+            const x = (dx * Math.cos(spin) - dy * Math.sin(spin)) * (1 - pull);
+            const y = (dx * Math.sin(spin) + dy * Math.cos(spin)) * (1 - pull) * 0.86 + SHUFFLE_CENTER_Y;
+            const angle = target.fromAngle + 102 * pull;
+            const bounded={x,y};
+            const submerge = clamp((p - 0.50) / 0.50, 0, 1);
+            const scale = target.fromScale * (1 - 0.91 * Math.pow(p, 1.55));
+            entry.x=bounded.x;entry.y=bounded.y;entry.scale=scale;entry.alpha=target.fromAlpha*(1-submerge**2);entry.angle=angle;
+            node.setPosition(bounded.x, bounded.y);
+            node.angle = angle;
+            node.setScale(scale, scale, 1);
+            entry.opacity.opacity = Math.round(target.fromAlpha * (1 - submerge ** 2));
+            node.active = target.fromAlpha > 0 && target.fromScale > 0;
+            return;
+        }
+        if (time < target.at) { node.active = false;entry.scale=0;return; }
+
+        const p = clamp((time - target.at) / SHUFFLE_RISE, 0, 1);
+        const eased = 1 - (1 - p) ** 3;
+        // Reappear near the new position, then coast outwards as the petals rise.
+        const travel = 0.79 + 0.21 * eased;
+        const scale = LAYER_SCALE[entry.band] * (eased + Math.sin(Math.PI * p) * p * 0.23);
+        entry.x = target.x * travel;
+        entry.y = SHUFFLE_CENTER_Y + (target.y - SHUFFLE_CENTER_Y) * travel;
+        entry.angle = target.toAngle;
+        entry.scale = scale;
+        entry.alpha = LAYER_ALPHA[entry.band] * Math.min(1, 2.4 * p);
+        node.active = p > 0;
+        node.setPosition(entry.x, entry.y);
+        node.angle = target.toAngle - 21 * (1 - eased);
+        node.setScale(scale, scale, 1);
+        entry.opacity.opacity = Math.round(entry.alpha);
+        if (p === 1) {
+            entry.anchorX = target.x;
+            entry.anchorY = target.y;
+            entry.physicsResumeAt=start+target.at+SHUFFLE_RISE;
+            this.scatterTargets.delete(entry);
+            this.startRipple(entry, false, entry.physicsResumeAt);
+        }
+    }
+
+    private finishShuffle(completed: boolean): void {
+        const shuffle = this.shuffleMotion;
+        if (!shuffle) return;
+        this.shuffleMotion = null;
+        this.scatterTargets.clear();
+        shuffle.water.dispose();
+        shuffle.onFinish?.(completed);
+    }
+
+    /** Starts a shuffle and reports when the last wave finishes on the pool clock. */
+    shuffle(need?: {kind: string; count: number}, onFinish?: (completed: boolean) => void): number {
+        if (this.disposed || this.entering || this.shuffleMotion || this.visibleIds.length < 2) return 0;
         const random = randomGenerator(seedOf(`flower-pool:${this.level}:shuffle:${++this.shuffleCount}`));
+        const starting = new Map(this.ordered.map(entry => [entry, {
+            fromX: entry.node.position.x, fromY: entry.node.position.y, fromAngle: entry.node.angle,
+            fromScale: entry.node.scale.x, fromAlpha: entry.band < 3 && entry.node.active ? entry.opacity.opacity : 0,
+        }] as const));
         // The original fan cancels promotions before it gathers the flowers.
         for (const entry of this.ordered) {
             if (!entry.promotion) continue;
             entry.promotion = null; entry.visualBand = entry.band; entry.angle = entry.node.angle;
-            this.startRipple(entry, false);
         }
         // Original fan promotes missing flowers for the first current group
         // from deeper layers before gathering and redistributing the surface.
@@ -950,34 +1003,40 @@ export class FlowerPoolView {
                 }
             }
         }
-        this.scatterTargets.clear();
+        this.refreshBands();
+        const water = new FlowerShuffleWater(this.root);
+        let remainingInBatch = 0, scatterOffset = SHUFFLE_RELEASE;
+        let scheduled = 0;
         for (const layer of [0, 1, 2]) {
             const placed: PoolEntry[] = [];
             for (const entry of this.inLayer(layer)) {
+                if (!remainingInBatch) {
+                    if (scheduled) scatterOffset += SHUFFLE_BATCH_INTERVAL;
+                    remainingInBatch = 4 + Math.floor(random() * 3);
+                }
+                remainingInBatch--; scheduled++;
+                entry.angle += (random() - 0.5) * 38;
                 const position = this.choosePosition(entry, placed, random);
-                this.scatterTargets.set(entry, { x: position.x, y: position.y, at: 0 });
+                this.scatterTargets.set(entry, { ...position, at: scatterOffset, toAngle: entry.angle, ...starting.get(entry)! });
                 placed.push({ ...entry, anchorX: position.x, anchorY: position.y });
+                entry.entranceAt = null;
+
+                this.releaseRipple(entry);
+                if (layer === 0 && (scheduled % 2 === 1 || placed.length === 1)) {
+                    water.addSplash(position.x * 0.88, SHUFFLE_CENTER_Y + (position.y - SHUFFLE_CENTER_Y) * 0.88,
+                        scatterOffset + 0.035, Math.min(85, entry.width * 0.47));
+                }
             }
         }
-        let remainingInBatch = 0, scatterOffset = SHUFFLE_GATHER_TIME;
-        let scheduled = 0;
-        for (const [entry, target] of this.scatterTargets) {
-            if (!remainingInBatch) {
-                if (scheduled) scatterOffset += SHUFFLE_BATCH_INTERVAL;
-                remainingInBatch = 4 + Math.floor(random() * 3);
-            }
-            target.at = this.clock + scatterOffset;
-            remainingInBatch--; scheduled++;
-            entry.anchorX = Math.cos(entry.phase) * 30;
-            entry.anchorY = -190 + Math.sin(entry.phase) * 30;
-        }
-        this.refreshBands();
-        return scheduled ? scatterOffset + SHUFFLE_SETTLE_TIME : 0;
+        const duration = scatterOffset + SHUFFLE_RISE + SHUFFLE_WATER_TAIL + 0.035;
+        this.shuffleMotion = { start: this.clock, duration, water, onFinish };
+        return duration;
     }
 
     dispose(): void {
         if (this.disposed) return;
         this.disposed = true;
+        this.finishShuffle(false);
         this.root.off(Node.EventType.TOUCH_START, this.touchStart);
         this.root.off(Node.EventType.TOUCH_END, this.touchEnd);
         for (const entry of this.entries.values()) {

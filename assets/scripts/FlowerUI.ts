@@ -21,17 +21,26 @@ function quoteWechatFontFamily(font: Font): void {
     quotedWechatFonts.add(font);
 }
 
+const fonts = new Map<string, Promise<Font>>();
+export function loadGameFont(path: string): Promise<Font> {
+    if (!fonts.has(path)) fonts.set(path, new Promise<Font>((resolve, reject) => {
+        loadFlowerAsset(path, Font, (error, font) => {
+            if (error) { fonts.delete(path); reject(error); return; }
+            quoteWechatFontFamily(font);
+            resolve(font);
+        });
+    }));
+    return fonts.get(path)!;
+}
+
 /** Load the two embedded original fonts before constructing any visible UI. */
 export function preloadTypography(): Promise<void> {
     if (!typography) typography = Promise.all([
-        new Promise<Font>((resolve, reject) => loadFlowerAsset('original/fonts/AlibabaPuHuiTi-2-65-Medium', Font,
-            (error, font) => error ? reject(error) : resolve(font))),
-        new Promise<Font>((resolve, reject) => loadFlowerAsset('original/fonts/ZhanKuXiaoLOGOTi-2', Font,
-            (error, font) => error ? reject(error) : resolve(font))),
+        loadGameFont('original/fonts/AlibabaPuHuiTi-2-65-Medium'),
+        loadGameFont('original/fonts/ZhanKuXiaoLOGOTi-2'),
         new Promise<JsonAsset>((resolve, reject) => loadFlowerAsset('original/fonts/font-coverage', JsonAsset,
             (error, asset) => error ? reject(error) : resolve(asset))),
     ]).then(([body, display, chars]) => {
-        quoteWechatFontFamily(body); quoteWechatFontFamily(display);
         typefaces.body = body; typefaces.display = display;
         const data = chars.json as Record<Typeface, string>;
         coverage = {body: new Set(data.body), display: new Set(data.display)};
@@ -64,6 +73,8 @@ export async function sprite(parent: Node, name: string, path: string, x: number
     const node = uiNode(parent, name, x, y, width, h);
     const renderer = node.addComponent(Sprite);
     renderer.sizeMode = Sprite.SizeMode.CUSTOM;
+    if (path.startsWith('original/flower/') || path.startsWith('original/uiflower/')
+        || path.startsWith('greenhouse/toys/')) renderer.trim = false;
     renderer.spriteFrame = frame;
     return node;
 }
@@ -75,18 +86,18 @@ export async function fittedSprite(parent: Node, name: string, path: string, x: 
     return sprite(parent, name, path, x, y, frame.originalSize.width * ratio, frame.originalSize.height * ratio);
 }
 
-const originalInsets: Record<string, [number, number, number, number]> = {
-    'original/extras/green_button_931': [103, 0, 109, 0],
-    'original/extras/pink_484': [115, 0, 123, 0],
-    'original/extras/pink_deep_167': [112, 0, 110, 0],
-    'original/extras/bg1_816': [0, 335, 0, 331],
-    'original/extras/tittlebg_305': [64, 0, 57, 0],
-    'original/extras/hl0_435': [39, 55, 37, 0],
+const POPUP_ART = 'greenhouse/popup/';
+const popupInsets: Record<string, [number, number, number, number]> = {
+    [POPUP_ART + 'frame']: [49, 43, 49, 47],
+    [POPUP_ART + 'inset']: [28, 27, 28, 27],
+    [POPUP_ART + 'button-green']: [42, 0, 42, 0],
+    [POPUP_ART + 'button-blue']: [42, 0, 42, 0],
+    [POPUP_ART + 'button-coral']: [42, 0, 42, 0],
 };
 
-/** Native Unity pixel borders rendered at its 1080 baseline, with an independent hit root. */
-export async function slicedSprite(parent: Node, name: string, path: string, x: number, y: number, width: number, height: number): Promise<Node> {
-    const border = originalInsets[path];
+/** Scale the artwork at the 1080px art baseline and keep the hit area independent. */
+async function slicedSprite(parent: Node, name: string, path: string, x: number, y: number, width: number, height: number): Promise<Node> {
+    const border = popupInsets[path];
     if (!border) throw new Error(`Missing verified slice borders: ${path}`);
     const unit = 750 / 1080;
     const root = uiNode(parent, name, x, y, width, height);
@@ -118,6 +129,56 @@ export function label(parent: Node, name: string, text: string, x: number, y: nu
     component.overflow = Label.Overflow.NONE;
     component.color = new Color().fromHEX(color);
     return node;
+}
+
+const popupFrameNames = ['frame', 'inset', 'title', 'close', 'button-green', 'button-blue', 'button-coral'];
+export const preloadPopupFrames = (art: readonly string[] = []): Promise<SpriteFrame[]> =>
+    Promise.all([...popupFrameNames, ...art].map(key => loadFrame(POPUP_ART + key)));
+
+export function popupIcon(parent: Node, name: string, art: string, x: number, y: number, width: number, height = width): Promise<Node> {
+    return fittedSprite(parent, name, POPUP_ART + art, x, y, width, height);
+}
+
+export function popupInset(parent: Node, name: string, x: number, y: number, width: number, height: number): Promise<Node> {
+    return slicedSprite(parent, name, POPUP_ART + 'inset', x, y, width, height);
+}
+
+function popupHeading(parent: Node, name: string, text: string, x: number, y: number, size: number, width: number, outline: string): Node {
+    const node = label(parent, name, text, x, y, size, width, '#fffdf0', 'display');
+    const heading = node.getComponent(Label)!;
+    heading.enableWrapText = false;
+    heading.enableOutline = true;
+    heading.outlineColor = new Color().fromHEX(outline);
+    heading.outlineWidth = 2;
+    const transform = node.getComponent(UITransform)!;
+    // Fit the finished label and outline between the plaque ornaments.
+    node.on(Node.EventType.SIZE_CHANGED, () => {
+        const scale = width / Math.max(width, transform.width);
+        node.setScale(scale, scale, 1);
+    });
+    return node;
+}
+
+export async function popupFrame(parent: Node, title: string, width: number, height: number, y = 0): Promise<void> {
+    const titleY = y + height / 2 - 20;
+    await slicedSprite(parent, 'PopupFrame', POPUP_ART + 'frame', 0, y, width, height);
+    await sprite(parent, 'TitlePlate', POPUP_ART + 'title', 0, titleY, 359, 111);
+    popupHeading(parent, 'Title', title, 0, titleY + 5, 54, 240, '#15559f');
+}
+
+export function popupClose(parent: Node, name: string, x: number, y: number, onClose: () => void): Promise<Node> {
+    return popupIcon(parent, name, 'close', x, y, 78).then(node => { tap(node, onClose); return node; });
+}
+
+type PopupButtonTone = 'green' | 'blue' | 'coral';
+const popupButtonOutlines: Record<PopupButtonTone, string> = {green: '#347e16', blue: '#15559f', coral: '#9e2859'};
+
+export async function popupButton(parent: Node, name: string, text: string, x: number, y: number,
+    width: number, height: number, tone: PopupButtonTone = 'green', icon?: string): Promise<Node> {
+    const button = await slicedSprite(parent, name, POPUP_ART + 'button-' + tone, x, y, width, height);
+    if (icon) await popupIcon(button, 'Icon', icon, -width / 2 + 38, 4, 43);
+    popupHeading(button, 'Text', text, icon ? 20 : 0, 4, Math.min(36, height * 0.38), width - (icon ? 85 : 26), popupButtonOutlines[tone]);
+    return button;
 }
 
 export function panel(parent: Node, name: string, x: number, y: number, width: number, height: number, color: string, radius = 0): Node {
@@ -167,7 +228,7 @@ export function fade(node: Node, opacity: number): void {
 }
 
 /** Keep an assembling popup invisible while its scrim already owns input. */
-export function modal(parent: Node, name: string, color = '#000000a8'): Node {
+export function modal(parent: Node, name: string, color = '#172548ac'): Node {
     const overlay = panel(parent, name, 0, 0, 750, 1334, color);
     overlay.addComponent(BlockInputEvents);
     bindFlowerViewport(overlay, viewport => {
@@ -229,16 +290,19 @@ export function dismissPopup(overlay: Node, onClosed?: () => void): void {
 }
 
 /** All popups block both gameplay and controls underneath them. */
-export async function message(parent: Node, title: string, body: string, actionText = '知道了', onAction?: () => void): Promise<Node> {
+export async function message(parent: Node, title: string, body: string, actionText = '知道了', onAction?: () => void, icon?: string): Promise<Node> {
+    await preloadPopupFrames(icon ? [icon] : []);
+    if (!parent.isValid) return parent;
     const overlay = modal(parent, 'DialogOverlay');
-    await slicedSprite(overlay, 'DialogPaper', 'original/extras/bg1_816', 0, 0, 620, 560);
-    label(overlay, 'Title', title, 0, 190, 38, 550, '#754f27');
-    const text = label(overlay, 'Message', body, 0, 35, 27, 510, '#754f27').getComponent(Label)!;
-    text.overflow = Label.Overflow.CLAMP;
-    text.node.getComponent(UITransform)!.setContentSize(510, 245);
+    await popupFrame(overlay, title, 628, icon ? 580 : 485);
+    const bodyY = icon ? -83 : 35;
+    if (icon) await popupIcon(overlay, 'DialogIcon', icon, 0, 89, 158);
+    await popupInset(overlay, 'MessageSurface', 0, bodyY, 530, icon ? 132 : 187);
+    const text = label(overlay, 'Message', body, 0, bodyY, 31, 474, '#694727').getComponent(Label)!;
+    text.overflow = Label.Overflow.SHRINK;
+    text.node.getComponent(UITransform)!.setContentSize(474, icon ? 104 : 155);
     text.enableWrapText = true;
-    const ok = await slicedSprite(overlay, 'Confirm', 'original/extras/green_button_931', 0, -175, 280, 95);
-    label(ok, 'Text', actionText, 0, 0, 32, 250, '#56881d');
+    const ok = await popupButton(overlay, 'Confirm', actionText, 0, icon ? -211 : -143, 270, 91);
     let accepted = false;
     const button = tap(ok, () => {
         if (accepted) return;

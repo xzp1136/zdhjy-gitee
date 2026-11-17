@@ -1,0 +1,14 @@
+{
+  "ver": "1.2.0",
+  "importer": "directory",
+  "imported": true,
+  "uuid": "ea84e259-98fb-42aa-bd85-3306143eaa7c",
+  "files": [],
+  "subMetas": {},
+  "userData": {
+    "isBundle": true,
+    "bundleName": "greenhouse-board",
+    "priority": 6,
+    "bundleConfigID": "zdhjy-local"
+  }
+}

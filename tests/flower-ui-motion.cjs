@@ -13,7 +13,7 @@ const resultEffects = [];
 class Vec3 { constructor(x = 0, y = 0, z = 0) { Object.assign(this, {x, y, z}); } }
 class Component { enabled = true; get enabledInHierarchy() { return this.enabled && this.node.activeInHierarchy; } }
 class Node {
-  static EventType = {NODE_DESTROYED: 'destroyed', TOUCH_START: 'start', TOUCH_MOVE: 'move', TOUCH_END: 'end', TOUCH_CANCEL: 'cancel'};
+  static EventType = {NODE_DESTROYED: 'destroyed', SIZE_CHANGED: 'size-changed', TOUCH_START: 'start', TOUCH_MOVE: 'move', TOUCH_END: 'end', TOUCH_CANCEL: 'cancel'};
   constructor(name = '') { Object.assign(this, {name, children: [], components: [], events: new Map(), isValid: true, active: true, layer: 1, position: new Vec3(), scale: new Vec3(1, 1, 1), angle: 0}); }
   get activeInHierarchy() { return this.active && (!this.parent || this.parent.activeInHierarchy); }
   addChild(node) { node.setParent(this); }
@@ -33,7 +33,12 @@ class Node {
 }
 class UITransform {
   anchorPoint = {x: .5, y: .5}; width = 0; height = 0;
-  setContentSize(width, height) { if (typeof width === 'object') ({width, height} = width); Object.assign(this, {width, height}); }
+  setContentSize(width, height) {
+    if (typeof width === 'object') ({width, height} = width);
+    if (width === this.width && height === this.height) return;
+    Object.assign(this, {width, height});
+    this.node.emit(Node.EventType.SIZE_CHANGED);
+  }
   setAnchorPoint(x, y) { this.anchorPoint = typeof x === 'object' ? {...x} : {x, y}; }
   get contentSize() { return {width: this.width, height: this.height}; }
   hitTest(p) { return Math.abs(p.x - this.node.position.x) <= this.width / 2 && Math.abs(p.y - this.node.position.y) <= this.height / 2; }
@@ -47,7 +52,7 @@ class Button extends Component {
   }
 }
 class Sprite { static Type = {SLICED: 1, FILLED: 2}; static SizeMode = {CUSTOM: 0}; static FillType = {HORIZONTAL: 0}; }
-class Label { static HorizontalAlign = {CENTER: 0}; static VerticalAlign = {CENTER: 0}; static Overflow = {NONE: 0, CLAMP: 1}; }
+class Label { static HorizontalAlign = {CENTER: 0, LEFT: 1}; static VerticalAlign = {CENTER: 0}; static Overflow = {NONE: 0, CLAMP: 1}; }
 class Color { fromHEX(value) { this.value = value; return this; } }
 class UIOpacity { opacity = 255; }
 const tweens = [];
@@ -186,23 +191,119 @@ test('popup uses serialized BaseView scale timing, cancellation, and optional Ov
   ui.dismissPopup(over); assert.equal(tweens.findLast(t => t.target === over.getChildByName('PopupLayout').getChildByName('PopupContent')).steps[0].duration, .3);
 });
 
-test('home binds motion only to original illustration targets and keeps local reward labels reachable after hit wrapping', async () => {
+test('homepage artwork keeps separate controls and renders saved counters and stage', async () => {
   storage.clear();
-  const home = await load('FlowerHome').createHome(new Node(), () => {}, 1);
-  const visual = name => descendant(home, name + 'Hit').getChildByName(name);
-  const daily = visual('DailyReward'), welcome = visual('WelcomeGift');
-  const dailyMotion = daily.getChildByName('Illustration').getComponent(motion.FlowerHomeMotion);
-  const welcomeMotion = welcome.getChildByName('Illustration').getComponent(motion.FlowerHomeMotion);
-  dailyMotion.update(1 / 6); welcomeMotion.update(1 / 6);
-  near(daily.getChildByName('Illustration').scale.x, 1.08, 'available daily reward animates');
-  near(daily.getChildByName('Text').scale.x, 1, 'label does not squash');
-  const play = descendant(home, 'PlayHit'); play.getComponent(motion.FlowerButtonMotion).update(1.6);
-  near(play.getChildByName('Play').scale.x, .94, 'home opts into original start-button idle');
-  assert.equal(visual('Welfare').getChildByName('Illustration').getComponent(motion.FlowerHomeMotion), null);
-  assert.equal(visual('GameCommunity').getChildByName('Illustration').getComponent(motion.FlowerHomeMotion), null);
-  storage.set('zdhjy.welcome', '1'); welcomeMotion.update(.01); near(welcome.getChildByName('Illustration').scale.x, 1, 'claimed welcome reward rests');
-  const share = visual('ShareReward').getChildByName('Illustration'); share.getComponent(motion.FlowerHomeMotion).update(1 / 6);
-  near(share.scale.x, 1, 'unconnected share service does not suggest a claim is ready');
+  storage.set('zdhjy.coins', '230'); storage.set('zdhjy.stars', '97');
+  let started = 0;
+  const home = await load('FlowerHome').createHome(new Node(), () => { started++; }, 22);
+  for (const name of ['ShareReward', 'DailyReward', 'WelcomeGift', 'Welfare', 'GameCommunity', 'StoreTab', 'HomeTab', 'RankTab']) {
+    assert(descendant(home, name + 'Hit').getComponent(Button));
+  }
+  for (const [name, value] of [['EnergyValue', '5'], ['CoinsValue', '230'], ['StarsValue', '97']]) {
+    const node = descendant(home, name);
+    const counter = node.getComponent(Label);
+    assert.equal(counter.string, value);
+    assert.equal(counter.overflow, Label.Overflow.NONE);
+    assert.equal(counter.enableWrapText, false);
+    const transform = node.getComponent(UITransform);
+    assert.equal(transform.anchorPoint.x, 0);
+    const left = node.position.x;
+    transform.setContentSize(182, 81);
+    near(node.scale.x, 0.5, 'a wide rendered line fits inside the 91px slot');
+    near(node.scale.y, 0.5, 'the glyph proportions stay the same');
+    transform.setContentSize(86, 81);
+    near(node.scale.x, 1, 'a shorter rendered line returns to full size');
+    assert.equal(node.position.x, left);
+  }
+  assert.equal(descendant(home, 'Level').getComponent(Label).string, '第22关');
+  const play = descendant(home, 'PlayHit');
+  for (let i = 0; i < 2; i++) { play.emit('start', touch()); play.emit('end', touch()); }
+  assert.equal(started, 1);
+  home.destroy();
+  storage.clear();
+});
+
+test('homepage navigation fills the viewport while tab art keeps its aspect ratio and taps respect safe insets', async () => {
+  const viewport = require('./viewport-fixture.cjs').getFlowerViewport();
+  const saved = {...viewport};
+  try {
+    Object.assign(viewport, {width: 900, height: 1500, safeLeft: -420, safeRight: 430, safeBottom: -727});
+    const home = await load('FlowerHome').createHome(new Node(), () => {}, 22);
+    const bar = descendant(home, 'NavigationBackground');
+    assert.equal(bar.getComponent(UITransform).width, 900);
+    assert.equal(bar.position.x, 0);
+    assert.equal(descendant(home, 'Bottom').position.y, -727);
+    for (const [name, left, right] of [['StoreTab', -420, -150], ['HomeTab', -150, 150], ['RankTab', 150, 430]]) {
+      const hit = descendant(home, name + 'Hit');
+      assert.equal(hit.position.x, (left + right) / 2);
+      assert.equal(hit.getComponent(UITransform).width, right - left);
+      const icon = descendant(hit, 'Artwork');
+      assert.equal(icon.scale.x, icon.scale.y);
+      assert.equal(icon.scale.x, 1500 / 2400);
+    }
+    home.destroy();
+  } finally { Object.assign(viewport, saved); }
+});
+
+test('homepage tabs and daily reward show skinned popups and keep their actions', async () => {
+  storage.clear();
+  storage.set('zdhjy.coins', '230');
+  const home = await load('FlowerHome').createHome(new Node(), () => {}, 22);
+  const click = hit => { hit.emit('start', touch()); hit.emit('end', touch()); };
+  try {
+    for (const [entry, name, action, title] of [
+      ['StoreTabHit', 'StoreOverlay', 'CloseStoreHit', '商城'],
+      ['RankTabHit', 'RankOverlay', 'BackHomeHit', '排行榜'],
+      ['ShareRewardHit', 'DialogOverlay', 'ConfirmHit', '分享有礼'],
+      ['DailyRewardHit', 'DialogOverlay', 'ConfirmHit', '每日奖励'],
+    ]) {
+      click(descendant(home, entry));
+      await new Promise(resolve => setImmediate(resolve));
+      const overlay = descendant(home, name);
+      const content = overlay.getChildByName('PopupLayout').getChildByName('PopupContent');
+      assert(content.getChildByName('PopupFrame'));
+      const titleNode = content.getChildByName('Title');
+      const titleLabel = titleNode.getComponent(Label);
+      assert.equal(titleLabel.string, title);
+      assert.equal(titleLabel.fontSize, 54);
+      assert.equal(titleLabel.overflow, Label.Overflow.NONE);
+      const titleBounds = titleNode.getComponent(UITransform);
+      titleBounds.setContentSize(220, 81);
+      near(titleNode.scale.x, 1, 'four-character heading stays at full size');
+      titleBounds.setContentSize(324, 81);
+      near(titleNode.scale.x * titleBounds.width, 240, 'long heading fits between the ornaments');
+      click(content.getChildByName(action));
+      tweens.findLast(tween => tween.target === content && tween.callback).callback();
+      assert.equal(overlay.isValid, false);
+    }
+    assert.equal(storage.get('zdhjy.coins'), '280');
+    assert.equal(descendant(home, 'CoinsValue').getComponent(Label).string, '280');
+  } finally {
+    home.destroy();
+    storage.clear();
+  }
+});
+
+test('reskinned pause switches still update saved settings and resume', async () => {
+  storage.clear();
+  let resumed = 0;
+  const popup = await load('FlowerPause').createPause(new Node(), {
+    onResume: () => { resumed++; }, onHome: () => {}, onRestart: () => {},
+  });
+  try {
+    const content = popup.getChildByName('PopupLayout').getChildByName('PopupContent');
+    assert(content.getChildByName('PopupFrame'));
+    const hit = content.getChildByName('musicSwitchHit');
+    hit.emit('start', touch()); hit.emit('end', touch());
+    assert.equal(storage.get('zdhjy.music'), 'off');
+    const resume = content.getChildByName('PauseResumeHit');
+    resume.emit('start', touch()); resume.emit('end', touch());
+    tweens.findLast(tween => tween.target === content && tween.callback).callback();
+    assert.equal(resumed, 1);
+  } finally {
+    popup.destroy();
+    storage.clear();
+  }
 });
 
 test('verified popup sounds emit once per transition and generic tap never invents a click sound', () => {
@@ -353,7 +454,7 @@ test('font quoting is idempotent for shared assets, repeated preloads and retrie
   await assert.rejects(view.preloadTypography());
   await view.preloadTypography(); await view.preloadTypography();
   assert.equal(view.fonts[0]._nativeAsset, '"Name 2.0"'); assert.equal(view.fonts[1], view.fonts[0]);
-  assert.equal(view.loads, 6);
+  assert.equal(view.loads, 4, 'only the failed coverage request is retried');
 });
 
 

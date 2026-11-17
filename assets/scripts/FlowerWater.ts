@@ -85,7 +85,7 @@ export class FlowerWaterRenderer {
             copy={node,image:sprite};this.down.set(id,copy);
             image.spriteFrame=this.frozen(image.spriteFrame!);
         }
-        image.grayscale=false;copy.image.grayscale=false;
+        image.grayscale=false;copy.image.grayscale=false;copy.image.trim=image.trim;
         image.node.active=visible&&band<2;
         copy.node.active=visible&&(band===1||band===2);
         if(band===1){this.half(image,false);this.half(copy.image,true);}
