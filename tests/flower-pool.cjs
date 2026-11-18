@@ -35,7 +35,6 @@ function uiNode(parent,name,x=0,y=0,w=750,h=1334){const n=new Node(name);n.layer
 async function loadFrame(path) { const file=resourceFile(path+'.png');if(!fs.existsSync(file+'.meta')){const png=fs.readFileSync(file);return {originalSize:{width:png.readUInt32BE(16),height:png.readUInt32BE(20)}};}const meta=JSON.parse(fs.readFileSync(file+'.meta','utf8')); const d=Object.values(meta.subMetas).find(s=>s.importer==='sprite-frame').userData;return {originalSize:{width:d.rawWidth,height:d.rawHeight}}; }
 const cc={Node,Button,Sprite,UITransform,UIOpacity,Graphics,Color,Vec3,JsonAsset:class{},resources:{load(path,type,done){done(null,{json:JSON.parse(fs.readFileSync(resourceFile(path+'.json'),'utf8'))});}},Tween:{stopAllByTarget(){}}};
 cc.Director={EVENT_AFTER_DRAW:'after-draw'};cc.director={once(_event,callback){queueMicrotask(callback);}};
-Object.assign(cc,require('./physics-cc.cjs')(Node));
 const moduleCache={};
 function moduleLoad(name){if(moduleCache[name])return moduleCache[name];const scope={exports:{},require(path){if(path==='cc')return cc;if(path==='./FlowerWater')return require('./water-fixture.cjs');if(path==='./FlowerAssets')return {loadFlowerAsset:cc.resources.load};if(path==='./FlowerUI')return {loadFrame,uiNode};if(path.startsWith('./'))return moduleLoad(path.slice(2));throw Error(path);},console:{warn(){}}};moduleCache[name]=scope.exports;vm.runInNewContext(ts.transpileModule(fs.readFileSync(project+'/assets/scripts/'+name+'.ts','utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.CommonJS}}).outputText,scope);return scope.exports;}
 const Pool=moduleLoad('FlowerPool').FlowerPoolView;
@@ -71,16 +70,18 @@ function layeredFlowers(counts) {
 
 test('the real second level builds at most three flowers per frame without changing layout or entrance timing',async()=>{
  const catalog=await moduleLoad('FlowerCatalog').FlowerCatalog.load(),config=catalog.level(2);
- const {FlowerRules}=moduleLoad('FlowerRules'),flowers=new FlowerRules(config).flowers;
+ const {FlowerRules}=moduleLoad('FlowerRules'),rules=new FlowerRules(config),flowers=rules.flowers;
+ assert.deepEqual(Array.from(rules.layerCounts),[22,1,39,40],'retain the real second-level distribution, including 39 underwater flowers');
+ assert.deepEqual(Array.from(rules.layerMaxCounts),[21,2,40,0],'pool limits come from rules, not the raw catalog row');
  let building;const counts=[];
- const p=await Pool.create(new Node(),flowers,2,()=>{},config.layerMaxCounts,undefined,
+ const p=await Pool.create(new Node(),flowers,2,()=>{},rules.layerMaxCounts,undefined,
   {deferEntrance:true,onCreate:pool=>{building=pool;},nextFrame:async()=>{
     counts.push(building.nodeMap.size);
     assert(building.ordered.every(e=>!e.node.active),'future flowers must not activate while building');
   }});
  assert(counts.length>1,'the real second level spans multiple render frames');
  let previous=0;for(const count of [...counts,p.nodeMap.size]){assert(count-previous<=3);previous=count;}
- const reference=await Pool.create(new Node(),flowers,2,()=>{},config.layerMaxCounts);
+ const reference=await Pool.create(new Node(),flowers,2,()=>{},rules.layerMaxCounts);
  const layout=pool=>pool.ordered.map(e=>({id:e.flower.id,x:e.x,y:e.y,angle:e.angle,band:e.band,scale:e.physicalScale}));
  assert.deepEqual(layout(p),layout(reference));
  assert(p.ordered.every(e=>!e.node.active));
@@ -93,10 +94,89 @@ test('the real second level builds at most three flowers per frame without chang
 test('later levels use the same sliced creation path rather than a level-two special case',async()=>{
  const catalog=await moduleLoad('FlowerCatalog').FlowerCatalog.load(),Rules=moduleLoad('FlowerRules').FlowerRules;
  for(const level of [3,5,10]){
-  const config=catalog.level(level),flowers=new Rules(config).flowers;let building,last=0,frames=0;
-  const pool=await Pool.create(new Node(),flowers,level,()=>{},config.layerMaxCounts,undefined,
+  const config=catalog.level(level),rules=new Rules(config),flowers=rules.flowers;let building,last=0,frames=0;
+  const pool=await Pool.create(new Node(),flowers,level,()=>{},rules.layerMaxCounts,undefined,
    {deferEntrance:true,onCreate:p=>{building=p;},nextFrame:async()=>{const count=building.nodeMap.size;assert(count-last<=3);last=count;frames++;}});
   assert(pool.nodeMap.size-last<=3);assert(frames>1);assert.equal(pool.nodeMap.size,flowers.filter(f=>f.status==='pool').length);pool.dispose();
+ }
+});
+
+test('real crowded levels settle without sustained correction jitter at 15, 30 and 60 fps, and collection wakes them',async()=>{
+ const catalog=await moduleLoad('FlowerCatalog').FlowerCatalog.load(),Rules=moduleLoad('FlowerRules').FlowerRules;
+ for(const level of [2,5,10,34])for(const fps of [15,30,60]){
+  const config=catalog.level(level),rules=new Rules(config),p=await Pool.create(new Node(),rules.flowers,level,()=>{},rules.layerMaxCounts);
+  try{
+   p.playEntrance();
+   // Measure passive collisions; periodic scripted promotions intentionally
+   // move flowers and are tested separately below.
+   p.nextAutoPromotion=Infinity;
+   for(let i=0;i<fps*35;i++){p.update(1/fps);await renderFrame();}
+   // The real second-level middle band contains one free-floating flower.
+   // It must retain its water flow; only crowded bands must settle to rest.
+   const crowdedBands=[0,1,2].filter(band=>rules.layerCounts[band]>1);
+   const snapshot=()=>p.ordered.filter(e=>crowdedBands.includes(e.band)).map(e=>[e.flower.id,e.x,e.y,e.angle]);
+   const resting=snapshot(),stats=p.physics.diagnostics;
+   const visible=rules.layerCounts.slice(0,3).reduce((sum,n)=>sum+n,0);
+   assert.equal(stats.active,visible);
+   assert([...p.physics.states.values()].filter(s=>s.active&&crowdedBands.includes(s.band)).every(s=>s.sleeping),`level ${level} at ${fps}fps settles all flowers in the actual crowded bands`);
+   for(let i=0;i<fps*3;i++){p.update(1/fps);await renderFrame();assert.deepEqual(snapshot(),resting,'resting flowers must not move back and forth');}
+   assert.equal(p.physics.diagnostics.pairChecks,0,'resting pool does not waste collision work');
+   p.take(p.inLayer(0)[0].flower.id);
+   assert([...p.physics.states.values()].some(s=>s.active&&!s.sleeping),'a real collection wakes the pool for refill');
+   if(level===2&&fps===60){
+    p.update(1/fps);p.update(1/fps);
+    const awake=[...p.physics.states.values()].filter(s=>s.active&&!s.sleeping).length;
+    assert(awake<30,'one collection must not wake all three layers (previously 50 flowers)');
+   }
+  }finally{p.dispose();}
+ }
+});
+
+test('the actual 39-flower underwater layer gets whole collision sweeps and stays still during normal idle promotions',async()=>{
+ const catalog=await moduleLoad('FlowerCatalog').FlowerCatalog.load(),Rules=moduleLoad('FlowerRules').FlowerRules;
+ const rules=new Rules(catalog.level(2)),p=await Pool.create(new Node(),rules.flowers,2,()=>{},rules.layerMaxCounts);
+ const fineBudget=moduleLoad('FlowerPhysics').FLOWER_PHYSICS_FINE_BUDGETS[2];
+ try{
+  p.playEntrance();let checkedDenseSweep=false,rest=null;
+  for(let frame=0;frame<120*60;frame++){
+   p.update(1/60);await renderFrame();
+   const stats=p.physics.diagnostics;
+   if(p.clock>4&&stats.steps&&stats.fineByBand[2]){
+    assert(stats.fineByBand[2]<fineBudget*stats.steps,'the original underwater density must not exhaust its fine budget');
+    if(stats.sourcesByBand[2]>=39)checkedDenseSweep=true;
+   }
+   if(p.clock>=90){
+    const water=p.inLayer(2);
+    assert.equal(water.length,39,'do not reduce density to make collisions cheaper');
+    assert(water.every(e=>p.physics.states.get(e.flower.id).sleeping),'the entire underwater group rests');
+    const pose=water.map(e=>[e.flower.id,e.x,e.y,e.angle]);
+    if(rest)assert.deepEqual(pose,rest,'no slow lateral drift during the final thirty seconds after automatic refills');else rest=pose;
+   }
+  }
+  assert(checkedDenseSweep,'the initial dense sweep must process all 39 underwater sources, rather than rotate a capped subset');
+ }finally{p.dispose();}
+});
+
+test('normal idle play with automatic promotions and variable frame times does not sustain surface or underwater seesawing',async()=>{
+ const catalog=await moduleLoad('FlowerCatalog').FlowerCatalog.load(),Rules=moduleLoad('FlowerRules').FlowerRules;
+ for(const level of [3,5,8,10,19,26,34,58,83]){
+  const config=catalog.level(level),rules=new Rules(config),p=await Pool.create(new Node(),rules.flowers,level,()=>{},rules.layerMaxCounts);
+  try{
+   p.playEntrance();const history=new Map();
+   for(let frame=0;frame<2400;frame++){
+    const before=new Map(p.ordered.map(e=>[e.flower.id,{x:e.x,y:e.y}]));
+    p.update([1/60,1/60,1/30,1/90,1/45][frame%5]);await renderFrame();
+    if(p.clock<10)continue;
+    for(const e of p.ordered){
+     if(e.band>2||e.promotion||e.entranceAt!==null)continue;
+     const b=before.get(e.flower.id),dx=e.x-b.x,dy=e.y-b.y;
+     let h=history.get(e.flower.id);if(!h){h={dx:0,dy:0,reversals:[]};history.set(e.flower.id,h);}
+     if(h.dx*dx+h.dy*dy<0&&Math.hypot(dx,dy)>.15)h.reversals.push(p.clock);
+     h.dx=dx;h.dy=dy;h.reversals=h.reversals.filter(time=>p.clock-time<2);
+     assert(h.reversals.length<=8,`level ${level}, band ${e.band}, ${e.flower.kind} must not repeatedly reverse under static compression`);
+    }
+   }
+  }finally{p.dispose();}
  }
 });
 
@@ -180,15 +260,15 @@ test('vacancy admission uses original layer count even during animation or with 
  p.update(2);assert.equal(p.inLayer(0).length,2);p.dispose();
 });
 
-test('pool movement uses original physical bodies while input covers the complete water', async () => {
+test('pool movement uses lightweight bodies while input covers the complete water', async () => {
  const geometry=moduleLoad('FlowerPool').ORIGINAL_POOL_GEOMETRY;
  const p=await Pool.create(new Node(),layeredFlowers([3,2,2,1]),2,()=>{},[3,2,2,0]);
  const transform=p.root.getComponent(UITransform);
  assert.equal(transform.width,geometry.waterWidth);assert.equal(transform.height,geometry.waterHeight);
  const before=p.inLayer(0).map(e=>({x:e.x,y:e.y}));
  for(let i=0;i<60;i++)p.update(1/60);
- assert(p.inLayer(0).some((e,i)=>Math.hypot(e.x-before[i].x,e.y-before[i].y)>.1),'actual Box2D flow moves the flowers');
- for(const state of p.physics.states.values())if(state.active)assert(Math.abs(state.body.getMass()-1)<1e-5,'original explicit mass survives collider scaling');
+ assert(p.inLayer(0).some((e,i)=>Math.hypot(e.x-before[i].x,e.y-before[i].y)>.1),'numeric water flow moves the flowers');
+ for(const state of p.physics.states.values())if(state.active)assert(Math.abs(state.mass-1)<1e-5,'source mass stays stable while geometry scales');
  assert.equal(typeof p.repackSurface,'undefined','no hand-written ellipse repacking remains');
  assert.equal(typeof p.limit,'undefined','no PNG or conservative wall clamp remains');
  p.dispose();

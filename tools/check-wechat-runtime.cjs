@@ -105,9 +105,6 @@ function loadRuntime(buildRoot) {
         assetManager: {downloader: {remoteServerAddress: settings.assets.server}, getBundle: name => openedBundles.get(name),
             loadBundle(name, callback) { queueMicrotask(() => { try { config(name); const value = owner(name); openedBundles.set(name, value); callback(null, value); } catch (error) { callback(error); } }); }},
     };
-    // Component plumbing is mocked; collision integration uses Creator's exact
-    // bundled Box2D package, exercising the emitted code rather than TS source.
-    Object.assign(cc,require('../tests/physics-cc.cjs')(Node));
     const context = vm.createContext({console: {warn: (...args) => warnings.push(args.join(' ')), error: (...args) => warnings.push(args.join(' ')), info() {}},
         System: {register(name, dependencies, declare) {
             if (Array.isArray(name)) {
@@ -247,32 +244,102 @@ async function checkRuntime(buildRoot = path.join(PROJECT, 'build/wechatgame')) 
         const frames = runtime.requests.slice(before).filter(request => request.logical.endsWith('/spriteFrame'));
         assert(frames.length > 0); assert.equal(new Set(frames.map(request => request.logical)).size, frames.length);
     });
-    await check('compiled physics iterates native body Maps, keeps original mass and pushes through the true centre',async()=>{
-        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit}=load('FlowerPhysics'),data=await FlowerPhysics.preload();
-        const p=new FlowerPhysics(new runtime.cc.Node('NativePhysicsCheck'),data,()=>.8);
+    await check('compiled lightweight physics keeps mass and full rotation without engine body components',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit,FLOWER_PHYSICS_STEP:step}=load('FlowerPhysics'),data=await FlowerPhysics.preload();
+        const p=new FlowerPhysics(new runtime.cc.Node('LightPhysicsCheck'),data,()=>.8);
         try{
-            p.add('rose','original/flower/zy_lmg_01',0,-2*unit,155,1.1,0,{x:0,y:.3});p.sync('rose',0,1,true);p.update(.02);
-            const state=p.states.get('rose');assert(state.active);assert(Math.abs(state.body.getMass()-1)<1e-6);
-            assert(Math.abs(state.body.angularVelocity)<1e-10,'linear impulses must not spin the off-centre native body');
-            state.body.angularVelocity=1;p.update(.03);const native=state.body.impl.GetAngle()*180/Math.PI,alpha=p.accumulator/.02;
-            const expected=state.previous.angle+(((native-state.previous.angle+540)%360)-180)*alpha;
-            assert(Math.abs(((p.pose('rose').angle-expected+540)%360)-180)<1e-6,'full planar angle must survive the emitted helpers');
+            p.add('rose','original/flower/zy_lmg_01',0,-2*unit,155,1.1,0,{x:0,y:.3});p.sync('rose',0,1,true);p.update(step);
+            const state=p.states.get('rose');assert(state.active);assert.equal(state.mass,1);assert.equal(state.spin,0);
+            assert.equal(p.root.children.length,0,'no native body Nodes or collider components are created');
+            state.spin=.05;p.update(step*1.5);const alpha=p.accumulator/step;
+            const expected=state.previous.angle+(((state.angle-state.previous.angle+540)%360)-180)*alpha;
+            assert(Math.abs(((p.pose('rose').angle-expected+540)%360)-180)<1e-6);
         }finally{p.dispose();}
     });
-    await check('compiled original rose/lily overlaps separate and sleep at 15, 30 and 60 fps',async()=>{
+    await check('compiled lightweight rose/lily contacts separate and sleep at 15, 30 and 60 fps',async()=>{
         const {FlowerPhysics,FLOWER_WORLD_UNIT:unit}=load('FlowerPhysics'),data=JSON.parse(JSON.stringify(await FlowerPhysics.preload()));
         data.flow.torqueImpulse=0;for(const layer of data.flow.layers)layer.strength=0;
         for(const fps of [15,30,60])for(const variant of [1,2,3]){
-            const p=new FlowerPhysics(new runtime.cc.Node('NativeOverlapCheck'),data,()=>.8);
+            const p=new FlowerPhysics(new runtime.cc.Node('LightOverlapCheck'),data,()=>.8);
             try{
                 p.add('rose','original/flower/zy_lmg_0'+variant,-2.8*unit,-5.8*unit,155,1.1,0,{x:0,y:0});p.sync('rose',0,1,true);
                 p.add('lily','original/flower/cdtx_sl_0'+variant,-2.7*unit,-5.7*unit,-155,1,0,{x:0,y:0});p.sync('lily',0,1,true);
-                for(let frame=0;frame<fps*30;frame++)p.update(1/fps);
+                for(let frame=0;frame<fps*6;frame++)p.update(1/fps);
                 const a=p.states.get('rose'),b=p.states.get('lily');
-                assert(Math.hypot(a.node.position.x-b.node.position.x,a.node.position.y-b.node.position.y)/32>1.5);
-                assert(!a.body.isAwake()&&!b.body.isAwake(),'the generated code must settle real bodies, not just cache a stationary picture');
+                assert(Math.hypot(a.x-b.x,a.y-b.y)>1.5);assert(a.sleeping&&b.sleeping);
+                p.update(5);assert(p.diagnostics.steps<=3,'long frames never cause unbounded catch-up');
             }finally{p.dispose();}
         }
+    });
+    await check('compiled full-size crowded pool stays still after settling and wakes on collection',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit}=load('FlowerPhysics'),data=await FlowerPhysics.preload();
+        let seed=123456;
+        const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+        const p=new FlowerPhysics(new runtime.cc.Node('CrowdedRestCheck'),data,random);
+        try{
+            const keys=['cdy_lxq_01','dy_zmj_01','cdcs_jyc_01','zy_lmg_01'];
+            for(let i=0;i<53;i++){
+                const band=i<21?0:i<37?1:2;
+                p.add(String(i),'original/flower/'+keys[i%keys.length],(random()-.5)*6.4*unit,
+                    (-2.51+(random()-.5)*8)*unit,(random()-.5)*24,1,band,{x:.1,y:0});
+                p.sync(String(i),band,1-band*.1,true);
+            }
+            for(let frame=0;frame<17*60;frame++)p.update(1/60);
+            assert.equal(p.diagnostics.sleeping,53);
+            const snapshot=()=>Array.from({length:53},(_,i)=>p.pose(String(i))),rest=snapshot();
+            for(let frame=0;frame<3*60;frame++){p.update(1/60);assert.deepEqual(snapshot(),rest);}
+            assert.equal(p.diagnostics.pairChecks,0);
+            p.remove('0');assert([...p.states.values()].some(s=>s.active&&!s.sleeping));
+        }finally{p.dispose();}
+    });
+    await check('compiled interlocked compound flowers separate and stay asleep at 15, 30 and 60 fps',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit}=load('FlowerPhysics'),data=await FlowerPhysics.preload();
+        for(const key of ['cdcs_jgh_01','cdyz_bll_02','cdyz_flc_03'])for(const fps of [15,30,60]){
+            const p=new FlowerPhysics(new runtime.cc.Node('CompoundRestCheck'),data,()=>.8);
+            try{
+                for(let i=0;i<2;i++){
+                    p.add(String(i),'original/flower/'+key,(-2.5+i*.01)*unit,(-5+i*.01)*unit,i?155:-155,1,0,{x:0,y:0});
+                    p.sync(String(i),0,1,true);
+                }
+                for(let frame=0;frame<fps*17;frame++)p.update(1/fps);
+                assert.equal(p.diagnostics.sleeping,2,key+' must not alternate stem/head pushes');
+                const rest=[p.pose('0'),p.pose('1')];
+                for(let frame=0;frame<fps*3;frame++){p.update(1/fps);assert.deepEqual([p.pose('0'),p.pose('1')],rest);}
+            }finally{p.dispose();}
+        }
+    });
+    await check('compiled translation cache defers world geometry until narrow phase',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit,FLOWER_PHYSICS_STEP:step}=load('FlowerPhysics'),data=await FlowerPhysics.preload();
+        const p=new FlowerPhysics(new runtime.cc.Node('GeometryCacheCheck'),data,()=>.8);
+        try{
+            p.add('moving','original/flower/cdy_lxq_01',0,-2*unit,0,1,0,{x:.1,y:0});p.sync('moving',0,1,true);
+            const s=p.states.get('moving'),local=s.local;p.update(step);
+            assert(s.x>0);assert.equal(p.diagnostics.geometryBuilds,0);assert.equal(p.diagnostics.worldSyncs,0);
+            p.ensureWorld(s);assert.equal(s.world[0],s.local[0]+s.x);assert.equal(s.local,local);
+        }finally{p.dispose();}
+    });
+    await check('compiled local wake and independent foreground budgets remain bounded',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit,FLOWER_PHYSICS_FINE_BUDGETS:budgets}=load('FlowerPhysics');
+        const data=JSON.parse(JSON.stringify(await FlowerPhysics.preload()));data.walls=[];
+        data.flow.torqueImpulse=0;for(const layer of data.flow.layers)layer.strength=0;
+        data.flowers={circle:{mass:1,fixtures:[{kind:'CircleCollider2D',matrix:[1,0,0,1,0,0],offset:{x:0,y:0},m_Radius:.5}]}};
+        const p=new FlowerPhysics(new runtime.cc.Node('LocalWakeCheck'),data,()=>.8);
+        try{
+            for(let i=0;i<12;i++){
+                p.add(String(i),'circle',i*.98*unit,-2*unit,0,1,0,{x:0,y:0});p.sync(String(i),0,1,true);
+                const s=p.states.get(String(i));s.vx=s.vy=0;
+            }
+            for(let i=0;i<240;i++)p.update(1/30);
+            assert.equal(p.diagnostics.sleeping,12);p.remove('5');
+            assert(!p.states.get('4').sleeping&&p.states.get('0').sleeping&&p.states.get('11').sleeping);
+            for(let i=0;i<120;i++){
+                p.add('pile-'+i,'circle',0,-2*unit,0,1,2,{x:0,y:0});p.sync('pile-'+i,2,1,true);
+            }
+            for(let i=0;i<15;i++){
+                p.update(1/30);const d=p.diagnostics;
+                d.fineByBand.forEach((n,band)=>assert(n<=budgets[band]*d.steps));
+            }
+        }finally{p.dispose();}
     });
     await check('compiled cancellation invokes every callback in a Set before clearing it', () => {
         const calls = [], pendingAnimations = new Set([() => calls.push(1), () => calls.push(2)]);
