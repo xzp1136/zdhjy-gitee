@@ -9,6 +9,7 @@ import { FlowerLoadingView } from './FlowerLoading';
 import { runStartupTasks } from './FlowerStartup';
 import { FlowerCatalog, flowerSpritePath } from './FlowerCatalog';
 import { BouquetLanding, FlowerBouquetView, preloadBouquets } from './FlowerBouquet';
+import { BUTTERFLY_PAIR_OFFSET, BUTTERFLY_WING_HEIGHT, FlowerButterflyFlight } from './FlowerButterflyFlight';
 import { BOUQUET_FINISH_DURATION, FlowerBouquetFinish } from './FlowerBouquetFinish';
 import { BOUQUET_BLOOM_SECONDS, BOUQUET_GOLD_DELAY, FlowerPetalBloom, preloadFlowerPetals } from './FlowerPetalBloom';
 import { BOARD_HEIGHT, BOARD_UNIT, BOARD_WIDTH, BOUQUET_BASE_Y, ORDER_X, TOOL_NAMES, TOOL_X, TOOL_Y,
@@ -92,6 +93,7 @@ type OrderView = {
     landingEffects?: Set<FlowerEffectHandle>; departing?: boolean;
 };
 type FlowerMove = Extract<FlowerEvent, { type: 'move' }>;
+type ButterflyPair = Extract<FlowerEvent, { type: 'special-paired' }>;
 type FlowerFlight = { event: FlowerMove; node: Node; completed: Promise<boolean> };
 
 @ccclass('FlowerGame')
@@ -311,18 +313,23 @@ export class FlowerGame extends Component {
             if (sys.localStorage.getItem('zdhjy.music') !== 'off') this.music.play();
         });
     }
-    private sound(name: string) {
+    private sound(name: string, volume = 0.7) {
         if (sys.localStorage.getItem('zdhjy.sound') === 'off') return;
         const cached = this.effectsCache.get(name);
-        if (cached) { this.effects.playOneShot(cached, 0.7); return; }
+        if (cached) { this.effects.playOneShot(cached, volume); return; }
         const rev = this.revision;
         loadFlowerAsset(A + 'audio/' + name, AudioClip, (err, clip) => {
-            if (!err && this.current(rev) && sys.localStorage.getItem('zdhjy.sound') !== 'off') { this.effectsCache.set(name, clip); this.effects.playOneShot(clip, 0.7); }
+            if (!err && this.current(rev) && sys.localStorage.getItem('zdhjy.sound') !== 'off') {
+                this.effectsCache.set(name, clip);
+                this.effects.playOneShot(clip, volume);
+            }
         });
     }
     private onUISound(name?: string): void { if (name) this.sound(name); }
     private async preloadEffects(): Promise<void> {
-        await Promise.all(['click', 'open', 'close', 'flowerstart', 'flowerhit', 'vasesuccss', 'flowerfuqi', 'level_new', 'level_checkceng', 'level_daluan', 'bgm_home', 'bgm_level'].map(name =>
+        const names = ['click', 'open', 'close', 'flowerstart', 'flowerhit', 'vasesuccss', 'flowerfuqi',
+            'level_new', 'level_checkceng', 'level_daluan', 'bgm_home', 'bgm_level', 'combine', 'hudiefly', 'starAdd'];
+        await Promise.all(names.map(name =>
             new Promise<void>((resolve, reject) => {
                 loadFlowerAsset(A + 'audio/' + name, AudioClip, (error, clip) => {
                     if (error) { reject(error); return; }
@@ -704,7 +711,7 @@ export class FlowerGame extends Component {
             tap(root, () => this.useTool(i));
         }
     }
-    private startFlowerFlight(event: FlowerMove, node: Node, landing?: BouquetLanding | null): FlowerFlight {
+    private startFlowerFlight(event: FlowerMove, node: Node, landing?: BouquetLanding | null, pair?: ButterflyPair): FlowerFlight {
         if (node.parent !== this.flowerRoot) node.setParent(this.flowerRoot, true);
         const ripple = node.getChildByName('Ripple'); if (ripple) ripple.active = false;
         const size = node.getComponent(UITransform)!;
@@ -713,6 +720,13 @@ export class FlowerGame extends Component {
             : this.mapPoint(this.trayRoot, new Vec3(TRAY_X[event.slot], TRAY_Y, 0), this.flowerRoot);
         const fit = Math.min(54 / size.width, 48 / size.height);
         let scale = new Vec3(fit, fit, 1), angle = 0;
+        const wing = pair && node.getChildByName('FlowerImage');
+        if (wing) {
+            wing.setScale(1, 1, 1);
+            const wingFit = BUTTERFLY_WING_HEIGHT / wing.getComponent(UITransform)!.height;
+            scale = new Vec3(-wingFit, wingFit, 1);
+            destination = () => this.butterflyTrayPoint(pair).add(BUTTERFLY_PAIR_OFFSET);
+        }
         if (event.to === 'order') {
             // Use the resting anchor even if the new vase has not entered yet.
             const x = ORDER_X[event.slot] + (landing?.position.x ?? 0);
@@ -735,6 +749,7 @@ export class FlowerGame extends Component {
         const events = rules.select(id);
         const move = events[0];
         if (move?.type !== 'move') return;
+        const pair = events[1]?.type === 'special-paired' ? events[1] : undefined;
         const starsEarned = rules.stars - starsBefore;
         vibrateFlowerTap(); this.sound('click');
         if (this.hand) { Tween.stopAllByTarget(this.hand); this.hand.destroy(); this.hand = null; this.handTarget = null; }
@@ -746,7 +761,7 @@ export class FlowerGame extends Component {
             const order = move.to === 'order' ? orders[move.slot] : null;
             const node = this.pool?.take(id);
             const flight = node?.isValid && node.parent
-                ? this.startFlowerFlight(move, node, order && FlowerBouquetView.landingFor(order))
+                ? this.startFlowerFlight(move, node, order && FlowerBouquetView.landingFor(order), pair)
                 : undefined;
             if (previous) await previous;
             if (this.current(rev)) await this.animateEvents(events, rev, flight, starsEarned);
@@ -766,7 +781,8 @@ export class FlowerGame extends Component {
         const rules = this.rules!, visual = this.visual!;
         const completionCount = events.filter(event => event.type === 'order-completed').length;
         const starsPerCompletion = completionCount ? starsEarned / completionCount : 0;
-        for (const event of events) {
+        for (let index = 0; index < events.length; index++) {
+            const event = events[index];
             if (!this.current(rev)) return;
             if (event.type === 'flower-revealed') {
                 const flower = rules.flowers.find(piece => piece.id === event.flowerId);
@@ -784,18 +800,14 @@ export class FlowerGame extends Component {
                 continue;
             }
             if (event.type === 'special-paired') {
-                visual.buffer = visual.buffer.filter(id => !event.flowerIds.includes(id));
-                await this.renderTray(); if (!this.current(rev)) return;
-                const path = flowerSpritePath(event.specialId === 2000 ? 'hd_01' : 'hd_02');
-                const start = this.mapPoint(this.trayRoot, new Vec3(TRAY_X[event.slot], TRAY_Y, 0), this.topHud);
-                const butterfly = await fittedSprite(this.topHud, 'PairedButterfly', path, start.x, start.y, 54, 68);
-                this.sound('combine');
-                if (!await this.waitFor(event.delaySeconds)) return;
-                const destination = this.mapPoint(this.ordersRoot, new Vec3(0, boardY(586.5) + 54, 0), this.topHud);
-                await this.animate(butterfly, 0.32, { position: destination, scale: new Vec3(1.6, 1.6, 1) }, 'sineOut');
-                butterfly.destroy(); continue;
+                const target = events.slice(index + 1).find((item): item is FlowerMove => item.type === 'move' && item.to === 'order');
+                if (!await this.animateButterfly(event, target, startedFlight, rev)) return;
+                continue;
             }
             if (event.type !== 'move') continue;
+            const next = events[index + 1];
+            // Keep the second wing visible until the pair has fused in the tray.
+            if (next?.type === 'special-paired' && next.flowerIds[1] === event.flowerId) continue;
             const flower = rules.flowers.find(piece => piece.id === event.flowerId)!;
             const landingOrder = event.to === 'order' ? visual.orders[event.slot] : null;
             const landingGroup = landingOrder?.needs.findIndex(need => need.filled < need.required) ?? -1;
@@ -861,6 +873,67 @@ export class FlowerGame extends Component {
             }
         }
     }
+    private butterflyTrayPoint(pair: ButterflyPair): Vec3 {
+        const stored = this.trayRoot.getChildByName('Buffered-' + pair.flowerIds[0]);
+        const point = stored?.position ?? new Vec3(TRAY_X[pair.slot], TRAY_Y);
+        return this.mapPoint(this.trayRoot, point, this.flowerRoot);
+    }
+    private async animateButterfly(pair: ButterflyPair, target: FlowerMove | undefined, startedFlight: FlowerFlight | undefined,
+        rev: number): Promise<boolean> {
+        const [firstId, secondId] = pair.flowerIds;
+        const incoming = startedFlight?.event.flowerId === secondId ? startedFlight : undefined;
+        let butterfly: FlowerButterflyFlight | undefined;
+        try {
+            if ((incoming && !await incoming.completed) || !this.current(rev)) return false;
+            const pink = pair.specialId === 2001;
+            const frame = await loadFrame(flowerSpritePath(pink ? 'hd_02' : 'hd_01')).catch(error => {
+                if (this.current(rev)) console.warn('[FlowerGame] butterfly art', error);
+                return null;
+            });
+            if (!this.current(rev)) return false;
+            if (frame) {
+                const effect = new FlowerButterflyFlight(this.flowerRoot, frame, this.butterflyTrayPoint(pair), pink);
+                butterfly = effect;
+                const stored = this.trayRoot.getChildByName('Buffered-' + firstId);
+                if (stored) stored.active = false;
+                if (incoming?.node.isValid) incoming.node.active = false;
+                let combined = false;
+                if (!await this.animateProgress(effect.root, pair.delaySeconds + 0.13, t => {
+                    effect.merge(t);
+                    if (!combined && t >= 0.60) {
+                        combined = true;
+                        this.sound('combine', 0.50);
+                    }
+                })) return false;
+            }
+
+            this.visual!.buffer = this.visual!.buffer.filter(id => id !== firstId && id !== secondId);
+            await this.renderTray();
+            if (!this.current(rev)) return false;
+            if (!butterfly) return true;
+
+            const effect = butterfly, start = effect.takeoff;
+            const order = target && this.visual!.orders[target.slot];
+            const bouquet = order && order.id === target.orderId ? this.orderViews.get(target.slot)?.bouquet : undefined;
+            const landing = bouquet && bouquet.landing(order);
+            const perch = new Vec3(landing?.effectPosition.x ?? 0, (landing?.effectPosition.y ?? 76) + 16);
+            const destination = () => {
+                if (!target) return new Vec3(start.x + 8, start.y + 100, start.z);
+                if (bouquet?.root.isValid) return this.mapPoint(bouquet.root, perch, this.flowerRoot);
+                return this.mapPoint(this.ordersRoot, new Vec3(ORDER_X[target.slot] + perch.x, BOUQUET_BASE_Y + perch.y), this.flowerRoot);
+            };
+            const end = destination();
+            const duration = 0.88 + Math.min(0.36, Math.hypot(end.x - start.x, end.y - start.y) / 1300);
+            this.sound('hudiefly', 0.64);
+            if (!await this.animateProgress(effect.root, duration, t => effect.fly(t, destination()))) return false;
+            this.sound('starAdd', 0.46);
+            return await this.animateProgress(effect.root, 0.24, t => effect.land(t, destination()));
+        } finally {
+            if (incoming?.node.isValid) incoming.node.destroy();
+            if (butterfly?.root.isValid) butterfly.root.destroy();
+        }
+    }
+
     private updateHUD() {
         if (!this.rules || !this.timer) return;
         const sec = Math.ceil(this.rules.remainingSeconds);
