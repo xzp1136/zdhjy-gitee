@@ -1,0 +1,150 @@
+func 42828 locals [(1, 127)]
+i32.const 4366266
+i32.load8_u offset=0
+i32.eqz
+if -64
+i32.const 3356080
+call 2180
+i32.const 3387256
+call 2180
+i32.const 3413860
+call 2180
+i32.const 3413868
+call 2180
+i32.const 3413872
+call 2180
+i32.const 3413876
+call 2180
+i32.const 3364124
+call 2180
+i32.const 4366266
+i32.const 1
+i32.store8 offset=0
+end
+block -64
+local.get 0
+i32.load offset=160
+local.tee 1
+i32.eqz
+br_if 0
+local.get 1
+i32.const 0
+call 7706
+i32.eqz
+br_if 0
+local.get 0
+i32.load offset=160
+i32.const 0
+i32.const 0
+call 7683
+end
+i32.const 3356080
+i32.load offset=0
+local.tee 1
+i32.load offset=116
+i32.eqz
+if -64
+local.get 1
+call 60460
+end
+local.get 0
+i32.const 0
+call 7600
+local.tee 1
+i32.store offset=160
+i32.const 3364124
+i32.load offset=0
+call 1900
+local.tee 2
+local.get 0
+i32.const 3413876
+i32.load offset=0
+i32.const 0
+call 7547
+local.get 1
+local.get 2
+i32.const 0
+call 7954
+drop
+local.get 0
+i32.load offset=160
+f32.const 0.5
+i32.const 0
+call 7663
+drop
+block -64
+local.get 0
+i32.load offset=180
+local.tee 1
+i32.eqz
+br_if 0
+local.get 1
+i32.load offset=12
+i32.const 0
+i32.le_s
+br_if 0
+local.get 0
+i32.load offset=160
+local.set 1
+i32.const 3364124
+i32.load offset=0
+call 1900
+local.tee 2
+local.get 0
+i32.const 3413868
+i32.load offset=0
+i32.const 0
+call 7547
+local.get 1
+local.get 2
+i32.const 0
+call 7954
+drop
+local.get 0
+i32.load offset=160
+f32.const 1.0
+i32.const 0
+call 7663
+drop
+end
+local.get 0
+i32.load offset=160
+local.set 1
+i32.const 3364124
+i32.load offset=0
+call 1900
+local.tee 2
+local.get 0
+i32.const 3413872
+i32.load offset=0
+i32.const 0
+call 7547
+local.get 1
+local.get 2
+i32.const 0
+call 7954
+drop
+local.get 0
+i32.load offset=160
+f32.const 0.30000001192092896
+i32.const 0
+call 7663
+drop
+local.get 0
+i32.load offset=160
+local.set 1
+i32.const 3364124
+i32.load offset=0
+call 1900
+local.tee 2
+local.get 0
+i32.const 3413860
+i32.load offset=0
+i32.const 0
+call 7547
+local.get 1
+local.get 2
+i32.const 0
+call 7954
+drop
+end

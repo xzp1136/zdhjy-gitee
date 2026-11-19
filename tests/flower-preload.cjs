@@ -13,6 +13,7 @@ const compiled = new Map();
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
 function harness(options = {}) {
+  const viewportBindings = [];
   const modules = new Map(), requests = [], downloads = [], bundleRequests = [], cached = new Map(), failures = new Map(), delayed = new Map(), logs = [];
   class Vec3 { constructor(x = 0, y = 0, z = 0) { Object.assign(this, {x, y, z}); } }
   class Node {
@@ -32,7 +33,8 @@ function harness(options = {}) {
   }
   class Component { isValid = true; scheduleOnce() {} unschedule() {} }
   class UITransform { setContentSize(width, height) { Object.assign(this, {width, height}); } setAnchorPoint() {} }
-  class SpriteFrame { constructor(width = 100, height = 100) { this.originalSize = {width, height}; this.isValid = true; } clone() { return new SpriteFrame(this.originalSize.width, this.originalSize.height); } destroy() { this.isValid = false; } }
+  const cloneable=value=>Object.assign(value,{clone(){return cloneable({...this});}});
+  class SpriteFrame {constructor(width=100,height=100){this.originalSize=cloneable({width,height});this.rect=cloneable({x:0,y:0,width,height});this.offset=cloneable({x:0,y:0});this.isValid=true;}clone(){const f=new SpriteFrame(this.originalSize.width,this.originalSize.height);f.rect=this.rect.clone();f.offset=this.offset.clone();return f;}destroy(){this.isValid=false;}}
   class Sprite { static SizeMode = {CUSTOM: 0}; static Type = {SLICED: 1}; }
   class Color { fromHEX() { return this; } }
   class Graphics { clear() {} roundRect() {} fill() {} }
@@ -41,6 +43,7 @@ function harness(options = {}) {
   class JsonAsset {} class EffectAsset {} class Font {} class AudioClip {} class SkeletonData {}
   const storage = new Map();
   const cc = {
+    Director:{EVENT_AFTER_DRAW:'after-draw'},director:{once(_event,callback){options.onFrame?.(requests);queueMicrotask(callback);}},
     _decorator: {ccclass: () => value => value, property: () => () => {}},
     Component, Node, Vec3, UITransform, SpriteFrame, Sprite, Color, Graphics, Mask, AudioSource, AudioClip, JsonAsset, EffectAsset, Font,
     Material: class { initialize() {} destroy() {} },
@@ -88,7 +91,9 @@ function harness(options = {}) {
     vm.runInNewContext(compiled.get(name), {exports, console: {warn: (...args) => logs.push(args), error: (...args) => logs.push(args), info() {}}, setTimeout, clearTimeout,
       require(request) {
         if (request === 'cc') return cc;
-        if (request === './FlowerViewport') return require('./viewport-fixture.cjs');
+        if (request === './FlowerWater') return require('./water-fixture.cjs');
+        if (request === './FlowerViewport') return {...require('./viewport-fixture.cjs'),
+          bindFlowerViewport(owner, callback) {viewportBindings.push({owner, callback});callback(require('./viewport-fixture.cjs').getFlowerViewport());return () => {};}};
         if (request === 'cc/env') return {DEBUG: false, PREVIEW: true};
         if (request === './FlowerButtonMotion') return {FlowerButtonMotion: class {}};
         if (request.startsWith('./')) return load(request.slice(2));
@@ -120,6 +125,7 @@ function harness(options = {}) {
     setError(retry) { this.errors++; this.retry = retry; }, dispose() { this.disposed = true; this.root.destroy(); }};
   game.startupLoading = loading;
   return {game, loading, homeState, load, requests, downloads, bundleRequests, cached, failures, delayed, dialogs, logs, Node, storage,
+    resize(viewport) { for(const {owner,callback} of viewportBindings) if(owner.isValid) callback(viewport); },
     release(resource) { const jobs = delayed.get(resource); delayed.delete(resource); jobs.forEach(callback => queueMicrotask(callback)); }};
 }
 
@@ -166,6 +172,29 @@ test('next-level preparation deduplicates concurrent requests without changing t
   }
   assert(h.requests.includes('original/butterfly/qipao/spriteFrame'), 'the butterfly retains its transparent bubble');
   const requests = h.requests.length; await h.game.prepareLevelAssets(2); assert.equal(h.requests.length, requests);
+});
+
+test('flower frame warmup limits each batch to four even when all callbacks are cached',async()=>{
+  const counts=[],h=harness({onFrame:requests=>counts.push(requests.filter(p=>p.endsWith('/spriteFrame')).length)});
+  await h.load('FlowerCatalog').FlowerCatalog.load();
+  const flowers=[];for(const kind of ['cdy_lxq','dy_zmj','cdcs_jyc','zy_lmg'])for(let variant=1;variant<=3;variant++)flowers.push({kind,variant});
+  await h.load('FlowerPool').FlowerPoolView.preload(flowers);
+  const total=h.requests.filter(p=>p.endsWith('/spriteFrame')).length;
+  let previous=0;for(const count of [...counts,total]){assert(count-previous<=4);previous=count;}
+  assert(counts.length>1);
+});
+
+test('the room renders during pool construction without starting gameplay or its countdown',async()=>{
+  const h=harness();await h.game.loadStartup();h.game.catalog.levels.delete(2);
+  let release,started;const gate=new Promise(resolve=>{release=resolve;}),building=new Promise(resolve=>{started=resolve;});
+  const spawn=h.game.spawnFlowers.bind(h.game);
+  h.game.spawnFlowers=async()=>{started();await gate;await spawn();};
+  const pending=h.game.startLevel(1);await building;
+  const board=h.game.content.children.find(n=>n.name==='LevelBoard');
+  assert(board.active);assert.equal(h.game.ready,false);assert.equal(h.game.busy,true);
+  const remaining=h.game.rules.remainingSeconds;h.game.update(2);
+  assert.equal(h.game.rules.remainingSeconds,remaining,'creation time cannot consume the level timer');
+  release();await pending;assert.equal(h.game.ready,true);assert.equal(h.game.pool.entering,false);
 });
 
 test('the level five graduation bear uses the new sprite in the pool and gift box', async () => {
@@ -317,4 +346,30 @@ test('production-transformed scene cancellation and order-entry iterate every ca
   h.game.enterBouquet = async slot => { entered.push(slot); return true; };
   await h.game.startLevel(1);
   assert.deepEqual(entered, [0, 1]); assert.equal(h.game.ready, true);
+});
+
+
+test('resizing short, tall and tablet views preserves world pool, flower and order geometry', async () => {
+  const h=harness();await h.game.loadStartup();await h.game.startLevel(2);
+  assert(h.game.ready,h.logs.flat().map(String).join('\n'));
+  const find=(root,name)=>root.name===name?root:root.children.map(child=>find(child,name)).find(Boolean);
+  const names=['WaterSurface','WaterCaustics','WoodenPool','FloatingFlowers','UnderwaterFlowers','Orders','TemporarySlots'];
+  const snapshot=()=>names.map(name=>{const node=find(h.game.node,name);assert(node,name);return {name,y:node.position.y,height:node.components.find(c=>'width' in c)?.height};});
+  const baseline=snapshot(),rules=h.game.rules,flowers=JSON.stringify(rules.flowers),time=rules.remainingSeconds;
+  for(const [width,height] of [[750,1334],[750,844/390*750],[750,800/360*750],[1334*768/1024,1334]]){
+    h.resize({width,height,safeLeft:-width/2,safeRight:width/2,safeTop:height/2,safeBottom:-height/2,topShift:(height-1334)/2,bottomShift:(1334-height)/2,centerY:0});
+    assert.deepEqual(snapshot(),baseline,'viewport only changes backdrop width/cover and edge HUD');
+    assert.equal(h.game.rules,rules);assert.equal(JSON.stringify(rules.flowers),flowers);assert.equal(rules.remainingSeconds,time);
+  }
+  const surface=find(h.game.node,'WaterCaustics').components.find(c=>c.spriteFrame)?.spriteFrame;
+  assert(surface,'the new pool artwork supplies the animated surface');
+  assert.deepEqual({x:surface.rect.x,y:surface.rect.y,width:surface.rect.width,height:surface.rect.height},{x:38,y:57,width:990,height:1060});
+  const source=await h.load('FlowerUI').loadFrame('greenhouse/pool');
+  assert.equal(source.rect.x,0);assert.equal(source.rect.y,0);assert.equal(source.rect.width,1060);assert.equal(source.rect.height,1133);
+  const water=find(h.game.node,'WaterSurface'),geometry=h.load('FlowerPool').ORIGINAL_POOL_GEOMETRY;
+  const skin=h.load('FlowerBoardSkin');
+  assert.equal(water.position.y,skin.boardY(1420));assert.equal(water.components.find(c=>'width' in c).width,990*skin.BOARD_UNIT);
+  const above=find(h.game.node,'FloatingFlowers'),below=find(h.game.node,'UnderwaterFlowers');
+  assert.deepEqual(above.position,below.position);assert.deepEqual(above.scale,below.scale);
+  assert(Math.abs(above.position.y+geometry.waterY*above.scale.y)<1e-6,'the original local physics centre maps onto the new pool centre');
 });

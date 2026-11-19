@@ -1,0 +1,46 @@
+func 40985 locals []
+i32.const 4365096
+i32.load8_u offset=0
+i32.eqz
+if -64
+i32.const 3360032
+call 2180
+i32.const 4365096
+i32.const 1
+i32.store8 offset=0
+end
+i32.const 3360032
+i32.load offset=0
+call 1900
+local.tee 1
+i32.const 0
+call 29422
+local.get 0
+local.get 1
+i32.store offset=68
+i32.const 3360032
+i32.load offset=0
+call 1900
+local.tee 1
+i32.const 0
+call 29422
+local.get 0
+local.get 1
+i32.store offset=72
+local.get 0
+local.get 0
+i32.load offset=16
+i32.const 0
+local.get 0
+i32.load offset=68
+local.get 0
+call 40983
+local.get 0
+local.get 0
+i32.load offset=20
+i32.const 1
+local.get 0
+i32.load offset=72
+local.get 0
+call 40983
+end

@@ -1,0 +1,49 @@
+func 56043 locals [(4, 125), (1, 127)]
+local.get 0
+i32.const 0
+call 28681
+i32.store offset=32
+local.get 0
+i32.const 0
+call 28682
+i32.store offset=36
+local.get 0
+f32.load offset=20
+local.set 2
+local.get 0
+f32.load offset=16
+local.set 4
+i32.const 0
+call 28681
+local.set 1
+i32.const 0
+call 28682
+local.set 6
+local.get 0
+f32.load offset=24
+local.set 3
+local.get 0
+i32.load offset=28
+local.get 1
+f32.convert_i32_s
+local.get 6
+f32.convert_i32_s
+f32.div
+local.tee 5
+local.get 4
+local.get 2
+f32.div
+local.tee 2
+f32.lt
+if -3
+local.get 2
+local.get 3
+f32.mul
+local.get 5
+f32.div
+else
+local.get 3
+end
+i32.const 0
+call 55439
+end

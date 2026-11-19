@@ -17,7 +17,7 @@
   "startSceneAssetBundle": true,
   "mainBundleCompressionType": "merge_dep",
   "mainBundleIsRemote": false,
-  "server": "https://game2cdn.chujinggamefun.com/zdhjy/wechat/v0001/",
+  "server": "https://game2cdn.chujinggamefun.com/zdhjy/wechat/v0002/",
   "nativeCodeBundleMode": "wasm",
   "packages": {
     "wechatgame": {

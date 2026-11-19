@@ -68,7 +68,7 @@ export interface FlowerLevelConfig {
     source?: LevelSource;
     /** One star per completed order was observed in the original first level. */
     starsPerOrder?: number;
-    /** Only level 1 was observed at 10 coins; later defaults are provisional local rewards. */
+    /** Original OverUIControl.InitRewardValue (42816) grants 10 coins. */
     coinsOnWin?: number;
 }
 
@@ -322,6 +322,26 @@ export class FlowerRules {
         events.push({ type: 'flower-revealed', flowerId: flower.id, layer: 2 });
     }
 
+    /** A configured delay may create tension while other flowers remain, but
+     * it must never leave an empty board. Release every hidden flower required
+     * by the currently visible order groups as soon as ordinary pool input is
+     * exhausted. Special paired objects do not count as playable order input. */
+    private releaseStalledDifficulties(events: FlowerEvent[]): void {
+        if (this.status !== 'playing' || this.flowers.some(piece => piece.specialId === undefined && piece.status === 'pool')) return;
+        for (const order of this.orders) {
+            const need = order?.needs.find(item => item.filled < item.required);
+            if (!order || !need) continue;
+            // Prefer this bouquet's record, then accept an older record of the
+            // same kind. Repeated bouquet kinds can consume each other's normal
+            // pieces, leaving the hidden piece attached to an already completed
+            // order even though the visible order still needs that exact kind.
+            const difficulty = this.difficulties.find(item => item.orderId === order.id
+                && item.kind === need.kind && !item.released)
+                || this.difficulties.find(item => item.kind === need.kind && !item.released);
+            if (difficulty) this.revealDifficulty(difficulty, events);
+        }
+    }
+
     private advanceDifficulty(seconds: number, events: FlowerEvent[]): void {
         const end = this.elapsedGameTime + seconds;
         while (true) {
@@ -392,6 +412,7 @@ export class FlowerRules {
             this.buffer.push(flower.id);
             events.push({ type: 'move', flowerId, from: 'pool', to: 'buffer', slot: this.buffer.length - 1 });
         }
+        this.releaseStalledDifficulties(events);
         this.checkEnd(events);
         return events;
     }
@@ -433,6 +454,7 @@ export class FlowerRules {
             this.collect(flower, target, from, events);
         }
         this.settleBuffer(events);
+        this.releaseStalledDifficulties(events);
         this.checkEnd(events);
         return events;
     }
@@ -451,6 +473,7 @@ export class FlowerRules {
         }
         this.buffer = retained;
         this.settleBuffer(events);
+        this.releaseStalledDifficulties(events);
         this.checkEnd(events);
         return events;
     }
@@ -459,6 +482,7 @@ export class FlowerRules {
     tick(dt: number): FlowerEvent[] {
         if (this.status !== 'playing' || !Number.isFinite(dt) || dt <= 0) return [];
         const events: FlowerEvent[] = [];
+        this.releaseStalledDifficulties(events);
         this.advanceDifficulty(Math.min(dt, this.remainingSeconds), events);
         this.remainingSeconds = Math.max(0, this.remainingSeconds - dt);
         if (this.remainingSeconds > 0) return events;

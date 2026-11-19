@@ -98,8 +98,8 @@ function harness(options = {}) {
   return { FlowerEffects: scope.exports.FlowerEffects, Node, UITransform, Vec3, Skeleton, SkeletonData, uiNode, loads, skeletons };
 }
 
-test('all seven original Spine assets have compatible headers, atlas pages and animation names', () => {
-  const choices = Object.values(manifest.roles).flatMap(role => role.choices); assert.equal(choices.length, 7);
+test('all nine original Spine assets have compatible headers, atlas pages and animation names', () => {
+  const choices = Object.values(manifest.roles).flatMap(role => role.choices); assert.equal(choices.length, 9);
   for (const choice of choices) {
     const file = resourceFile(choice.resource), json = JSON.parse(fs.readFileSync(file + '.json', 'utf8'));
     assert.equal(json.skeleton.spine, '3.8.99'); assert(json.animations[choice.animation]); assert.equal(choice.track, 0);
@@ -115,7 +115,7 @@ test('landing selects the three original variants and captures the original anch
   const random = [0, .4, .99], effects = await h.FlowerEffects.create(owner, () => random.shift());
   const handles = random.slice().map(() => effects.play('landing', anchor, { x: 12, y: -8 }));
   assert.equal(new Set(h.skeletons.map(skeleton => skeleton.asset.resource)).size, 3);
-  assert.equal(h.loads.filter(load => load.Type === h.SkeletonData).length, 7, 'Spine data is preloaded exactly once');
+  assert.equal(h.loads.filter(load => load.Type === h.SkeletonData).length, 9, 'Spine data is preloaded exactly once');
   const expected = effects.root.getComponent(h.UITransform).convertToNodeSpaceAR(anchor.getComponent(h.UITransform).convertToWorldSpaceAR(new h.Vec3(12, -8)));
   for (const handle of handles) {
     assert.deepEqual(handle.node.position, expected); assert(Math.abs(handle.node.scale.x - 750 / 1080) < 1e-7);
@@ -154,4 +154,23 @@ test('cancelled loading, retryable resource errors and runtime initialization fa
   const retry = harness({ failFirstSkeleton: true }); await assert.rejects(retry.FlowerEffects.preload(), /temporary load failure/); await retry.FlowerEffects.preload();
   const broken = harness({ failInitialization: true }), owner = new broken.Node(), anchor = broken.uiNode(owner, 'Anchor'), effects = await broken.FlowerEffects.create(owner);
   assert.throws(() => effects.play('complete', anchor), /initialization failed/); assert.equal(effects.root.children.length, 0); assert.equal(effects.activeCount, 0); effects.dispose();
+});
+
+
+test('captured landing positions survive anchor destruction before the delayed play', async () => {
+ const h=harness(), owner=new h.Node(), anchor=h.uiNode(owner,'LastFlower',40,120),effects=await h.FlowerEffects.create(owner);
+ const point=effects.root.getComponent(h.UITransform).convertToNodeSpaceAR(anchor.getComponent(h.UITransform).convertToWorldSpaceAR(new h.Vec3(12,-8)));
+ anchor.destroy();const handle=effects.playAt('landing',point);assert(handle);assert.deepEqual(handle.node.position,point);
+ h.skeletons[0].advance(2);assert.equal(await handle.finished,true);effects.dispose();
+});
+
+test('unlock card plays the original opening once then animation2 until its result closes', async () => {
+ const h=harness(), owner=new h.Node(),anchor=h.uiNode(owner,'Card'),effects=await h.FlowerEffects.create(owner);
+ const card=effects.play('result-card',anchor),title=effects.play('result-title',anchor);
+ const skeleton=card.node.getComponent(h.Skeleton);assert.equal(skeleton.track.animation.name,'animation');assert.equal(skeleton.track.loop,false);
+ assert(Math.abs(card.node.scale.x-2.2*750/1080)<1e-6);
+ skeleton.advance(.91);assert.equal(skeleton.track.animation.name,'animation2');assert.equal(skeleton.track.loop,true);
+ h.skeletons[1].advance(2);assert.equal(h.skeletons[1].track.loop,true);assert(title.node.isValid);
+ assert.equal(effects.activeCount,2);skeleton.advance(10);assert(card.node.isValid);
+ owner.destroy();assert.equal(await card.finished,false);assert.equal(await title.finished,false);assert.equal(effects.activeCount,0);
 });

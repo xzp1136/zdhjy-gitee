@@ -276,6 +276,66 @@
         }
       ],
       "offsetPolicy": "caller-anchor-world-position; ignore prefab authoring position"
+    },
+    "resultTitle": {
+      "choices": [
+        {
+          "prefab": "prefabs/model/overlightspineeffect",
+          "resource": "original/effects/spine/texiao_6/texiao_6",
+          "animation": "animation",
+          "track": 0,
+          "duration": 1.8667,
+          "prefabScale": [
+            1.7999999523162842,
+            1.7999999523162842,
+            1.7999999523162842
+          ],
+          "sourceSkeletonDataScale": 0.009999999776482582,
+          "sourceJsonSha256": "36d33f8a7e1c1e4440581e1588e190d8fd5681ff66a1fbd5effbaf564ba3564c",
+          "sourcePrefabPathId": 7361,
+          "sourceComponentPathId": 22301,
+          "sourceRenderer": "SkeletonGraphic",
+          "source": "/Users/a7/Desktop/真的好解压_wx38b4f3dff4fbedf0/runtime-cache/d83724c5931a26b5.webgl.data.unityweb.bin",
+          "sourceSha256": "3f74128bbe4c7b8490e2b012f52c5b928dce1a940fff80eb5ade91571fb644b6",
+          "alphaMode": "straight",
+          "importNormalization": null
+        }
+      ],
+      "localOffset": [
+        159,
+        20
+      ],
+      "loop": true
+    },
+    "resultCard": {
+      "choices": [
+        {
+          "prefab": "prefabs/model/overvasespineeffect",
+          "resource": "original/effects/spine/texiao_5/texiao_5",
+          "animation": "animation",
+          "track": 0,
+          "duration": 0.9,
+          "prefabScale": [
+            2.200000047683716,
+            2.200000047683716,
+            2.200000047683716
+          ],
+          "sourceSkeletonDataScale": 0.009999999776482582,
+          "sourceJsonSha256": "95bf00cf78f4eb56f666b3a62e6e6b5cac79d0b81011cd087c28996591080ab0",
+          "sourcePrefabPathId": 4148,
+          "sourceComponentPathId": 23462,
+          "sourceRenderer": "SkeletonGraphic",
+          "source": "/Users/a7/Desktop/真的好解压_wx38b4f3dff4fbedf0/runtime-cache/d83724c5931a26b5.webgl.data.unityweb.bin",
+          "sourceSha256": "3f74128bbe4c7b8490e2b012f52c5b928dce1a940fff80eb5ade91571fb644b6",
+          "alphaMode": "straight",
+          "importNormalization": null
+        }
+      ],
+      "followup": {
+        "animation": "animation2",
+        "loop": true,
+        "duration": 0.9
+      }
     }
   },
   "scalePolicy": {

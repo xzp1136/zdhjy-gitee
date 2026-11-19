@@ -1,0 +1,233 @@
+func 42438 locals [(2, 127)]
+global.get 0
+i32.const 16
+i32.sub
+local.tee 3
+global.set 0
+i32.const 4365971
+i32.load8_u offset=0
+i32.eqz
+if -64
+i32.const 3359836
+call 2180
+i32.const 3361468
+call 2180
+i32.const 3395032
+call 2180
+i32.const 3395036
+call 2180
+i32.const 3454548
+call 2180
+i32.const 3442940
+call 2180
+i32.const 3455832
+call 2180
+i32.const 4365971
+i32.const 1
+i32.store8 offset=0
+end
+block -64
+block -64
+local.get 0
+i32.load offset=124
+i32.const 3454548
+i32.load offset=0
+i32.const 0
+call 48029
+if -64
+i32.const 3359836
+i32.load offset=0
+local.tee 2
+i32.load offset=116
+if -1
+local.get 2
+else
+local.get 2
+call 60460
+i32.const 3359836
+i32.load offset=0
+end
+i32.load offset=92
+i32.load offset=52
+local.tee 2
+local.get 3
+i32.const 12
+i32.add
+i32.const 3395032
+i32.load offset=0
+call 45693
+i32.const 3395036
+i32.load offset=0
+local.set 4
+local.get 3
+local.get 0
+i32.load offset=120
+local.get 3
+i32.load offset=12
+i32.add
+i32.store offset=12
+local.get 2
+local.get 3
+i32.const 12
+i32.add
+local.get 4
+call 45694
+i32.const 3361468
+i32.load offset=0
+i32.load offset=92
+i32.load offset=0
+local.tee 0
+if -64
+local.get 0
+i32.load offset=32
+local.get 0
+i32.load offset=20
+local.get 0
+i32.load offset=12
+call_indirect (1, 0)
+end
+i32.const 2
+local.set 0
+local.get 1
+br_if 1
+br 2
+end
+local.get 0
+i32.load offset=124
+i32.const 3455832
+i32.load offset=0
+i32.const 0
+call 48029
+if -64
+i32.const 3359836
+i32.load offset=0
+local.tee 2
+i32.load offset=116
+if -1
+local.get 2
+else
+local.get 2
+call 60460
+i32.const 3359836
+i32.load offset=0
+end
+i32.load offset=92
+i32.load offset=56
+local.tee 2
+local.get 3
+i32.const 12
+i32.add
+i32.const 3395032
+i32.load offset=0
+call 45693
+i32.const 3395036
+i32.load offset=0
+local.set 4
+local.get 3
+local.get 0
+i32.load offset=120
+local.get 3
+i32.load offset=12
+i32.add
+i32.store offset=12
+local.get 2
+local.get 3
+i32.const 12
+i32.add
+local.get 4
+call 45694
+i32.const 3361468
+i32.load offset=0
+i32.load offset=92
+i32.load offset=4
+local.tee 0
+if -64
+local.get 0
+i32.load offset=32
+local.get 0
+i32.load offset=20
+local.get 0
+i32.load offset=12
+call_indirect (1, 0)
+end
+i32.const 1
+local.set 0
+local.get 1
+br_if 1
+br 2
+end
+local.get 0
+i32.load offset=124
+i32.const 3442940
+i32.load offset=0
+i32.const 0
+call 48029
+i32.eqz
+br_if 1
+i32.const 3359836
+i32.load offset=0
+local.tee 2
+i32.load offset=116
+if -1
+local.get 2
+else
+local.get 2
+call 60460
+i32.const 3359836
+i32.load offset=0
+end
+i32.load offset=92
+i32.load offset=60
+local.tee 2
+local.get 3
+i32.const 12
+i32.add
+i32.const 3395032
+i32.load offset=0
+call 45693
+i32.const 3395036
+i32.load offset=0
+local.set 4
+local.get 3
+local.get 0
+i32.load offset=120
+local.get 3
+i32.load offset=12
+i32.add
+i32.store offset=12
+local.get 2
+local.get 3
+i32.const 12
+i32.add
+local.get 4
+call 45694
+i32.const 3361468
+i32.load offset=0
+i32.load offset=92
+i32.load offset=8
+local.tee 0
+if -64
+local.get 0
+i32.load offset=32
+local.get 0
+i32.load offset=20
+local.get 0
+i32.load offset=12
+call_indirect (1, 0)
+end
+i32.const 0
+local.set 0
+local.get 1
+i32.eqz
+br_if 1
+end
+local.get 3
+local.get 0
+local.get 3
+call 42440
+end
+local.get 3
+i32.const 16
+i32.add
+global.set 0
+end

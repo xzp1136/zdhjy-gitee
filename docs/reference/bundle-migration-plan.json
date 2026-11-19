@@ -8,13 +8,13 @@
     "assets/resources/startup/notice.png",
     "assets/resources/startup/track.png"
   ],
-  "sourceBytes": 56160381,
-  "localBundleBytes": 19603391,
+  "sourceBytes": 57156559,
+  "localBundleBytes": 20599569,
   "remoteBundleBytes": 34468247,
   "bundles": {
     "core-data": {
       "remote": false,
-      "sourceBytes": 4700961,
+      "sourceBytes": 4801003,
       "fileCount": 11
     },
     "core-audio": {
@@ -24,8 +24,8 @@
     },
     "core-effects": {
       "remote": false,
-      "sourceBytes": 1567822,
-      "fileCount": 79
+      "sourceBytes": 2463958,
+      "fileCount": 91
     },
     "core-level1": {
       "remote": false,
@@ -530,8 +530,8 @@
       "source": "db://assets/resources/original/data/flower-click-shapes.json",
       "target": "db://assets/bundles/core-data/original/data/flower-click-shapes.json",
       "uuid": "a93e3d55-e34f-4383-9fca-bf7cf844a4f2",
-      "bytes": 1889377,
-      "sha256": "17adb184f97b379453e95c8afb381fc760769b7747b5eab58378b7c75d75e672",
+      "bytes": 1987232,
+      "sha256": "e65f8559cc59b178f0e80cb7b3b476e5bc10c1dc380aab3471a6d0d7d395aa41",
       "bundle": "core-data"
     },
     {
@@ -554,8 +554,8 @@
       "source": "db://assets/resources/original/data/order-spine-effects.json",
       "target": "db://assets/bundles/core-data/original/data/order-spine-effects.json",
       "uuid": "0197e23d-2f03-4981-a3cb-37e1010920cb",
-      "bytes": 10595,
-      "sha256": "e5b914837a951727a9e32f5f1768afabefabed82850cd9fd6a8eb1187ee85dcc",
+      "bytes": 12782,
+      "sha256": "e38898627aebc7a5f6fc60b0bee88abf4410839b34ae4e70e3b84b4f8601f9b9",
       "bundle": "core-data"
     },
     {
@@ -9318,6 +9318,102 @@
       "sha256": "a92deb14f03ece44e995c38bbecad2cba436d81b832273d80cf9567177bdb476",
       "bundle": null,
       "runtimeRoute": false
+    },
+    {
+      "source": "db://assets/resources/original/data/flower-runtime-physics.json",
+      "target": "db://assets/bundles/core-effects/original/data/flower-runtime-physics.json",
+      "uuid": "f9be6865-1513-435c-b01d-4797b598d838",
+      "bytes": 188024,
+      "sha256": "f6626bb61d6f4bae78569bbc1ee6f7d83790b1231dbe75d766bfd35ac74fe6ea",
+      "bundle": "core-effects"
+    },
+    {
+      "source": "db://assets/resources/original/data/flower-water-materials.json",
+      "target": "db://assets/bundles/core-effects/original/data/flower-water-materials.json",
+      "uuid": "b0770807-0243-4d5b-ad56-3b701930398f",
+      "bytes": 3713,
+      "sha256": "42e9bb184419961472299f80ac736877da189a1480ac92da364f7e51402661fa",
+      "bundle": "core-effects"
+    },
+    {
+      "source": "db://assets/resources/original/effects/spine/texiao_5/texiao_5.atlas",
+      "target": "db://assets/bundles/core-effects/original/effects/spine/texiao_5/texiao_5.atlas",
+      "uuid": "1dc77063-0786-4898-984b-02210a33ed02",
+      "bytes": 2806,
+      "sha256": "6db5fb342bc0d8416a0b7cdcee9b97f691d3c30134577ed6ba244fbd4522ea85",
+      "bundle": "core-effects"
+    },
+    {
+      "source": "db://assets/resources/original/effects/spine/texiao_5/texiao_5.json",
+      "target": "db://assets/bundles/core-effects/original/effects/spine/texiao_5/texiao_5.json",
+      "uuid": "c7bc0d66-b762-4eae-922c-97fe08f2f045",
+      "bytes": 108397,
+      "sha256": "95bf00cf78f4eb56f666b3a62e6e6b5cac79d0b81011cd087c28996591080ab0",
+      "bundle": "core-effects"
+    },
+    {
+      "source": "db://assets/resources/original/effects/spine/texiao_5/texiao_5.png",
+      "target": "db://assets/bundles/core-effects/original/effects/spine/texiao_5/texiao_5.png",
+      "uuid": "0e1d3b80-33db-4c12-b955-082e7c0611d9",
+      "bytes": 130329,
+      "sha256": "9316975df507e6ae76035bb0714fa89e95a9080b90ad7d8c6f9ca00c8491487c",
+      "bundle": "core-effects"
+    },
+    {
+      "source": "db://assets/resources/original/effects/spine/texiao_6/texiao_6.atlas",
+      "target": "db://assets/bundles/core-effects/original/effects/spine/texiao_6/texiao_6.atlas",
+      "uuid": "5ad05a18-83bd-4d25-b88b-f320a8616d72",
+      "bytes": 352,
+      "sha256": "2dbe0ed1577a04632b21a082be10170bbae481baf372af7cc27e244dac72473f",
+      "bundle": "core-effects"
+    },
+    {
+      "source": "db://assets/resources/original/effects/spine/texiao_6/texiao_6.json",
+      "target": "db://assets/bundles/core-effects/original/effects/spine/texiao_6/texiao_6.json",
+      "uuid": "babeb2b6-1464-4b5c-847a-276c17890d3c",
+      "bytes": 14888,
+      "sha256": "36d33f8a7e1c1e4440581e1588e190d8fd5681ff66a1fbd5effbaf564ba3564c",
+      "bundle": "core-effects"
+    },
+    {
+      "source": "db://assets/resources/original/effects/spine/texiao_6/texiao_6.png",
+      "target": "db://assets/bundles/core-effects/original/effects/spine/texiao_6/texiao_6.png",
+      "uuid": "560f58ef-68e7-483d-b15a-7276bb96b6e7",
+      "bytes": 8901,
+      "sha256": "13d8d5ba2605252f856bcbff27ca0f1aefe5e6967aaf944aafe1364d05c5a62b",
+      "bundle": "core-effects"
+    },
+    {
+      "source": "db://assets/resources/original/materials/flower-half-water.effect",
+      "target": "db://assets/bundles/core-effects/original/materials/flower-half-water.effect",
+      "uuid": "6c344878-74cd-491c-84e3-336b47bc9a85",
+      "bytes": 2654,
+      "sha256": "a0c8cfb2aa06393d0f12a9a3ac4febf39b7a799a05445379613c47865bfffaab",
+      "bundle": "core-effects"
+    },
+    {
+      "source": "db://assets/resources/original/materials/flower-water-surface.effect",
+      "target": "db://assets/bundles/core-effects/original/materials/flower-water-surface.effect",
+      "uuid": "dfffbf98-84f4-4750-a759-862effaf0ecd",
+      "bytes": 8285,
+      "sha256": "ed4f89f9aa55e56e50e7c13e5367b616f7d335c790936e6ca68c0009e359409f",
+      "bundle": "core-effects"
+    },
+    {
+      "source": "db://assets/resources/original/materials/water-detail.png",
+      "target": "db://assets/bundles/core-effects/original/materials/water-detail.png",
+      "uuid": "2cc33d07-bc3c-4eff-be44-893440e2c41b",
+      "bytes": 122821,
+      "sha256": "e2ba13ff067c4d627924ce61de5f3ebfdfdd2ad8f3e479e058d903d232d8cd53",
+      "bundle": "core-effects"
+    },
+    {
+      "source": "db://assets/resources/original/materials/water-flow.png",
+      "target": "db://assets/bundles/core-effects/original/materials/water-flow.png",
+      "uuid": "808a5b55-d18b-45b0-a412-6d05e19a6f06",
+      "bytes": 304966,
+      "sha256": "2e05eeee458b05d3ba313deadcacdf171bb8e85af545b41dff0879f10e49c24e",
+      "bundle": "core-effects"
     }
   ]
 }

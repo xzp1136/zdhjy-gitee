@@ -1,0 +1,977 @@
+{
+  "source": "/Users/a7/Desktop/真的好解压_wx38b4f3dff4fbedf0/runtime-cache/d83724c5931a26b5.webgl.data.unityweb.bin",
+  "sourceSha256": "3f74128bbe4c7b8490e2b012f52c5b928dce1a940fff80eb5ade91571fb644b6",
+  "viewCount": 3,
+  "overUIControlFields": [
+    "btnWin",
+    "btnFail",
+    "btnBackWin",
+    "btnBackFail",
+    "winPanel",
+    "failPanel",
+    "txtStarNum",
+    "txtGoldNum",
+    "txtWinTip",
+    "txtFailTip",
+    "txtSpirit",
+    "UnlockFlowerParent",
+    "unlockFlowerItem",
+    "imgUnlockTitle",
+    "imgReward",
+    "elvesSprite",
+    "proGreenTween",
+    "proGrgyTween",
+    "rewardValue",
+    "curLevel",
+    "isWin",
+    "winShowSequence",
+    "winTitleTargetPos",
+    "winRewardTargetPos",
+    "UnlockFlowerList",
+    "UnlockVaseList",
+    "TitleEffect",
+    "vaseEffectList",
+    "curAddStarValue",
+    "starMultipleValue",
+    "goldTextTween",
+    "starTextTween"
+  ],
+  "views": [
+    {
+      "controllerFile": "level2",
+      "controllerPathId": 842,
+      "tree": {
+        "name": "Over",
+        "sourceFile": "level2",
+        "sourcePathId": 126,
+        "active": false,
+        "children": [
+          {
+            "name": "backgroup",
+            "sourceFile": "level2",
+            "sourcePathId": 167,
+            "active": true,
+            "children": []
+          },
+          {
+            "name": "Panel",
+            "sourceFile": "level2",
+            "sourcePathId": 110,
+            "active": true,
+            "children": [
+              {
+                "name": "winPanel",
+                "sourceFile": "level2",
+                "sourcePathId": 213,
+                "active": true,
+                "children": [
+                  {
+                    "name": "UnlockFlowerParent",
+                    "sourceFile": "level2",
+                    "sourcePathId": 168,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "unlockFlowerItem",
+                    "sourceFile": "level2",
+                    "sourcePathId": 157,
+                    "active": false,
+                    "children": [
+                      {
+                        "name": "imgIcon",
+                        "sourceFile": "level2",
+                        "sourcePathId": 90,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "Image",
+                        "sourceFile": "level2",
+                        "sourcePathId": 139,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txtName",
+                        "sourceFile": "level2",
+                        "sourcePathId": 194,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "imgReward",
+                    "sourceFile": "level2",
+                    "sourcePathId": 72,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Text (Legacy)",
+                        "sourceFile": "level2",
+                        "sourcePathId": 225,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "reward3",
+                        "sourceFile": "level2",
+                        "sourcePathId": 241,
+                        "active": true,
+                        "children": [
+                          {
+                            "name": "txtGoldNum",
+                            "sourceFile": "level2",
+                            "sourcePathId": 88,
+                            "active": true,
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "name": "reward3 (1)",
+                        "sourceFile": "level2",
+                        "sourcePathId": 87,
+                        "active": true,
+                        "children": [
+                          {
+                            "name": "txtStarNum",
+                            "sourceFile": "level2",
+                            "sourcePathId": 182,
+                            "active": true,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "btnBackWin",
+                    "sourceFile": "level2",
+                    "sourcePathId": 155,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Image",
+                        "sourceFile": "level2",
+                        "sourcePathId": 207,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txt1",
+                        "sourceFile": "level2",
+                        "sourcePathId": 234,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "ContinueWin",
+                    "sourceFile": "level2",
+                    "sourcePathId": 211,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "txt1",
+                        "sourceFile": "level2",
+                        "sourcePathId": 201,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "imgUnlockTitle",
+                    "sourceFile": "level2",
+                    "sourcePathId": 77,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "txtWinTip",
+                    "sourceFile": "level2",
+                    "sourcePathId": 183,
+                    "active": false,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "failPanel",
+                "sourceFile": "level2",
+                "sourcePathId": 111,
+                "active": false,
+                "children": [
+                  {
+                    "name": "bg",
+                    "sourceFile": "level2",
+                    "sourcePathId": 69,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "Image",
+                    "sourceFile": "level2",
+                    "sourcePathId": 122,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "Image (1)",
+                    "sourceFile": "level2",
+                    "sourcePathId": 204,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "btnBackFail",
+                    "sourceFile": "level2",
+                    "sourcePathId": 187,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Image",
+                        "sourceFile": "level2",
+                        "sourcePathId": 193,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txt1",
+                        "sourceFile": "level2",
+                        "sourcePathId": 149,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "ContinueLose",
+                    "sourceFile": "level2",
+                    "sourcePathId": 40,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Image",
+                        "sourceFile": "level2",
+                        "sourcePathId": 176,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txtHp",
+                        "sourceFile": "level2",
+                        "sourcePathId": 172,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txt1",
+                        "sourceFile": "level2",
+                        "sourcePathId": 59,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "txtFailTip",
+                    "sourceFile": "level2",
+                    "sourcePathId": 223,
+                    "active": false,
+                    "children": []
+                  },
+                  {
+                    "name": "txtTitle",
+                    "sourceFile": "level2",
+                    "sourcePathId": 54,
+                    "active": false,
+                    "children": []
+                  },
+                  {
+                    "name": "spiritItem",
+                    "sourceFile": "level2",
+                    "sourcePathId": 34,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "aixin",
+                        "sourceFile": "level2",
+                        "sourcePathId": 63,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "btnSpirit",
+                        "sourceFile": "level2",
+                        "sourcePathId": 64,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txtSpirit",
+                        "sourceFile": "level2",
+                        "sourcePathId": 53,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "controllerFile": "resources.assets",
+      "controllerPathId": 20578,
+      "tree": {
+        "name": "Over",
+        "sourceFile": "resources.assets",
+        "sourcePathId": 2447,
+        "active": false,
+        "children": [
+          {
+            "name": "backgroup",
+            "sourceFile": "resources.assets",
+            "sourcePathId": 6353,
+            "active": true,
+            "children": []
+          },
+          {
+            "name": "Panel",
+            "sourceFile": "resources.assets",
+            "sourcePathId": 2333,
+            "active": true,
+            "children": [
+              {
+                "name": "winPanel",
+                "sourceFile": "resources.assets",
+                "sourcePathId": 6290,
+                "active": true,
+                "children": [
+                  {
+                    "name": "UnlockFlowerParent",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 6381,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "unlockFlowerItem",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 8795,
+                    "active": false,
+                    "children": [
+                      {
+                        "name": "imgIcon",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 2585,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "Image",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 7305,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txtName",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6040,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "imgReward",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 4186,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Text (Legacy)",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 5281,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "reward3",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6007,
+                        "active": true,
+                        "children": [
+                          {
+                            "name": "txtGoldNum",
+                            "sourceFile": "resources.assets",
+                            "sourcePathId": 3039,
+                            "active": true,
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "name": "reward3 (1)",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 2569,
+                        "active": true,
+                        "children": [
+                          {
+                            "name": "txtStarNum",
+                            "sourceFile": "resources.assets",
+                            "sourcePathId": 7020,
+                            "active": true,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "btnBackWin",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 8648,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Image",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6231,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txt1",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 5431,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "ContinueWin",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 6157,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "txt1",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6103,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "imgUnlockTitle",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 4141,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "txtWinTip",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 7014,
+                    "active": false,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "failPanel",
+                "sourceFile": "resources.assets",
+                "sourcePathId": 2296,
+                "active": false,
+                "children": [
+                  {
+                    "name": "bg",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 4071,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "Image",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 2422,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "Image (1)",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 6114,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "btnBackFail",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 7130,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Image",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6054,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txt1",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 7330,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "ContinueLose",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 4934,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Image",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6476,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txtHp",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6462,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txt1",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 3556,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "txtFailTip",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 5181,
+                    "active": false,
+                    "children": []
+                  },
+                  {
+                    "name": "txtTitle",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 3581,
+                    "active": false,
+                    "children": []
+                  },
+                  {
+                    "name": "spiritItem",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 4425,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "aixin",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 3571,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "btnSpirit",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 4097,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txtSpirit",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 5017,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "controllerFile": "resources.assets",
+      "controllerPathId": 22170,
+      "tree": {
+        "name": "Over",
+        "sourceFile": "resources.assets",
+        "sourcePathId": 4914,
+        "active": true,
+        "children": [
+          {
+            "name": "backgroup",
+            "sourceFile": "resources.assets",
+            "sourcePathId": 6250,
+            "active": true,
+            "children": []
+          },
+          {
+            "name": "Panel",
+            "sourceFile": "resources.assets",
+            "sourcePathId": 5031,
+            "active": true,
+            "children": [
+              {
+                "name": "winPanel",
+                "sourceFile": "resources.assets",
+                "sourcePathId": 6403,
+                "active": true,
+                "children": [
+                  {
+                    "name": "UnlockFlowerParent",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 6261,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "unlockFlowerItem",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 5215,
+                    "active": false,
+                    "children": [
+                      {
+                        "name": "imgIcon",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 4281,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "Image",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6030,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txtName",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 7035,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "imgReward",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 3170,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Text (Legacy)",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 8686,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "reward3",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 7271,
+                        "active": true,
+                        "children": [
+                          {
+                            "name": "txtGoldNum",
+                            "sourceFile": "resources.assets",
+                            "sourcePathId": 4272,
+                            "active": true,
+                            "children": []
+                          }
+                        ]
+                      },
+                      {
+                        "name": "reward3 (1)",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 4253,
+                        "active": true,
+                        "children": [
+                          {
+                            "name": "txtStarNum",
+                            "sourceFile": "resources.assets",
+                            "sourcePathId": 6137,
+                            "active": true,
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "name": "btnBackWin",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 5270,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Image",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6467,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txt1",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 7326,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "ContinueWin",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 6447,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "txt1",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6512,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "imgUnlockTitle",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 3052,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "txtWinTip",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 6145,
+                    "active": false,
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "failPanel",
+                "sourceFile": "resources.assets",
+                "sourcePathId": 5001,
+                "active": false,
+                "children": [
+                  {
+                    "name": "bg",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 3279,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "Image",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 4983,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "Image (1)",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 6521,
+                    "active": true,
+                    "children": []
+                  },
+                  {
+                    "name": "btnBackFail",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 6095,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Image",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 7031,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txt1",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 5428,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "ContinueLose",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 2461,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "Image",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6230,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txtHp",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 6203,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txt1",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 3363,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  },
+                  {
+                    "name": "txtFailTip",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 8760,
+                    "active": false,
+                    "children": []
+                  },
+                  {
+                    "name": "txtTitle",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 3526,
+                    "active": false,
+                    "children": []
+                  },
+                  {
+                    "name": "spiritItem",
+                    "sourceFile": "resources.assets",
+                    "sourcePathId": 2514,
+                    "active": true,
+                    "children": [
+                      {
+                        "name": "aixin",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 3509,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "btnSpirit",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 3294,
+                        "active": true,
+                        "children": []
+                      },
+                      {
+                        "name": "txtSpirit",
+                        "sourceFile": "resources.assets",
+                        "sourcePathId": 2303,
+                        "active": true,
+                        "children": []
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "findings": {
+    "serializedRewardSlots": [
+      "reward3",
+      "reward3 (1)"
+    ],
+    "mainWinRewardFunction": 42816,
+    "mainWinRewards": {
+      "gold": 10,
+      "stars": "curAddStarValue"
+    },
+    "toolRefillFunction": 42438,
+    "toolRefillQuantity": 1,
+    "winToolReward": "Not found in inspected OverUI code. Screenshot +1 icon differs from the supplied compose wand. Reward type and generation path unresolved; do not grant compose stock based on this image alone."
+  },
+  "userClarification": "User confirms the screenshot and unpacked files are from the same version. Absence from serialized OverUI is not evidence of a version difference; dynamic reward/type investigation remains open.",
+  "toolWriteCandidates": [
+    [
+      43649,
+      "ServerDataMgr.ChangeLocalData:1297"
+    ],
+    [
+      42639,
+      "MotifItemControl.ClickMotif:1514"
+    ],
+    [
+      42664,
+      "CommonRewardControl.ShowReward:1550"
+    ],
+    [
+      42395,
+      "PropButtonControl.RemoveProp:1829"
+    ],
+    [
+      42399,
+      "PropButtonControl.ShuffleProp:1830"
+    ],
+    [
+      42401,
+      "PropButtonControl.ComposeProp:1832"
+    ],
+    [
+      42417,
+      "PropGuideControl.ClickComposeProp:1852"
+    ],
+    [
+      42420,
+      "PropGuideControl.ClickShuffleProp:1853"
+    ],
+    [
+      42421,
+      "PropGuideControl.ClickRemoveProp:1854"
+    ],
+    [
+      42438,
+      "PropViewControl.AddProp:1878"
+    ],
+    [
+      43101,
+      "StoreItemControl.ClickBtnCoin:2419"
+    ],
+    [
+      43210,
+      "UIManager.TriggerPropGuide:2543"
+    ]
+  ],
+  "userRewardTypeClarification": "User does not know the purple puzzle-shaped +1 reward name/use. No compose-stock grant has been inferred."
+}

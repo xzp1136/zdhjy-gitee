@@ -9,13 +9,49 @@ const exportsObject = {};
 vm.runInNewContext(ts.transpileModule(source, {
   compilerOptions: {target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.CommonJS},
 }).outputText, {exports: exportsObject, Promise});
-const {runStartupTasks} = exportsObject;
+const {runStartupTasks, runFrameWork, FrameTaskQueue} = exportsObject;
 const deferred = () => {
   let resolve, reject;
   const promise = new Promise((yes, no) => {resolve = yes; reject = no;});
   return {promise, resolve, reject};
 };
 const flush = async () => { await Promise.resolve(); await Promise.resolve(); };
+
+test('cached work yields to actual frame boundaries under both item and time budgets', async () => {
+  const created=[],slices=[];let clock=0;
+  await runFrameWork(Array.from({length:10},(_,i)=>i), async i=>{created.push(i);clock+=2.5;},
+    {now:()=>clock,maxItems:3,budgetMs:4,nextFrame:async()=>{slices.push(created.length);}});
+  assert.deepEqual(created,[0,1,2,3,4,5,6,7,8,9]);
+  assert.deepEqual(slices,[2,4,6,8], 'expensive items yield before reaching the count cap');
+  const next=deferred(),work=[];
+  const pending=runFrameWork([1,2,3,4],i=>{work.push(i);},
+    {now:()=>0,maxItems:3,nextFrame:()=>next.promise});
+  await new Promise(setImmediate);
+  assert.deepEqual(work,[1,2,3], 'resolved microtasks alone cannot run the fourth item');
+  next.resolve();assert.equal(await pending,true);assert.deepEqual(work,[1,2,3,4]);
+});
+
+test('abandoned frame work stops after a queued frame and propagates construction errors', async () => {
+  let current=true;const created=[],next=deferred();
+  const pending=runFrameWork([1,2,3],i=>{created.push(i);},
+    {now:()=>0,maxItems:1,isCurrent:()=>current,nextFrame:()=>next.promise});
+  await new Promise(setImmediate);current=false;next.resolve();
+  assert.equal(await pending,false);assert.deepEqual(created,[1]);
+  await assert.rejects(runFrameWork([1,2,3],i=>{if(i===2)throw Error('fixture construction failed');},
+    {now:()=>0,nextFrame:async()=>{}}),/fixture construction failed/);
+});
+
+test('concurrent runtime creation jobs share one frame budget and disposal settles all pending callers',async()=>{
+  const gates=[],created=[];
+  const queue=new FrameTaskQueue({now:()=>0,maxItems:3,nextFrame:()=>{const gate=deferred();gates.push(gate);return gate.promise;}});
+  const jobs=Array.from({length:10},(_,i)=>queue.enqueue(()=>{created.push(i);return i;}));
+  await new Promise(setImmediate);assert.deepEqual(created,[]);
+  gates.shift().resolve();await new Promise(setImmediate);assert.deepEqual(created,[0,1,2]);
+  gates.shift().resolve();await new Promise(setImmediate);assert.deepEqual(created,[0,1,2,3,4,5]);
+  queue.dispose();const values=await Promise.all(jobs);assert.deepEqual(values,[0,1,2,3,4,5,null,null,null,null]);
+  gates.shift().resolve();await new Promise(setImmediate);assert.equal(created.length,6);
+  assert.equal(await queue.enqueue(()=>assert.fail('disposed queue must not run')),null);
+});
 
 test('starts all asset jobs concurrently and advances only for actual completion', async () => {
   const jobs = [deferred(), deferred(), deferred()], started = [], progress = [];

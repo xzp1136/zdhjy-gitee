@@ -122,3 +122,16 @@ export function setProgressFill(node: Node, percent: number): void {
     node.active = percent > 0;
     node.getComponent(UITransform)!.setContentSize(width * BOARD_UNIT, 25 * BOARD_UNIT);
 }
+
+/** Water inside the new pool border, in the same PSD coordinate system. */
+export async function boardWater(parent: Node,width: number,height: number): Promise<Sprite> {
+    const source=await loadFrame(skinPath('pool')),frame=source.clone();
+    const rect=source.rect.clone();rect.x+=38;rect.y+=57;rect.width=990;rect.height=1060;
+    frame.rect=rect;
+    const size=frame.originalSize.clone();size.width=990;size.height=1060;frame.originalSize=size;
+    const offset=frame.offset.clone();offset.x=offset.y=0;frame.offset=offset;frame.packable=false;
+    const node=await sprite(parent,'WaterCaustics',skinPath('pool'),0,0,width,height);
+    const image=node.getComponent(Sprite)!;image.spriteFrame=frame;image.trim=false;
+    node.on(Node.EventType.NODE_DESTROYED,()=>frame.destroy());
+    return image;
+}

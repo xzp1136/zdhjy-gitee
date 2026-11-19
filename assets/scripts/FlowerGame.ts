@@ -1,5 +1,5 @@
 import { loadFlowerAsset } from './FlowerAssets';
-import { _decorator, AudioClip, AudioSource, BlockInputEvents, Color, Component, game, Graphics, Label, Mask, Node, SpriteFrame, sys, tween, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
+import { _decorator, AudioClip, AudioSource, BlockInputEvents, Color, Component, game, Graphics, Label, Mask, Node, Sprite, SpriteFrame, sys, tween, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
 import { bindFlowerViewport, configureFlowerViewport } from './FlowerViewport';
 import { vibrateFlowerTap } from './FlowerHaptics';
 import { createHome, HOME_FRAME_PATHS } from './FlowerHome';
@@ -12,9 +12,9 @@ import { BouquetLanding, FlowerBouquetView, preloadBouquets } from './FlowerBouq
 import { BOUQUET_FINISH_DURATION, FlowerBouquetFinish } from './FlowerBouquetFinish';
 import { BOUQUET_BLOOM_SECONDS, BOUQUET_GOLD_DELAY, FlowerPetalBloom, preloadFlowerPetals } from './FlowerPetalBloom';
 import { BOARD_HEIGHT, BOARD_UNIT, BOARD_WIDTH, BOUQUET_BASE_Y, ORDER_X, TOOL_NAMES, TOOL_X, TOOL_Y,
-    TRAY_X, TRAY_Y, boardLabel, boardSprite, boardX, boardY, createProgressFill, preloadBoardSkin,
+    TRAY_X, TRAY_Y, boardWater, boardLabel, boardSprite, boardX, boardY, createProgressFill, preloadBoardSkin,
     OrderFlowerIcon, setProgressFill } from './FlowerBoardSkin';
-import { FlowerPoolView } from './FlowerPool';
+import { ORIGINAL_POOL_GEOMETRY, FlowerPoolView } from './FlowerPool';
 import { FlowerEffectHandle, FlowerEffects } from './FlowerEffects';
 import { createWinResult, preloadWinResult } from './FlowerResults';
 import { createPause, preloadPause } from './FlowerPause';
@@ -110,11 +110,14 @@ export class FlowerGame extends Component {
     private revision = 0;
     private catalog: FlowerCatalog | null = null;
     private pool: FlowerPoolView | null = null;
+    private buildingPool: FlowerPoolView | null = null;
     private orderEffects: FlowerEffects | null = null;
     private toolsRoot!: Node;
     private ordersRoot!: Node;
     private trayRoot!: Node;
     private poolRoot!: Node;
+    private belowWaterRoot!: Node;
+    private waterSurface!: Sprite;
     private flowerRoot!: Node;
     private hud!: Node;
     private topHud!: Node;
@@ -183,7 +186,7 @@ export class FlowerGame extends Component {
             loading?.setError(() => this.loadStartup());
         }
     }
-    onDestroy() { this.startupRevision++; this.startupLoading?.dispose(); this.revision++; this.collectionWork = null; this.cancelAnimations(); Tween.stopAllByTarget(this.progressTween); this.pool?.dispose(); this.orderEffects?.dispose(); this.music?.stop(); game.off('flower-settings-changed', this.applyAudioSettings, this); game.off('flower-ui-sound', this.onUISound, this); }
+    onDestroy() { this.startupRevision++; this.startupLoading?.dispose(); this.revision++; this.collectionWork = null; this.cancelAnimations(); Tween.stopAllByTarget(this.progressTween); this.buildingPool?.dispose(); this.pool?.dispose(); this.orderEffects?.dispose(); this.music?.stop(); game.off('flower-settings-changed', this.applyAudioSettings, this); game.off('flower-ui-sound', this.onUISound, this); }
     private current(rev: number): boolean { return this.isValid && this.revision === rev; }
     private cancelAnimations(): void { for (const cancel of Array.from(this.pendingAnimations)) cancel(); this.pendingAnimations.clear(); }
     private animate(node: Node, duration: number, properties: Record<string, unknown>, easing = 'quadOut'): Promise<boolean> {
@@ -279,6 +282,7 @@ export class FlowerGame extends Component {
         this.collectionWork = null;
         this.cancelAnimations(); this.visual = null; this.orderViews.clear(); this.trayCells = []; this.trayCapacity = 0; this.progressTarget = -1;
         this.firstPlayFrame = false;
+        this.buildingPool?.dispose(); this.buildingPool = null;
         this.pool?.dispose(); this.pool = null;
         this.orderEffects?.dispose(); this.orderEffects = null;
         Tween.stopAllByTarget(this.progressTween); this.progressTween.percent = 0;
@@ -383,8 +387,15 @@ export class FlowerGame extends Component {
             const shape = mask.subComp as Graphics;
             shape.roundRect(-waterWidth / 2, -waterHeight / 2, waterWidth, waterHeight, 48 * BOARD_UNIT);
             shape.fill();
-            // FlowerPool's resting bounds are centered at local y = -195.
-            this.poolRoot = uiNode(waterMask, 'FloatingFlowers', 0, 195);
+            // Scale both depth roots together to the new skin. Native body sizes,
+            // contact layers and fixed-step simulation remain in original local units.
+            const poolScale=Math.min(waterWidth/ORIGINAL_POOL_GEOMETRY.waterWidth,waterHeight/ORIGINAL_POOL_GEOMETRY.waterHeight);
+            const poolY=-ORIGINAL_POOL_GEOMETRY.waterY*poolScale;
+            this.belowWaterRoot=uiNode(waterMask,'UnderwaterFlowers',0,poolY);
+            this.belowWaterRoot.setScale(poolScale,poolScale,1);
+            this.waterSurface=await boardWater(waterMask,waterWidth,waterHeight);
+            this.poolRoot=uiNode(waterMask,'FloatingFlowers',0,poolY);
+            this.poolRoot.setScale(poolScale,poolScale,1);
             this.ordersRoot = uiNode(board, 'Orders');
             this.trayRoot = uiNode(board, 'TemporarySlots');
             this.flowerRoot = uiNode(board, 'FlowerFlights');
@@ -410,8 +421,11 @@ export class FlowerGame extends Component {
             await this.buildHUD(); if (!this.current(rev)) return;
             await this.renderOrders(); if (!this.current(rev)) return;
             await this.renderTray(); if (!this.current(rev)) return;
-            await this.spawnFlowers(); if (!this.current(rev)) return;
-            await this.buildTools();
+            await this.buildTools(); if (!this.current(rev)) return;
+            // Present the room while node/fixture creation yields to real frames.
+            // ready stays false, so neither gameplay nor the countdown can start.
+            this.updateHUD(); board.active = true;
+            await this.spawnFlowers();
             if (!this.isValid || rev !== this.revision) return;
             // Original SpawnFlower emits 3–4 flowers every .05s, each scaling
             // from zero over .35s. Reveal the room before playing that sequence.
@@ -419,13 +433,14 @@ export class FlowerGame extends Component {
             this.firstPlayFrame = true;
             this.ready = true; this.bgm('bgm_level'); this.updateHUD();
             board.active = true;
-            if (DEBUG) console.info(`[FlowerGame] level ${level} visible in ${Date.now() - entryStarted}ms (build ${Date.now() - buildStarted}ms)`);
-            if (this.catalog?.levels.has(level + 1)) void this.prepareLevelAssets(level + 1)
-                .catch(error => console.warn('[FlowerGame] next level preload', error));
+            if (DEBUG) console.info(`[FlowerGame] level ${level} visible in ${Date.now() - entryStarted}ms (build ${Date.now() - buildStarted}ms), physics=${this.pool?.physicsRevision}`);
             this.sound('flowerstart');
             const entrance = await Promise.all([this.waitForPoolEntrance(),
                 ...Array.from(this.orderViews.keys()).map(slot => this.enterBouquet(slot, slot * 0.06))]);
             if (entrance.some(completed => !completed) || !this.current(rev)) return;
+            // Do not compete with flower activation/first render on the phone.
+            if (this.catalog?.levels.has(level + 1)) void this.prepareLevelAssets(level + 1)
+                .catch(error => console.warn('[FlowerGame] next level preload', error));
             if (level === 1) await this.showGuide();
         } catch (e) {
             if (!this.current(rev)) return;
@@ -619,15 +634,22 @@ export class FlowerGame extends Component {
     }
     private async spawnFlowers() {
         const rev = this.revision, rules = this.rules!;
-        const pool = await FlowerPoolView.create(this.poolRoot, rules.flowers, rules.level,
-            id => { if (this.current(rev)) void this.collect(id); }, rules.layerMaxCounts);
-        if (!this.current(rev)) { pool.dispose(); return; }
-        pool.setSurfaceListener(flower => {
-            if (!this.current(rev)) return;
-            const name = this.catalog?.flowersByKind.get(flower.kind)?.playUpSound;
-            if (typeof name === 'string' && name) this.sound(name);
-        });
-        this.pool = pool;
+        let building: FlowerPoolView | null = null;
+        try {
+            const pool = await FlowerPoolView.create(this.poolRoot, rules.flowers, rules.level,
+                id => { if (this.current(rev)) void this.collect(id); }, rules.layerMaxCounts, this.belowWaterRoot,
+                {isCurrent: () => this.current(rev), deferEntrance: true,
+                    onCreate: pool => { building = pool; this.buildingPool = pool; }});
+            if (!this.current(rev)) { pool.dispose(); return; }
+            pool.setSurfaceListener(flower => {
+                if (!this.current(rev)) return;
+                const name = this.catalog?.flowersByKind.get(flower.kind)?.playUpSound;
+                if (typeof name === 'string' && name) this.sound(name);
+            });
+            pool.ensureOrdersReachable(rules.orders);
+            this.pool = pool;
+            pool.setWaterSurface(this.waterSurface);
+        } finally { if (this.buildingPool === building) this.buildingPool = null; }
     }
     private async showGuide() {
         const rev = this.revision;
@@ -757,6 +779,7 @@ export class FlowerGame extends Component {
                 continue;
             }
             if (event.type === 'order-added') {
+                this.pool?.ensureOrdersReachable(rules.orders);
                 visual.add(event.order); await this.renderOrder(event.order.slot, true);
                 continue;
             }

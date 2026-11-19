@@ -2,7 +2,7 @@ import { loadFlowerAsset } from './FlowerAssets';
 import { JsonAsset, Node, sp, UITransform, Vec3 } from 'cc';
 import { uiNode } from './FlowerUI';
 
-export type FlowerEffectKind = 'landing' | 'complete' | 'group-switch' | 'order-tip' | 'new-order';
+export type FlowerEffectKind = 'landing' | 'complete' | 'group-switch' | 'order-tip' | 'new-order' | 'result-title' | 'result-card';
 export type FlowerEffectOptions = { newVaseTip?: boolean };
 export type FlowerEffectHandle = {
     readonly node: Node;
@@ -15,14 +15,14 @@ type EffectChoice = {
     resource: string; animation: string; track: number; duration: number;
     prefabScale: number[]; sourceSkeletonDataScale: number;
 };
-type EffectRole = { choices: EffectChoice[]; newVaseMode?: { loop: boolean; lifetime: number } };
+type EffectRole = { choices: EffectChoice[]; loop?: boolean; newVaseMode?: { loop: boolean; lifetime: number }; followup?: {animation: string; loop: boolean} };
 type EffectManifest = { roles: Record<string, EffectRole>; scalePolicy: { unityPixelsPerWorldUnit: number } };
 type EffectAssets = { manifest: EffectManifest; skeletons: Map<string, sp.SkeletonData> };
 type ActiveEffect = { skeleton: sp.Skeleton; node: Node; remaining: number | null; finish(completed: boolean): void };
 const UI_SCALE = 750 / 1080;
 const ROLE: Record<FlowerEffectKind, string> = {
     landing: 'flowerPut', complete: 'vaseComplete', 'group-switch': 'vaseSwitch',
-    'order-tip': 'orderTip', 'new-order': 'orderNewVase',
+    'order-tip': 'orderTip', 'new-order': 'orderNewVase', 'result-title': 'resultTitle', 'result-card': 'resultCard',
 };
 let assetPromise: Promise<EffectAssets> | null = null;
 
@@ -89,16 +89,22 @@ export class FlowerEffects {
         if (this.disposed || !this.root.isValid || !anchor.isValid) return null;
         const transform = anchor.getComponent(UITransform);
         if (!transform) throw new Error('A Spine effect anchor needs a UITransform.');
+        const world = transform.convertToWorldSpaceAR(new Vec3(localPoint.x, localPoint.y, 0));
+        const position = this.root.getComponent(UITransform)!.convertToNodeSpaceAR(world);
+        return this.playAt(kind, position, options);
+    }
+
+    /** A captured world attachment survives immediate replacement of its vase. */
+    playAt(kind: FlowerEffectKind, position: {x: number; y: number}, options: FlowerEffectOptions = {}): FlowerEffectHandle | null {
+        if (this.disposed || !this.root.isValid) return null;
         const role = this.assets.manifest.roles[ROLE[kind]];
         // Original FlowerSpineEft1/2/3 uses uniform Random.Range, unrelated to kind.
         const index = role.choices.length === 1 ? 0
             : Math.min(role.choices.length - 1, Math.max(0, Math.floor(this.random() * role.choices.length)));
         const choice = role.choices[index], asset = this.assets.skeletons.get(choice.resource)!;
         const mode = kind === 'order-tip' && options.newVaseTip ? role.newVaseMode : undefined;
-        const loop = !!mode?.loop;
-        if (loop && !(mode!.lifetime > 0)) throw new Error('A looping original effect must have a finite lifetime.');
-        const world = transform.convertToWorldSpaceAR(new Vec3(localPoint.x, localPoint.y, 0));
-        const position = this.root.getComponent(UITransform)!.convertToNodeSpaceAR(world);
+        const loop = !!mode?.loop || !!role.loop;
+        if (mode?.loop && !(mode.lifetime > 0)) throw new Error('A looping original effect must have a finite lifetime.');
         const node = uiNode(this.root, `Spine-${kind}`, position.x, position.y, 1, 1);
         let skeleton: sp.Skeleton;
         try {
@@ -133,12 +139,18 @@ export class FlowerEffects {
             if (node.isValid) { node.active = false; node.destroy(); }
             resolve(completed);
         };
-        const effect: ActiveEffect = { skeleton, node, remaining: loop ? mode!.lifetime : null, finish };
+        const effect: ActiveEffect = { skeleton, node, remaining: mode?.loop ? mode.lifetime : null, finish };
         this.active.add(effect);
         node.on(Node.EventType.NODE_DESTROYED, destroyed);
-        skeleton.setCompleteListener(() => { if (!loop) finish(true); });
-        skeleton.setInterruptListener(() => finish(false));
-        skeleton.setEndListener(() => finish(false));
+        let following = false;
+        skeleton.setCompleteListener(() => {
+            if (role.followup && !following) {
+                following = true;
+                skeleton.setAnimation(choice.track, role.followup.animation, role.followup.loop);
+            } else if (!loop && !role.followup) finish(true);
+        });
+        skeleton.setInterruptListener(() => { if (!following) finish(false); });
+        skeleton.setEndListener(() => { if (!following) finish(false); });
         try {
             if (!skeleton.setAnimation(choice.track, choice.animation, loop)) {
                 throw new Error(`Cannot play original Spine animation: ${choice.resource}/${choice.animation}`);

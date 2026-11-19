@@ -64,11 +64,14 @@ function loadRuntime(buildRoot) {
     class Component {}
     class Node {
         static EventType = {NODE_DESTROYED: 'destroyed'};
-        constructor(name = '') { Object.assign(this, {name, layer: 1, isValid: true, children: [], components: [], position: {x: 0, y: 0, z: 0}}); }
+        constructor(name = '') { Object.assign(this, {name, layer: 1, isValid: true, active: true, angle: 0, scale: {x:1,y:1,z:1}, children: [], components: [], position: {x: 0, y: 0, z: 0}}); }
         addChild(node) { this.children.push(node); node.parent = this; }
         addComponent(Type) { const value = new Type(); value.node = this; this.components.push(value); return value; }
         getComponent(Type) { return this.components.find(value => value instanceof Type) || null; }
         setPosition(x, y, z = 0) { this.position = {x, y, z}; }
+        setScale(x,y,z=1){this.scale={x,y,z};}
+        get activeInHierarchy(){return this.active&&(!this.parent||this.parent.activeInHierarchy);}
+        destroy(){this.isValid=false;for(const n of this.children)n.destroy();}
     }
     class UITransform { setContentSize(width, height) { Object.assign(this, {width, height}); } }
     class Label {
@@ -76,7 +79,8 @@ function loadRuntime(buildRoot) {
         useSystemFont = true;
     }
     class Color { fromHEX() { return this; } }
-    class JsonAsset {} class Font {} class SpriteFrame {} class SkeletonData {} class AudioClip {}
+    class JsonAsset {} class Font {} class SpriteFrame {} class SkeletonData {} class AudioClip {} class EffectAsset {}
+    class Texture2D {static WrapMode={REPEAT:0,MIRRORED_REPEAT:2,CLAMP_TO_EDGE:1};static Filter={NEAREST:0,LINEAR:1};setWrapMode(){}setFilters(){}}
     const storage = new Map();
     const owner = name => ({load(logical, Type, callback) {
         requests.push({bundle: name, logical});
@@ -88,9 +92,10 @@ function loadRuntime(buildRoot) {
         });
     }});
     const cc = {
+        Director:{EVENT_AFTER_DRAW:'after-draw'},director:{once(_event,callback){queueMicrotask(callback);}},
         cclegacy: {_RF: {push() {}, pop() {}}},
         _decorator: {ccclass: () => value => value, property: () => () => {}},
-        Component, Node, UITransform, Label, Color, JsonAsset, Font, SpriteFrame, AudioClip,
+        Component, Node, UITransform, Label, Color, JsonAsset, Font, SpriteFrame, AudioClip, EffectAsset, Texture2D,
         Vec3: class {constructor(x = 0, y = 0, z = 0) { Object.assign(this, {x, y, z}); }},
         sp: {SkeletonData},
         sys: {isBrowser: false, platform: 'wechat', Platform: {WECHAT_GAME: 'wechat'},
@@ -214,16 +219,127 @@ async function checkRuntime(buildRoot = path.join(PROJECT, 'build/wechatgame')) 
         }
         assert(!requests.some(request => /^greenhouse\/basket-/.test(request.logical)));
     });
-    await check('compiled Spine preload expands seven real effect resource names from its Set', async () => {
+    await check('compiled Spine preload expands the current emitted effect manifest without duplicate loads', async () => {
         const before = runtime.requests.length; await load('FlowerEffects').FlowerEffects.preload();
         const skeletons = runtime.requests.slice(before).filter(request => request.logical.startsWith('original/effects/spine/'));
-        assert.equal(skeletons.length, 7); assert(skeletons.every(request => typeof request.logical === 'string'));
+        const manifest=await new Promise((resolve,reject)=>load('FlowerAssets').loadFlowerAsset('original/data/order-spine-effects',runtime.cc.JsonAsset,(error,asset)=>error?reject(error):resolve(asset.json)));
+        const expected=Array.from(new Set(Object.values(manifest.roles).flatMap(role=>role.choices.map(choice=>choice.resource)))).sort();
+        assert.deepEqual(skeletons.map(request=>request.logical).sort(),expected);
+    });
+    await check('compiled cached creation jobs yield at the renderer frame boundary',async()=>{
+        const created=[],frames=[];
+        const completed=await load('FlowerStartup').runFrameWork([0,1,2,3,4,5,6,7],i=>{created.push(i);},
+            {maxItems:3,budgetMs:4,now:()=>0,nextFrame:async()=>{frames.push(created.length);}});
+        assert(completed);assert.deepEqual(created,[0,1,2,3,4,5,6,7]);assert.deepEqual(frames,[3,6]);
+    });
+    await check('compiled concurrent reveals share the same bounded frame queue',async()=>{
+        const created=[],frames=[];
+        const queue=new (load('FlowerStartup').FrameTaskQueue)({maxItems:3,now:()=>0,nextFrame:async()=>{frames.push(created.length);}});
+        await Promise.all([0,1,2,3,4,5,6,7].map(i=>queue.enqueue(()=>{created.push(i);return i;})));
+        assert.deepEqual(created,[0,1,2,3,4,5,6,7]);assert.deepEqual(frames,[0,3,6]);queue.dispose();
     });
     await check('compiled pool preload expands original frame and ripple Sets', async () => {
         const before = runtime.requests.length;
         await load('FlowerPool').FlowerPoolView.preload([{kind: 'cdy_lxq', variant: 1}, {kind: 'cdy_lxq', variant: 1}]);
         const frames = runtime.requests.slice(before).filter(request => request.logical.endsWith('/spriteFrame'));
         assert(frames.length > 0); assert.equal(new Set(frames.map(request => request.logical)).size, frames.length);
+    });
+    await check('compiled lightweight physics keeps mass and full rotation without engine body components',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit,FLOWER_PHYSICS_STEP:step}=load('FlowerPhysics'),data=await FlowerPhysics.preload();
+        const p=new FlowerPhysics(new runtime.cc.Node('LightPhysicsCheck'),data,()=>.8);
+        try{
+            p.add('rose','original/flower/zy_lmg_01',0,-2*unit,155,1.1,0,{x:0,y:.3});p.sync('rose',0,1,true);p.update(step);
+            const state=p.states.get('rose');assert(state.active);assert.equal(state.mass,1);assert.equal(state.spin,0);
+            assert.equal(p.root.children.length,0,'no native body Nodes or collider components are created');
+            state.spin=.05;p.update(step*1.5);const alpha=p.accumulator/step;
+            const expected=state.previous.angle+(((state.angle-state.previous.angle+540)%360)-180)*alpha;
+            assert(Math.abs(((p.pose('rose').angle-expected+540)%360)-180)<1e-6);
+        }finally{p.dispose();}
+    });
+    await check('compiled lightweight rose/lily contacts separate and sleep at 15, 30 and 60 fps',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit}=load('FlowerPhysics'),data=JSON.parse(JSON.stringify(await FlowerPhysics.preload()));
+        data.flow.torqueImpulse=0;for(const layer of data.flow.layers)layer.strength=0;
+        for(const fps of [15,30,60])for(const variant of [1,2,3]){
+            const p=new FlowerPhysics(new runtime.cc.Node('LightOverlapCheck'),data,()=>.8);
+            try{
+                p.add('rose','original/flower/zy_lmg_0'+variant,-2.8*unit,-5.8*unit,155,1.1,0,{x:0,y:0});p.sync('rose',0,1,true);
+                p.add('lily','original/flower/cdtx_sl_0'+variant,-2.7*unit,-5.7*unit,-155,1,0,{x:0,y:0});p.sync('lily',0,1,true);
+                for(let frame=0;frame<fps*6;frame++)p.update(1/fps);
+                const a=p.states.get('rose'),b=p.states.get('lily');
+                assert(Math.hypot(a.x-b.x,a.y-b.y)>1.5);assert(a.sleeping&&b.sleeping);
+                p.update(5);assert(p.diagnostics.steps<=3,'long frames never cause unbounded catch-up');
+            }finally{p.dispose();}
+        }
+    });
+    await check('compiled full-size crowded pool stays still after settling and wakes on collection',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit}=load('FlowerPhysics'),data=await FlowerPhysics.preload();
+        let seed=123456;
+        const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+        const p=new FlowerPhysics(new runtime.cc.Node('CrowdedRestCheck'),data,random);
+        try{
+            const keys=['cdy_lxq_01','dy_zmj_01','cdcs_jyc_01','zy_lmg_01'];
+            for(let i=0;i<53;i++){
+                const band=i<21?0:i<37?1:2;
+                p.add(String(i),'original/flower/'+keys[i%keys.length],(random()-.5)*6.4*unit,
+                    (-2.51+(random()-.5)*8)*unit,(random()-.5)*24,1,band,{x:.1,y:0});
+                p.sync(String(i),band,1-band*.1,true);
+            }
+            for(let frame=0;frame<17*60;frame++)p.update(1/60);
+            assert.equal(p.diagnostics.sleeping,53);
+            const snapshot=()=>Array.from({length:53},(_,i)=>p.pose(String(i))),rest=snapshot();
+            for(let frame=0;frame<3*60;frame++){p.update(1/60);assert.deepEqual(snapshot(),rest);}
+            assert.equal(p.diagnostics.pairChecks,0);
+            p.remove('0');assert([...p.states.values()].some(s=>s.active&&!s.sleeping));
+        }finally{p.dispose();}
+    });
+    await check('compiled interlocked compound flowers separate and stay asleep at 15, 30 and 60 fps',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit}=load('FlowerPhysics'),data=await FlowerPhysics.preload();
+        for(const key of ['cdcs_jgh_01','cdyz_bll_02','cdyz_flc_03'])for(const fps of [15,30,60]){
+            const p=new FlowerPhysics(new runtime.cc.Node('CompoundRestCheck'),data,()=>.8);
+            try{
+                for(let i=0;i<2;i++){
+                    p.add(String(i),'original/flower/'+key,(-2.5+i*.01)*unit,(-5+i*.01)*unit,i?155:-155,1,0,{x:0,y:0});
+                    p.sync(String(i),0,1,true);
+                }
+                for(let frame=0;frame<fps*17;frame++)p.update(1/fps);
+                assert.equal(p.diagnostics.sleeping,2,key+' must not alternate stem/head pushes');
+                const rest=[p.pose('0'),p.pose('1')];
+                for(let frame=0;frame<fps*3;frame++){p.update(1/fps);assert.deepEqual([p.pose('0'),p.pose('1')],rest);}
+            }finally{p.dispose();}
+        }
+    });
+    await check('compiled translation cache defers world geometry until narrow phase',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit,FLOWER_PHYSICS_STEP:step}=load('FlowerPhysics'),data=await FlowerPhysics.preload();
+        const p=new FlowerPhysics(new runtime.cc.Node('GeometryCacheCheck'),data,()=>.8);
+        try{
+            p.add('moving','original/flower/cdy_lxq_01',0,-2*unit,0,1,0,{x:.1,y:0});p.sync('moving',0,1,true);
+            const s=p.states.get('moving'),local=s.local;p.update(step);
+            assert(s.x>0);assert.equal(p.diagnostics.geometryBuilds,0);assert.equal(p.diagnostics.worldSyncs,0);
+            p.ensureWorld(s);assert.equal(s.world[0],s.local[0]+s.x);assert.equal(s.local,local);
+        }finally{p.dispose();}
+    });
+    await check('compiled local wake and independent foreground budgets remain bounded',async()=>{
+        const {FlowerPhysics,FLOWER_WORLD_UNIT:unit,FLOWER_PHYSICS_FINE_BUDGETS:budgets}=load('FlowerPhysics');
+        const data=JSON.parse(JSON.stringify(await FlowerPhysics.preload()));data.walls=[];
+        data.flow.torqueImpulse=0;for(const layer of data.flow.layers)layer.strength=0;
+        data.flowers={circle:{mass:1,fixtures:[{kind:'CircleCollider2D',matrix:[1,0,0,1,0,0],offset:{x:0,y:0},m_Radius:.5}]}};
+        const p=new FlowerPhysics(new runtime.cc.Node('LocalWakeCheck'),data,()=>.8);
+        try{
+            for(let i=0;i<12;i++){
+                p.add(String(i),'circle',i*.98*unit,-2*unit,0,1,0,{x:0,y:0});p.sync(String(i),0,1,true);
+                const s=p.states.get(String(i));s.vx=s.vy=0;
+            }
+            for(let i=0;i<240;i++)p.update(1/30);
+            assert.equal(p.diagnostics.sleeping,12);p.remove('5');
+            assert(!p.states.get('4').sleeping&&p.states.get('0').sleeping&&p.states.get('11').sleeping);
+            for(let i=0;i<120;i++){
+                p.add('pile-'+i,'circle',0,-2*unit,0,1,2,{x:0,y:0});p.sync('pile-'+i,2,1,true);
+            }
+            for(let i=0;i<15;i++){
+                p.update(1/30);const d=p.diagnostics;
+                d.fineByBand.forEach((n,band)=>assert(n<=budgets[band]*d.steps));
+            }
+        }finally{p.dispose();}
     });
     await check('compiled cancellation invokes every callback in a Set before clearing it', () => {
         const calls = [], pendingAnimations = new Set([() => calls.push(1), () => calls.push(2)]);

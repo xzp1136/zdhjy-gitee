@@ -1,0 +1,27 @@
+
+texiao_6.png
+size: 102,80
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+1 (1)
+  rotate: false
+  xy: 82, 40
+  size: 17, 17
+  orig: 17, 17
+  offset: 0, 0
+  index: -1
+1 (2)
+  rotate: true
+  xy: 82, 59
+  size: 21, 20
+  orig: 24, 24
+  offset: 2, 2
+  index: -1
+1 (4)
+  rotate: false
+  xy: 0, 0
+  size: 80, 80
+  orig: 81, 83
+  offset: 0, 3
+  index: -1

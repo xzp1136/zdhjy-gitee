@@ -1,0 +1,759 @@
+{
+  "source": "/Users/a7/Desktop/真的好解压_wx38b4f3dff4fbedf0/runtime-cache/d83724c5931a26b5.webgl.data.unityweb.bin",
+  "sourceSha256": "3f74128bbe4c7b8490e2b012f52c5b928dce1a940fff80eb5ade91571fb644b6",
+  "scope": "Serialized geometry only; does not verify the settled runtime density.",
+  "nodes": [
+    {
+      "path": "/BackGround/pool",
+      "file": "level2",
+      "pathId": 27,
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0,
+          "y": -4.059999942779541,
+          "z": 0
+        },
+        "m_LocalScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "m_LocalRotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        }
+      },
+      "components": [
+        {
+          "type": "SpriteRenderer",
+          "id": 300,
+          "sprite": "poor",
+          "spriteRef": {
+            "file": "resources.assets",
+            "id": 2182
+          },
+          "color": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "sortOrder": -48,
+          "sortLayer": 0,
+          "enabled": true,
+          "materials": [
+            {
+              "id": 2,
+              "file": "globalgamemanagers.assets",
+              "name": "Sprites-Default",
+              "shader": "Sprites/Default",
+              "savedProperties": {
+                "m_TexEnvs": [
+                  [
+                    "_AlphaTex",
+                    {
+                      "m_Texture": {
+                        "m_FileID": 0,
+                        "m_PathID": 0
+                      },
+                      "m_Scale": {
+                        "x": 1,
+                        "y": 1
+                      },
+                      "m_Offset": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    }
+                  ],
+                  [
+                    "_MainTex",
+                    {
+                      "m_Texture": {
+                        "m_FileID": 0,
+                        "m_PathID": 0
+                      },
+                      "m_Scale": {
+                        "x": 1,
+                        "y": 1
+                      },
+                      "m_Offset": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    }
+                  ]
+                ],
+                "m_Ints": [],
+                "m_Floats": [
+                  [
+                    "PixelSnap",
+                    0
+                  ],
+                  [
+                    "_EnableExternalAlpha",
+                    0
+                  ]
+                ],
+                "m_Colors": [
+                  [
+                    "_Color",
+                    {
+                      "r": 1,
+                      "g": 1,
+                      "b": 1,
+                      "a": 1
+                    }
+                  ],
+                  [
+                    "_Flip",
+                    {
+                      "r": 1,
+                      "g": 1,
+                      "b": 1,
+                      "a": 1
+                    }
+                  ],
+                  [
+                    "_RendererColor",
+                    {
+                      "r": 1,
+                      "g": 1,
+                      "b": 1,
+                      "a": 1
+                    }
+                  ]
+                ]
+              },
+              "renderQueue": -1,
+              "keywords": []
+            }
+          ],
+          "spriteMetrics": {
+            "ppu": 61.07242202758789,
+            "rect": {
+              "w": 876.9999389648438,
+              "h": 1024
+            },
+            "pivot": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "trim": {
+              "x": 0,
+              "y": 0
+            },
+            "textureRect": {
+              "w": 877,
+              "h": 1024
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/BackGround/Water",
+      "file": "level2",
+      "pathId": 26,
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0,
+          "y": -2.509999990463257,
+          "z": 0
+        },
+        "m_LocalScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "m_LocalRotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        }
+      },
+      "components": [
+        {
+          "type": "SpriteRenderer",
+          "id": 299,
+          "sprite": "water",
+          "spriteRef": {
+            "file": "resources.assets",
+            "id": 1646
+          },
+          "color": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "sortOrder": 0,
+          "sortLayer": 0,
+          "enabled": true,
+          "materials": [
+            {
+              "id": 49,
+              "file": "resources.assets",
+              "name": "WMat",
+              "shader": "Custom/SpriteWaterPlanE",
+              "savedProperties": {
+                "m_TexEnvs": [
+                  [
+                    "_DetailTex",
+                    {
+                      "m_Texture": {
+                        "m_FileID": 0,
+                        "m_PathID": 703
+                      },
+                      "m_Scale": {
+                        "x": 1,
+                        "y": 1
+                      },
+                      "m_Offset": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    }
+                  ],
+                  [
+                    "_FlowTex",
+                    {
+                      "m_Texture": {
+                        "m_FileID": 0,
+                        "m_PathID": 537
+                      },
+                      "m_Scale": {
+                        "x": 1,
+                        "y": 1
+                      },
+                      "m_Offset": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    }
+                  ],
+                  [
+                    "_MainTex",
+                    {
+                      "m_Texture": {
+                        "m_FileID": 0,
+                        "m_PathID": 0
+                      },
+                      "m_Scale": {
+                        "x": 1,
+                        "y": 1
+                      },
+                      "m_Offset": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    }
+                  ]
+                ],
+                "m_Ints": [],
+                "m_Floats": [
+                  [
+                    "_BaseDistortion",
+                    0.03200000151991844
+                  ],
+                  [
+                    "_BumpScale",
+                    1
+                  ],
+                  [
+                    "_Cutoff",
+                    0.5
+                  ],
+                  [
+                    "_DetailNormalMapScale",
+                    1
+                  ],
+                  [
+                    "_DetailStrength",
+                    0.6499999761581421
+                  ],
+                  [
+                    "_DstBlend",
+                    0
+                  ],
+                  [
+                    "_EdgeAlphaFloat",
+                    0.6499999761581421
+                  ],
+                  [
+                    "_EdgeFloatStrength",
+                    0.8999999761581421
+                  ],
+                  [
+                    "_EdgeProtectWidth",
+                    0.05000000074505806
+                  ],
+                  [
+                    "_FlowTimeScale",
+                    0.6800000071525574
+                  ],
+                  [
+                    "_GlossMapScale",
+                    1
+                  ],
+                  [
+                    "_Glossiness",
+                    0.5
+                  ],
+                  [
+                    "_GlossyReflections",
+                    1
+                  ],
+                  [
+                    "_HighlightSoftness",
+                    0.10000000149011612
+                  ],
+                  [
+                    "_HighlightStrength",
+                    0.03999999910593033
+                  ],
+                  [
+                    "_HighlightThreshold",
+                    0.7799999713897705
+                  ],
+                  [
+                    "_Metallic",
+                    0
+                  ],
+                  [
+                    "_Mode",
+                    0
+                  ],
+                  [
+                    "_OcclusionStrength",
+                    1
+                  ],
+                  [
+                    "_Parallax",
+                    0.019999999552965164
+                  ],
+                  [
+                    "_Perspective",
+                    0.1599999964237213
+                  ],
+                  [
+                    "_ShowUnderWater",
+                    0
+                  ],
+                  [
+                    "_SmoothnessTextureChannel",
+                    0
+                  ],
+                  [
+                    "_SourceAlphaMax",
+                    0.6000000238418579
+                  ],
+                  [
+                    "_SpecularHighlights",
+                    1
+                  ],
+                  [
+                    "_SrcBlend",
+                    1
+                  ],
+                  [
+                    "_UVSec",
+                    0
+                  ],
+                  [
+                    "_UnderWaterAlpha",
+                    0.8199999928474426
+                  ],
+                  [
+                    "_UnderWaterWaveDensity",
+                    9
+                  ],
+                  [
+                    "_UnderWaterWaveSpeed",
+                    0.800000011920929
+                  ],
+                  [
+                    "_UnderWaterWaveStrength",
+                    0.003000000026077032
+                  ],
+                  [
+                    "_UseReflectionDistort",
+                    1
+                  ],
+                  [
+                    "_WaterAlpha",
+                    0.8600000143051147
+                  ],
+                  [
+                    "_WaterCut",
+                    0.5
+                  ],
+                  [
+                    "_WaterFloatScale",
+                    2
+                  ],
+                  [
+                    "_WaterFloatSpeed",
+                    0.23999999463558197
+                  ],
+                  [
+                    "_WaterFloatStrength",
+                    0.006000000052154064
+                  ],
+                  [
+                    "_WaterLineSoftness",
+                    0.00800000037997961
+                  ],
+                  [
+                    "_ZWrite",
+                    1
+                  ]
+                ],
+                "m_Colors": [
+                  [
+                    "_Color",
+                    {
+                      "r": 1,
+                      "g": 1,
+                      "b": 1,
+                      "a": 0.7137255072593689
+                    }
+                  ],
+                  [
+                    "_DetailSpeed",
+                    {
+                      "r": -0.017000000923871994,
+                      "g": 0.014000000432133675,
+                      "b": 0,
+                      "a": 0
+                    }
+                  ],
+                  [
+                    "_DetailTiling",
+                    {
+                      "r": 2.4000000953674316,
+                      "g": 3,
+                      "b": 0,
+                      "a": 0
+                    }
+                  ],
+                  [
+                    "_EmissionColor",
+                    {
+                      "r": 0,
+                      "g": 0,
+                      "b": 0,
+                      "a": 1
+                    }
+                  ],
+                  [
+                    "_FlowSpeed",
+                    {
+                      "r": 0.02199999988079071,
+                      "g": 0.007000000216066837,
+                      "b": 0,
+                      "a": 0
+                    }
+                  ],
+                  [
+                    "_FlowTiling",
+                    {
+                      "r": 1,
+                      "g": 1.2000000476837158,
+                      "b": 0,
+                      "a": 0
+                    }
+                  ],
+                  [
+                    "_HighlightColor",
+                    {
+                      "r": 0.3333333432674408,
+                      "g": 0.729411780834198,
+                      "b": 0.8784313797950745,
+                      "a": 1
+                    }
+                  ],
+                  [
+                    "_SpriteUVRect",
+                    {
+                      "r": 0,
+                      "g": 0,
+                      "b": 1,
+                      "a": 1
+                    }
+                  ],
+                  [
+                    "_UnderWaterTint",
+                    {
+                      "r": 0.6000000238418579,
+                      "g": 0.8799999952316284,
+                      "b": 0.949999988079071,
+                      "a": 1
+                    }
+                  ],
+                  [
+                    "_WaterColor",
+                    {
+                      "r": 1,
+                      "g": 1,
+                      "b": 1,
+                      "a": 1
+                    }
+                  ]
+                ]
+              },
+              "renderQueue": -1,
+              "keywords": [
+                "USE_REFLECTION_DISTORT"
+              ]
+            }
+          ],
+          "spriteMetrics": {
+            "ppu": 100,
+            "rect": {
+              "w": 996,
+              "h": 1077
+            },
+            "pivot": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "trim": {
+              "x": 0,
+              "y": 0
+            },
+            "textureRect": {
+              "w": 996,
+              "h": 1077
+            }
+          }
+        }
+      ]
+    },
+    {
+      "path": "/BackGround/WaterBoundary",
+      "file": "level2",
+      "pathId": 23,
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0,
+          "y": -2.509999990463257,
+          "z": 0
+        },
+        "m_LocalScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "m_LocalRotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        }
+      },
+      "components": []
+    },
+    {
+      "path": "/BackGround/FlowerRoot",
+      "file": "level2",
+      "pathId": 24,
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0,
+          "y": -2.509999990463257,
+          "z": 0
+        },
+        "m_LocalScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "m_LocalRotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        }
+      },
+      "components": []
+    },
+    {
+      "path": "/cdy_lxq_01",
+      "file": "resources.assets",
+      "pathId": 3807,
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "m_LocalScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "m_LocalRotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        }
+      },
+      "components": []
+    },
+    {
+      "path": "/cdy_lxq_01/FlowerMajor",
+      "file": "resources.assets",
+      "pathId": 7919,
+      "transform": {
+        "m_LocalPosition": {
+          "x": 0,
+          "y": 0,
+          "z": 0
+        },
+        "m_LocalScale": {
+          "x": 1,
+          "y": 1,
+          "z": 1
+        },
+        "m_LocalRotation": {
+          "x": 0,
+          "y": 0,
+          "z": 0,
+          "w": 1
+        }
+      },
+      "components": [
+        {
+          "type": "SpriteRenderer",
+          "id": 14945,
+          "sprite": "cdy_lxq_01",
+          "spriteRef": {
+            "file": "resources.assets",
+            "id": 1525
+          },
+          "color": {
+            "r": 1,
+            "g": 1,
+            "b": 1,
+            "a": 1
+          },
+          "sortOrder": 1,
+          "sortLayer": 0,
+          "enabled": true,
+          "materials": [
+            {
+              "id": 2,
+              "file": "globalgamemanagers.assets",
+              "name": "Sprites-Default",
+              "shader": "Sprites/Default",
+              "savedProperties": {
+                "m_TexEnvs": [
+                  [
+                    "_AlphaTex",
+                    {
+                      "m_Texture": {
+                        "m_FileID": 0,
+                        "m_PathID": 0
+                      },
+                      "m_Scale": {
+                        "x": 1,
+                        "y": 1
+                      },
+                      "m_Offset": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    }
+                  ],
+                  [
+                    "_MainTex",
+                    {
+                      "m_Texture": {
+                        "m_FileID": 0,
+                        "m_PathID": 0
+                      },
+                      "m_Scale": {
+                        "x": 1,
+                        "y": 1
+                      },
+                      "m_Offset": {
+                        "x": 0,
+                        "y": 0
+                      }
+                    }
+                  ]
+                ],
+                "m_Ints": [],
+                "m_Floats": [
+                  [
+                    "PixelSnap",
+                    0
+                  ],
+                  [
+                    "_EnableExternalAlpha",
+                    0
+                  ]
+                ],
+                "m_Colors": [
+                  [
+                    "_Color",
+                    {
+                      "r": 1,
+                      "g": 1,
+                      "b": 1,
+                      "a": 1
+                    }
+                  ],
+                  [
+                    "_Flip",
+                    {
+                      "r": 1,
+                      "g": 1,
+                      "b": 1,
+                      "a": 1
+                    }
+                  ],
+                  [
+                    "_RendererColor",
+                    {
+                      "r": 1,
+                      "g": 1,
+                      "b": 1,
+                      "a": 1
+                    }
+                  ]
+                ]
+              },
+              "renderQueue": -1,
+              "keywords": []
+            }
+          ],
+          "spriteMetrics": {
+            "ppu": 100,
+            "rect": {
+              "w": 300,
+              "h": 296
+            },
+            "pivot": {
+              "x": 0.5,
+              "y": 0.5
+            },
+            "trim": {
+              "x": 0,
+              "y": 0
+            },
+            "textureRect": {
+              "w": 300,
+              "h": 296
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
