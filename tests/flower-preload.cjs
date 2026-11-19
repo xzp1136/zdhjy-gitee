@@ -38,11 +38,12 @@ function harness(options = {}) {
   class Graphics { clear() {} roundRect() {} fill() {} }
   class Mask { static Type = {GRAPHICS_RECT: 0, GRAPHICS_STENCIL: 1}; subComp = new Graphics(); }
   class AudioSource { stop() { this.playing = false; } play() { this.playing = true; } playOneShot() {} }
-  class JsonAsset {} class Font {} class AudioClip {} class SkeletonData {}
+  class JsonAsset {} class EffectAsset {} class Font {} class AudioClip {} class SkeletonData {}
   const storage = new Map();
   const cc = {
     _decorator: {ccclass: () => value => value, property: () => () => {}},
-    Component, Node, Vec3, UITransform, SpriteFrame, Sprite, Color, Graphics, Mask, AudioSource, AudioClip, JsonAsset, Font,
+    Component, Node, Vec3, UITransform, SpriteFrame, Sprite, Color, Graphics, Mask, AudioSource, AudioClip, JsonAsset, EffectAsset, Font,
+    Material: class { initialize() {} destroy() {} },
     sp: {SkeletonData}, BlockInputEvents: class {}, UIOpacity: class {},
     game: {on() {}, off() {}}, Tween: {stopAllByTarget() {}},
     sys: {isBrowser: false, platform: 'web', Platform: {WECHAT_GAME: 'wechat'}, localStorage: {getItem: key => storage.has(key) ? storage.get(key) : Object.hasOwn(options, 'missingStorageValue') ? options.missingStorageValue : null, setItem: (key, value) => storage.set(key, value)}},
@@ -144,6 +145,7 @@ test('startup prepares the first board once and entering it reuses frames, data,
   assert.deepEqual(h.downloads.slice(before), [], 'first entry has no cold asset fetch after startup preparation');
   assert.equal(h.requests.filter(path => path === 'greenhouse/pool/spriteFrame').length, 1, 'UI cache avoids even a second frame loader call');
   assert.equal(h.requests.filter(path => path === 'original/data/flower-sprite-metrics').length, 1);
+  assert.equal(h.requests.filter(path => path === 'original/effects/bouquet-petals').length, 1);
   assert(h.requests.includes('original/vase/bkt1_3cdy_01_mask/spriteFrame'), 'the original basket foreground is preloaded');
   assert(!h.requests.some(path => /^greenhouse\/basket-/.test(path)), 'the PSD basket is not requested');
 });

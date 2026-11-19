@@ -13,7 +13,7 @@ const buckets = {};
 const assetPath = url => path.join(project, url.replace(/^db:\/\//, ''));
 function assetContents(file) {
     const bytes = fs.readFileSync(file);
-    if (!file.endsWith('.json') && !file.endsWith('.atlas')) return bytes;
+    if (!/\.(json|atlas|effect)$/.test(file)) return bytes;
     return Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'), 'utf8');
 }
 const sourceKey = url => url.replace(/^db:\/\/assets\/resources\//, '').replace(/\.[^.]+$/, '');
@@ -48,6 +48,19 @@ for (const [name, expected] of Object.entries(plan.bundles)) {
 }
 
 const plannedRoutes = new Set(plan.moves.filter(move => move.bundle).map(move => sourceKey(move.source)));
+const petalEffect = 'original/effects/bouquet-petals', effectsBundle = 'core-effects';
+const effectFile = path.join(project, 'assets/bundles', effectsBundle, petalEffect + '.effect');
+if (routes.routes[petalEffect] !== effectsBundle || !fs.existsSync(effectFile) || !fs.existsSync(effectFile + '.meta')) {
+    issues.push(`Missing or unrouted bouquet effect: ${petalEffect}`);
+} else {
+    const bucket = buckets[effectsBundle];
+    bucket.bytes += assetContents(effectFile).length;
+    bucket.files++;
+    if (routes.bundles[effectsBundle].sourceBytes !== bucket.bytes || routes.bundles[effectsBundle].fileCount !== bucket.files) {
+        issues.push(`Bundle totals mismatch: ${effectsBundle} including bouquet effect`);
+    }
+    plannedRoutes.add(petalEffect);
+}
 for (const [resource, bundle] of Object.entries(routes.routes)) {
     if (bundle === additionalBundle && resource.startsWith('greenhouse/')) {
         const dir = path.join(project, 'assets/bundles', bundle);
@@ -82,7 +95,7 @@ const localBytes = Object.values(buckets).filter(bucket => !bucket.remote).reduc
 const remoteBytes = Object.values(buckets).filter(bucket => bucket.remote).reduce((sum, bucket) => sum + bucket.bytes, 0);
 console.log(JSON.stringify({
     passed: issues.length === 0, measuredAt: new Date().toISOString(),
-    measurement: 'Source file bytes excluding .meta, with LF line endings for JSON and Spine atlases.',
+    measurement: 'Source file bytes excluding .meta, with LF line endings for JSON, shaders and Spine atlases.',
     movedFiles: plan.moves.length, routes: Object.keys(routes.routes).length, bundles: buckets,
     localBundleBytes: localBytes, remoteBundleBytes: remoteBytes,
     startupImageBytes: loadingBytes, routeManifestBytes: runtimeConfigBytes,

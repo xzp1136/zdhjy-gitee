@@ -1,5 +1,5 @@
 import { Color, Font, Label, Node, Sprite, SpriteFrame, UITransform } from 'cc';
-import { label, loadFrame, loadGameFont, sprite } from './FlowerUI';
+import { label, loadFrame, loadGameFont, sprite, uiNode } from './FlowerUI';
 
 // The source art is 1080 × 2400. Keep the game's existing unit scale so that
 // pool physics, effects and other screens can keep their original units.
@@ -43,17 +43,47 @@ export async function boardSprite(parent: Node, name: string, asset: string,
     return node;
 }
 
-export function setOrderFlowerIcon(icon: Sprite, frame: SpriteFrame, kind: string): void {
-    const { width, height } = frame.rect;
-    // Tilt long stems further so they can use the width of the oval tag.
-    const angle = height >= width * 2 ? -71 : kind.startsWith('cdcs') ? -38 : 0;
-    const radians = angle * Math.PI / 180;
-    const c = Math.abs(Math.cos(radians)), s = Math.abs(Math.sin(radians));
-    const scale = BOARD_UNIT * Math.min(148 / (width * c + height * s), 82 / (width * s + height * c));
-    icon.trim = true;
-    icon.spriteFrame = frame;
-    icon.node.angle = angle;
-    icon.node.getComponent(UITransform)!.setContentSize(width * scale, height * scale);
+const FLOWER_ICON_SHADOWS = [
+    { name: 'FlowerShadowSoft', x: 4.2, y: -5.4, spread: 1.65, alpha: 38 },
+    { name: 'FlowerShadowNear', x: 3.0, y: -3.9, spread: 0.55, alpha: 74 },
+];
+
+/** The two tinted silhouettes reuse the icon's texture and sit behind its face. */
+export class OrderFlowerIcon {
+    readonly node: Node;
+    private readonly flower: Sprite;
+    private readonly shadows: Sprite[];
+
+    constructor(parent: Node, frame: SpriteFrame, kind: string) {
+        this.node = uiNode(parent, 'OrderFlowerIcon', 0, 9 * BOARD_UNIT);
+        this.shadows = FLOWER_ICON_SHADOWS.map(({ name, x, y, alpha }) => {
+            const shadow = uiNode(this.node, name, x * BOARD_UNIT, y * BOARD_UNIT).addComponent(Sprite);
+            shadow.color = new Color(88, 57, 30, alpha);
+            return shadow;
+        });
+        this.flower = uiNode(this.node, 'FlowerType', 0, 0).addComponent(Sprite);
+        for (const layer of [...this.shadows, this.flower]) {
+            layer.sizeMode = Sprite.SizeMode.CUSTOM;
+            layer.trim = true;
+        }
+        this.setFlower(frame, kind);
+    }
+
+    setFlower(frame: SpriteFrame, kind: string): void {
+        const { width, height } = frame.rect;
+        // Tilt long stems further so they can use the width of the oval tag.
+        const angle = height >= width * 2 ? -71 : kind.startsWith('cdcs') ? -38 : 0;
+        const radians = angle * Math.PI / 180;
+        const c = Math.abs(Math.cos(radians)), s = Math.abs(Math.sin(radians));
+        const scale = BOARD_UNIT * Math.min(148 / (width * c + height * s), 82 / (width * s + height * c));
+        const layers = [...this.shadows, this.flower];
+        layers.forEach((layer, index) => {
+            const blur = (FLOWER_ICON_SHADOWS[index]?.spread ?? 0) * BOARD_UNIT * 2;
+            layer.spriteFrame = frame;
+            layer.node.angle = angle;
+            layer.node.getComponent(UITransform)!.setContentSize(width * scale + blur, height * scale + blur);
+        });
+    }
 }
 
 export function boardLabel(parent: Node, name: string, value: string, x: number, y: number,

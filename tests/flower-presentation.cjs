@@ -6,7 +6,10 @@ const vm = require('node:vm');
 const test = require('node:test');
 const ts = require('/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/Resources/app.asar.unpacked/node_modules/typescript');
 const root = path.join(__dirname, '..');
-class Vec3 { constructor(x = 0, y = 0, z = 0) { Object.assign(this, { x, y, z }); } }
+class Vec3 {
+  constructor(x = 0, y = 0, z = 0) { Object.assign(this, { x, y, z }); }
+  clone() { return new Vec3(this.x, this.y, this.z); }
+}
 class Node {
   static EventType = { NODE_DESTROYED: 'destroyed' };
   constructor(name = '') { this.name = name; this.children = []; this.isValid = true; this.active = true; this.events = new Map(); this.position = new Vec3(); this.scale = new Vec3(1, 1, 1); this.angle = 0; this.components = []; }
@@ -14,6 +17,7 @@ class Node {
   addComponent(Type) { const value = new Type(); value.node = this; this.components.push(value); return value; }
   getComponent(Type) { return this.components.find(value => value instanceof Type) || null; }
   getChildByName(name) { return this.children.find(node => node.name === name) || null; }
+  getSiblingIndex() { return this.parent.children.indexOf(this); }
   setSiblingIndex(index) { const nodes = this.parent.children; nodes.splice(nodes.indexOf(this), 1); nodes.splice(Math.min(index, nodes.length), 0, this); }
   setPosition(x, y, z = 0) { this.position = typeof x === 'object' ? new Vec3(x.x, x.y, x.z) : new Vec3(x, y, z); }
   setScale(x, y, z = 1) { this.scale = typeof x === 'object' ? new Vec3(x.x, x.y, x.z) : new Vec3(x, y, z); }
@@ -43,9 +47,35 @@ class Component {
 }
 const animationTweens = [];
 const cc = {
-  _decorator: { ccclass: () => value => value, property: () => () => {} }, Component, Node, Vec3, UITransform, Mask, Sprite: class {},
+  _decorator: { ccclass: () => value => value, property: () => () => {} }, Component, Node, Vec3, UITransform, Mask,
+  Sprite: class { isValid = true; customMaterial = null; }, UIOpacity: class {}, EffectAsset: class {},
+  Graphics: class {
+    static LineCap = {ROUND: 1};
+    clears = 0;
+    fills = 0;
+    clear() { this.clears++; this.fills = 0; }
+    fill() { this.fills++; }
+    ellipse() {}
+    moveTo() {}
+    lineTo() {}
+    bezierCurveTo() {}
+    close() {}
+    stroke() {}
+  },
+  Color: class { set() { return this; } },
+  SpriteFrameEvent: { UV_UPDATED: 'uv_updated' },
+  Vec4: class {
+    constructor(x = 0, y = 0, z = 0, w = 0) { this.set(x, y, z, w); }
+    set(x, y, z, w) { Object.assign(this, {x, y, z, w}); }
+  },
+  Material: class {
+    properties = new Map();
+    initialize() {}
+    setProperty(name, value) { this.properties.set(name, {...value}); }
+    destroy() { this.destroyed = true; }
+  },
   Tween: { stopAllByTarget(target) { for (const value of animationTweens) if (value.target === target) value.stopped = true; } },
-  tween(target) { return { target, steps: [], to(duration, properties, options) { this.steps.push({duration, properties, options}); return this; }, call(callback) { this.callback = callback; return this; }, start() { animationTweens.push(this); return this; } }; },
+  tween(target) { return { target, steps: [], delay() { return this; }, to(duration, properties, options) { this.steps.push({duration, properties, options}); return this; }, call(callback) { this.callback = callback; return this; }, start() { animationTweens.push(this); return this; } }; },
   JsonAsset: class {},
   resources: { load(name, Type, callback) { callback(null, { json: JSON.parse(fs.readFileSync(resourceFile(name + '.json'), 'utf8')) }); } },
 };
@@ -69,14 +99,17 @@ function load(name) {
   }).outputText;
   vm.runInNewContext(text, { exports, console, Map, Set, Math, Number, Object, Array, Promise, require(request) {
     if (request === 'cc') return cc;
-    if (request === './FlowerAssets') return {loadFlowerAsset: cc.resources.load};
+    if (request === './FlowerAssets') return {loadFlowerAsset(resource, Type, callback) {
+      if (Type === cc.EffectAsset) callback(null, new Type());
+      else cc.resources.load(resource, Type, callback);
+    }};
     if (request === 'cc/env') return { DEBUG: false };
     if (request === './FlowerUI') return ui;
     if (request === './FlowerViewport') return require('./viewport-fixture.cjs');
     if (request === './FlowerHaptics') return {vibrateFlowerTap() { hapticTaps++; }};
     if (request === './FlowerPause') return {createPause: async (_parent, actions) => { pauseDialogs.push(actions); }};
     if (request === './FlowerCatalog') return catalog;
-    if (['./FlowerRules', './FlowerBoardSkin', './FlowerBouquet', './FlowerRewardedVideo'].includes(request)) return load(request.slice(2));
+    if (['./FlowerRules', './FlowerBoardSkin', './FlowerBouquet', './FlowerBouquetFinish', './FlowerPetalBloom', './FlowerRewardedVideo'].includes(request)) return load(request.slice(2));
     return {};
   } });
   return exports;
@@ -327,6 +360,73 @@ test('a flower flight follows its live destination after a viewport resize witho
   destination = new Vec3(100, 340);
   update(); assert.equal(node.position.y, 170);
   flight.callback(); assert.equal(await work, true); assert.equal(node.position.y, 340);
+});
+
+test('each flower unfolds from a blank frame independently and the basket exits after the gold effect', async () => {
+  await load('FlowerPetalBloom').preloadFlowerPetals();
+  const game = new FlowerGame(), root = uiNode(new Node('Orders'), 'Order');
+  const bouquet = uiNode(root, 'Bouquet');
+  const artwork = [['cdy_lxq_01', 120, 120], ['dy_zmj_01', 120, 100], ['cdcs_jyc_01', 80, 160]];
+  const slots = artwork.map(([name, width, height], index) => {
+    const node = uiNode(bouquet, `Flower${index}`);
+    node.setPosition(index * 30, 0);
+    node.addComponent(cc.Sprite).spriteFrame = {
+      name, texture: {}, rect: {width, height}, uv: [0, 1, 1, 1, 0, 0, 1, 0], on() {}, off() {},
+    };
+    return {node, path: 'original/flower/' + name};
+  });
+  let stoppedLanding = false;
+  game.orderViews.set(0, {root, bouquet: {root: bouquet, placedFlowers: slots},
+    landingEffects: new Set([{cancel() { stoppedLanding = true; }}])});
+  let finishGold;
+  game.playBouquetGold = () => new Promise(resolve => { finishGold = resolve; });
+  game.animate = async (_node, _seconds, properties) => { assert.ok(properties.position); return true; };
+  game.waitFor = async () => true;
+  const work = game.removeBouquet(0);
+  const tween = animationTweens.at(-1);
+  const materials = slots.map(({node}) => node.getComponent(cc.Sprite).customMaterial);
+  assert.equal(stoppedLanding, true);
+  assert.deepEqual(materials.map(mat => mat.properties.get('timing').x), [0, 0, 0]);
+  assert.deepEqual(materials.map(mat => mat.properties.get('flower').w), [1, 0, 2]);
+  tween.target.progress = 0.52;
+  tween.steps[0].options.onUpdate();
+  const phases = materials.map(mat => mat.properties.get('timing').x);
+  assert.ok(phases[0] > phases[1] && phases[1] > phases[2]);
+  assert.ok(slots.every(({node}) => node.scale.x === 1 && node.scale.y === 1));
+  tween.callback();
+  assert.ok(slots.every(({node}) => node.getComponent(cc.Sprite).customMaterial === null));
+  assert.ok(materials.every(mat => mat.destroyed));
+  assert.equal(root.isValid, true);
+  finishGold(true);
+  assert.equal(await work, true);
+  assert.equal(root.isValid, false);
+  assert.equal(game.orderViews.has(0), false);
+});
+
+test('the completion spiral redraws both layers from scratch and leaves the old completion flash out', async () => {
+  const game = new FlowerGame(), board = uiNode(new Node('Scene'), 'Board');
+  game.ordersRoot = uiNode(board, 'Orders');
+  const bouquet = uiNode(game.ordersRoot, 'Bouquet');
+  uiNode(board, 'OrderEffects');
+  game.hud = uiNode(board, 'HUD');
+  game.orderEffects = {play() { assert.fail('The older completion flash overlaps the spiral'); }};
+  game.waitFor = async () => true;
+  const work = game.playBouquetGold(bouquet);
+  await flush();
+  const rear = board.getChildByName('BouquetGoldBack'), front = board.getChildByName('BouquetGoldFront');
+  assert.deepEqual(board.children.map(child => child.name), ['BouquetGoldBack', 'Orders', 'OrderEffects', 'BouquetGoldFront', 'HUD']);
+  const graphics = [rear, front].map(node => node.getComponent(cc.Graphics));
+  const gold = animationTweens.at(-1);
+  gold.target.progress = .30;
+  gold.steps[0].options.onUpdate();
+  assert.ok(graphics.every(art => art.clears === 1 && art.fills > 0));
+  const fills = graphics.map(art => art.fills);
+  gold.steps[0].options.onUpdate();
+  assert.deepEqual(graphics.map(art => art.fills), fills);
+  assert.ok(graphics.every(art => art.clears === 2));
+  gold.callback();
+  assert.equal(await work, true);
+  assert.ok(!rear.isValid && !front.isValid);
 });
 
 test('tray, tool and order points map through their actual translated parents into the flight layer', () => {

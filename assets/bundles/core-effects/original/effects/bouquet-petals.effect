@@ -1,0 +1,199 @@
+CCEffect %{
+  techniques:
+  - passes:
+    - vert: petals-vs:vert
+      frag: petals-fs:frag
+      depthStencilState:
+        depthTest: false
+        depthWrite: false
+      blendState:
+        targets:
+        - blend: true
+          blendSrc: src_alpha
+          blendDst: one_minus_src_alpha
+          blendDstAlpha: one_minus_src_alpha
+      rasterizerState:
+        cullMode: none
+      properties:
+        timing: { value: [0, 0, 0, 0] }
+        flower: { value: [0.5, 0.5, 1.0, 0.0] }
+        atlasX: { value: [0, 0, 1, 0] }
+        atlasY: { value: [0, 1, 0, 0] }
+        clusterAB: { value: [0, 0, 0, 0] }
+        clusterCD: { value: [0, 0, 0, 0] }
+        clusterEF: { value: [0, 0, 0, 0] }
+        clusterG: { value: [0, 0, 0, 0] }
+}%
+
+CCProgram petals-vs %{
+  precision highp float;
+  #include <builtin/uniforms/cc-global>
+
+  in vec3 a_position;
+  in vec2 a_texCoord;
+  in vec4 a_color;
+  out vec2 uv;
+  out vec4 tint;
+
+  vec4 vert () {
+    uv = a_texCoord;
+    tint = a_color;
+    return cc_matViewProj * vec4(a_position, 1.0);
+  }
+}%
+
+CCProgram petals-fs %{
+  precision highp float;
+  #include <builtin/internal/embedded-alpha>
+
+  in vec2 uv;
+  in vec4 tint;
+  #pragma builtin(local)
+  layout(set = 2, binding = 12) uniform sampler2D cc_spriteTexture;
+
+  uniform Petals {
+    vec4 timing; // progress, petal orientation
+    vec4 flower; // flower centre, horizontal aspect, opening pattern
+    vec4 atlasX; // top-left UV, horizontal UV axis
+    vec4 atlasY; // vertical UV axis
+    vec4 clusterAB;
+    vec4 clusterCD;
+    vec4 clusterEF;
+    vec4 clusterG;
+  };
+
+  const float PI = 3.14159265;
+  const float TAU = 6.28318531;
+
+  // The layers use premultiplied colour internally to keep the folded edges clean.
+  vec4 ink (vec2 point) {
+    if (point.x < 0.001 || point.y < 0.001 || point.x > 0.999 || point.y > 0.999) return vec4(0.0);
+    vec4 c = CCSampleWithAlphaSeparated(cc_spriteTexture, atlasX.xy + atlasX.zw * point.x + atlasY.xy * point.y);
+    return vec4(c.rgb * c.a, c.a);
+  }
+
+  vec4 over (vec4 below, vec4 above) {
+    return above + below * (1.0 - above.a);
+  }
+
+  vec2 direction (float angle) {
+    return vec2(cos(angle), sin(angle));
+  }
+
+  vec2 leftOf (vec2 axis) {
+    return vec2(-axis.y, axis.x);
+  }
+
+  vec4 petal (vec2 point, float progress, float angle, float turn, float delay) {
+    float q = smoothstep(delay, delay + 0.46, progress);
+    if (q <= 0.002) return vec4(0.0);
+
+    vec2 aspect = vec2(flower.z, 1.0);
+    vec2 from = (point - flower.xy) * aspect;
+    vec2 hinge = direction(angle + (1.0 - q) * turn * 0.93);
+    vec2 side = leftOf(hinge);
+    // The base stays at the heart. A curled edge grows in depth before it comes forward.
+    float roll = sin(q * PI * 0.5);
+    float reach = dot(from, hinge) / mix(0.22, 1.0, roll);
+    float tip = smoothstep(0.04, 0.43, reach);
+    float fold = dot(from, side) / mix(0.41, 1.0, q)
+        + turn * tip * (1.0 - q) * (0.14 + 0.056 * tip);
+    float edge = reach * 0.51 + 0.018;
+    float mask = (1.0 - smoothstep(edge, edge + 0.026, abs(fold))) * smoothstep(0.021, 0.086, reach);
+    if (mask <= 0.001) return vec4(0.0);
+
+    vec2 axis = direction(angle);
+    vec4 p = ink(flower.xy + (axis * reach + leftOf(axis) * fold) / aspect);
+    float crease = smoothstep(0.25, 0.96, abs(fold) / max(edge, 0.025));
+    float glint = sin(PI * q) * tip * (0.08 + 0.22 * crease);
+    p.rgb = mix(p.rgb * mix(0.76, 1.0, q), vec3(0.96, 0.85, 1.0) * p.a, glint);
+    return p * (mask * smoothstep(0.0, 0.13, q));
+  }
+
+  vec4 corolla (vec2 point, float progress) {
+    vec4 art = vec4(0.0);
+    float angle = -PI * 0.5 + timing.y;
+    float gap = TAU / 7.0;
+    // The rear petals part first. The front lips roll away from the stamens last.
+    art = over(art, petal(point, progress, angle, -1.0, 0.00));
+    art = over(art, petal(point, progress, angle - gap, -1.0, 0.09));
+    art = over(art, petal(point, progress, angle + gap, 1.0, 0.17));
+    float r = length((point - flower.xy) * vec2(flower.z, 1.0));
+    float eye = (1.0 - smoothstep(0.155, 0.22, r)) * smoothstep(0.24, 0.61, progress);
+    art = over(art, ink(point) * eye);
+    art = over(art, petal(point, progress, angle - gap * 2.0, -1.0, 0.23));
+    art = over(art, petal(point, progress, angle + gap * 2.0, 1.0, 0.26));
+    art = over(art, petal(point, progress, angle - gap * 3.0, -1.0, 0.38));
+    art = over(art, petal(point, progress, angle + gap * 3.0, 1.0, 0.44));
+    return art;
+  }
+
+  vec4 floret (vec2 point, float progress, vec2 original, float delay, float turn) {
+    float age = smoothstep(delay, delay + 0.51, progress);
+    if (age <= 0.002) return vec4(0.0);
+    vec2 centre = mix(flower.xy + (original - flower.xy) * 0.69, original, age);
+    vec2 delta = point - centre;
+    if (abs(delta.x) > 0.245 || abs(delta.y) > 0.275) return vec4(0.0);
+    float angle = atan(delta.y, delta.x + 0.00001);
+    float tips = cos(angle * 5.0 + turn * 2.0);
+    float delayAcrossPetal = 0.22 * (0.5 + 0.5 * sin(angle + turn * 1.55));
+    float leaf = clamp((age - delayAcrossPetal) / (1.0 - delayAcrossPetal), 0.0, 1.0);
+    float reach = mix(0.31, 1.0, sin(leaf * PI * 0.5)) * (1.0 + (1.0 - leaf) * 0.33 * tips);
+    vec2 axis = direction(turn * 0.59 * (1.0 - age) + 0.24 * (1.0 - leaf) * sin(5.0 * angle));
+    vec2 source = vec2(dot(delta, axis), dot(delta, leftOf(axis))) / reach;
+    float boundary = (1.0 - smoothstep(0.80, 1.0, length(source / vec2(0.208, 0.246))));
+    vec4 art = ink(original + source);
+    art.rgb *= mix(0.79, 1.0, age);
+    return art * (boundary * smoothstep(0.0, 0.16, age));
+  }
+
+  vec4 cluster (vec2 point, float progress) {
+    vec4 art = floret(point, progress, clusterAB.xy, 0.00, -0.7);
+    art = over(art, floret(point, progress, clusterAB.zw, 0.13, -1.0));
+    art = over(art, floret(point, progress, clusterCD.xy, 0.16, 0.8));
+    art = over(art, floret(point, progress, clusterCD.zw, 0.22, -0.56));
+    art = over(art, floret(point, progress, clusterEF.xy, 0.26, 0.65));
+    art = over(art, floret(point, progress, clusterEF.zw, 0.29, 0.82));
+    return over(art, floret(point, progress, clusterG.xy, 0.37, -0.54));
+  }
+
+  vec4 tier (vec2 point, float progress, float tierY, float delay, float turn) {
+    float q = smoothstep(delay, min(delay + 0.53, 0.96), progress);
+    if (q <= 0.002 || abs(point.y - tierY) > 0.20) return vec4(0.0);
+    vec2 d = point - vec2(flower.x, tierY);
+    float width = mix(0.21, 1.0, q);
+    float x = d.x / width;
+    float y = (d.y + abs(x) * (1.0 - q) * 0.14 + turn * x * (1.0 - q) * 0.17)
+        / mix(0.63, 1.0, q);
+    vec4 art = ink(vec2(flower.x + x, tierY + y));
+    float window = 1.0 - smoothstep(0.077, 0.129, abs(y));
+    return art * (window * smoothstep(0.0, 0.28, q));
+  }
+
+  vec4 spike (vec2 point, float progress) {
+    vec4 art = tier(point, progress, 0.89, 0.02, -0.6);
+    art = over(art, tier(point, progress, 0.72, 0.10, 0.7));
+    art = over(art, tier(point, progress, 0.56, 0.17, -0.85));
+    art = over(art, tier(point, progress, 0.40, 0.24, 0.8));
+    art = over(art, tier(point, progress, 0.24, 0.31, -0.8));
+    return over(art, tier(point, progress, 0.09, 0.41, 0.9));
+  }
+
+  vec4 frag () {
+    vec2 relative = uv - atlasX.xy;
+    vec2 point = vec2(dot(relative, atlasX.zw) / max(dot(atlasX.zw, atlasX.zw), 0.0000001),
+      dot(relative, atlasY.xy) / max(dot(atlasY.xy, atlasY.xy), 0.0000001));
+    float progress = timing.x;
+    vec4 source = ink(point);
+    vec4 result = vec4(0.0);
+    if (flower.w >= 2.5) {
+      result = source * smoothstep(0.26, 0.75, progress);
+    } else {
+      if (flower.w >= 1.5) result = spike(point, progress);
+      else if (flower.w >= 0.5) result = cluster(point, progress);
+      else result = corolla(point, progress);
+      result = mix(result, source, smoothstep(0.875, 0.995, progress));
+    }
+    return vec4(result.rgb / max(result.a, 0.001), result.a) * tint;
+  }
+}%

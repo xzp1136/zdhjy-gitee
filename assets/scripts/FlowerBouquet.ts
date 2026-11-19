@@ -46,9 +46,11 @@ export interface BouquetLanding {
     angle: number;
 }
 
+export type BouquetFlower = { readonly node: Node; readonly path: string };
+
 /** Keep the vase and foreground masks stable while individual flowers arrive. */
 export class FlowerBouquetView {
-    private placed = new Set<string>();
+    private placed = new Map<string, BouquetFlower>();
     private flowersRoot: Node;
     private constructor(readonly root: Node, private readonly layout: Layout, private readonly metrics: Record<string, Metric>,
         private readonly unit: number, readonly entranceOffset: number) {
@@ -121,6 +123,10 @@ export class FlowerBouquetView {
             .filter((node): node is Node => !!node);
     }
 
+    get placedFlowers(): BouquetFlower[] {
+        return Array.from(this.placed.values());
+    }
+
     async sync(order: FlowerOrder): Promise<void> {
         for (const slot of this.layout.flowerSlots) {
             const need = order.needs[slot.group], key = slot.group + '-' + slot.index;
@@ -130,7 +136,7 @@ export class FlowerBouquetView {
             const n = await sprite(this.flowersRoot, 'PlacedFlower' + key, path,
                 target.position.x, target.position.y, target.width, target.height);
             n.angle = target.angle;
-            this.placed.add(key);
+            this.placed.set(key, {node: n, path});
         }
         // Arrival order differs from Unity's draw order (the first blue flower
         // is drawn in front of the later two), so retain the original stacking.
