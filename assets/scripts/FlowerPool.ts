@@ -4,7 +4,7 @@ import { loadFlowerAsset } from './FlowerAssets';
 import { Color, Director, director, EventTouch, JsonAsset, Node, Sprite, SpriteFrame, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
 import { FrameTaskQueue, runFrameWork } from './FlowerStartup';
 import { FlowerOrder, FlowerPiece } from './FlowerRules';
-import { flowerSpritePath, originalFlowerSpritePath } from './FlowerCatalog';
+import { flowerPoolScale, flowerSpritePath, originalFlowerSpritePath } from './FlowerCatalog';
 import { loadFrame, uiNode } from './FlowerUI';
 import { FlowerShuffleWater, SHUFFLE_BATCH_INTERVAL, SHUFFLE_CENTER_Y, SHUFFLE_GATHER,
     SHUFFLE_RELEASE, SHUFFLE_RISE, SHUFFLE_WATER_TAIL } from './FlowerShuffleWater';
@@ -657,9 +657,11 @@ export class FlowerPoolView {
         const sourcePath=originalFlowerSpritePath(flower.kind,flower.variant);
         const hitShape=this.shapes[sourcePath];
         if(!hitShape)throw new Error(`Missing original flower click shape: ${sourcePath}`);
-        // Keep the new artwork's fitted dimensions; scale physical fixtures to
-        // match instead of restoring the previous skin's sprite-size policy.
-        const width=flower.specialId?126:Math.min(flower.kind==='cdy_lxq'?200:176,245*original.width/original.height);
+        // Preserve each sprite's aspect ratio, then apply the competitor's
+        // species volume tier. The old large exception identified blue plumbago
+        // as a sunflower; cdtx_xrk is the actual double sunflower resource.
+        const baseWidth=Math.min(flower.kind==='cdtx_xrk'?200:176,245*original.width/original.height);
+        const width=flower.specialId?126:baseWidth*flowerPoolScale(flower.kind);
         const height=flower.specialId?132:width*original.height/original.width;
         const pixelScale=width/original.width;
         const node = uiNode(this.root, `Flower-${flower.id}`, 0, 0, width, height);

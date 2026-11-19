@@ -119,20 +119,35 @@ test('a mixed difficulty bouquet starts its delay only when its final group beco
   assert.equal(game.tick(5).length, 0);
 });
 
-test('difficulty checks wait for the one-second poll and zero pool supply before beginning the delay', () => {
+test('an empty ordinary pool releases the current hidden order flower immediately instead of deadlocking', () => {
   const game = create({
     level: 2, timeLimit: 180, flowers: [{ kind: 'a', count: 6 }],
     orderSequence: ['a', 'a'], diffRange: [[50, 2]],
   });
   const hidden = game.flowers.find(piece => piece.status === 'hidden');
-  game.flowers.filter(piece => piece.status === 'pool').forEach(piece => game.select(piece.id));
+  const events=[];
+  game.flowers.filter(piece => piece.status === 'pool').forEach(piece => events.push(...game.select(piece.id)));
   assert.equal(game.completedOrders, 1);
-  assert.equal(game.tick(0.5).length, 0);
-  assert.equal(game.tick(0.5).length, 0);
-  assert.equal(game.tick(1).length, 0);
-  assert.equal(hidden.status, 'hidden');
-  assert.equal(game.tick(1)[0].flowerId, hidden.id);
+  assert.equal(events.some(event => event.type === 'flower-revealed' && event.flowerId === hidden.id), true);
+  assert.equal(hidden.status, 'pool');
   game.select(hidden.id);
+  assert.equal(game.status, 'won');
+});
+
+test('an empty board releases two hidden flowers needed by two simultaneous orders', () => {
+  const game = create({
+    level: 3, timeLimit: 180,
+    flowers: [{kind: 'a', count: 3}, {kind: 'b', count: 3}],
+    orders: [{needs: [{kind: 'a', count: 3}]}, {needs: [{kind: 'b', count: 3}]}],
+    diffRange: [[50, 35], [100, 15]],
+  });
+  const hidden = game.flowers.filter(piece => piece.status === 'hidden');
+  assert.equal(hidden.length, 2);
+  const events=[];
+  game.flowers.filter(piece => piece.status === 'pool').forEach(piece => events.push(...game.select(piece.id)));
+  assert.equal(events.filter(event => event.type === 'flower-revealed').length, 2);
+  assert.equal(hidden.every(piece => piece.status === 'pool'), true);
+  hidden.forEach(piece => game.select(piece.id));
   assert.equal(game.status, 'won');
 });
 

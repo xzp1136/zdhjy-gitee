@@ -25,6 +25,21 @@ const flowerSizes = new Map<string, number>();
 
 /** Original ItemDataConfig size multiplier, applied only to the pool sprite. */
 export function flowerLocalSize(kind: string): number { return flowerSizes.get(kind) ?? 1; }
+
+/** Competitor visual-volume tiers encoded by the original resource taxonomy.
+ * Values are relative to the previous fitted pool size. They deliberately keep
+ * the sunflower largest while restoring the large/medium/small/tiny spread. */
+export function flowerPoolScale(kind: string): number {
+    if (kind === 'zytx_xhf') return 0.50; // Early bee blocker: half the old volume.
+    if (kind === 'cdtx_xrk') return 0.70; // Double sunflower remains the hero-sized flower.
+    if (/^(cdtx_|cdy_|dy_|cdtxwj_|dytx_)/.test(kind)) return 0.68;
+    if (/^(zy_|zyj_|zdgh_|zytx_)/.test(kind)) return 0.62;
+    if (/^xy_/.test(kind)) return 0.56;
+    if (/^cxy_/.test(kind)) return 0.50;
+    // Branches, spikes, grasses and water flowers retain their aspect-ratio
+    // differences but no longer dominate the pool through overall size.
+    return 0.60;
+}
 const toyKinds = new Set(['cdtxwj_bsx', 'cdtxwj_yaya', 'dytx_cet', 'dytx_wjx',
     'zytx_xfz', 'zytx_xhf', 'zytx_xlq', 'zytx_xm']);
 
