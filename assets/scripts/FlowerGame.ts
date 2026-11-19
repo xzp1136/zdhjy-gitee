@@ -609,6 +609,7 @@ export class FlowerGame extends Component {
                 const name = this.catalog?.flowersByKind.get(flower.kind)?.playUpSound;
                 if (typeof name === 'string' && name) this.sound(name);
             });
+            pool.ensureOrdersReachable(rules.orders);
             this.pool = pool;
             pool.setWaterSurface(this.waterSurface);
         } finally { if (this.buildingPool === building) this.buildingPool = null; }
@@ -741,6 +742,7 @@ export class FlowerGame extends Component {
                 continue;
             }
             if (event.type === 'order-added') {
+                this.pool?.ensureOrdersReachable(rules.orders);
                 visual.add(event.order); await this.renderOrder(event.order.slot, true);
                 continue;
             }

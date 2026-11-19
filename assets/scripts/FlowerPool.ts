@@ -3,7 +3,7 @@ import { FlowerWaterRenderer } from './FlowerWater';
 import { loadFlowerAsset } from './FlowerAssets';
 import { Color, Director, director, EventTouch, JsonAsset, Node, Sprite, SpriteFrame, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
 import { FrameTaskQueue, runFrameWork } from './FlowerStartup';
-import { FlowerPiece } from './FlowerRules';
+import { FlowerOrder, FlowerPiece } from './FlowerRules';
 import { flowerSpritePath, originalFlowerSpritePath } from './FlowerCatalog';
 import { loadFrame, uiNode } from './FlowerUI';
 import { FlowerShuffleWater, SHUFFLE_BATCH_INTERVAL, SHUFFLE_CENTER_Y, SHUFFLE_GATHER,
@@ -31,7 +31,23 @@ const LAYER_ALPHA = [255, 255, 255, 0];
 const FLOWER_PIXEL_SCALE = WORLD_UNIT / 100;
 const NEAR_RADIUS = 1.3 * WORLD_UNIT;
 const MOTION_RESPONSE = 9;
+/** The extracted competitor tables use per-level piece counts (8-28 initially),
+ * not one global area budget. Keep those counts and use area only to spread the
+ * organic artwork. This is a target: a very full configured board may need the
+ * least-overlapping sampled position instead of an impossible hard rejection. */
+export const SURFACE_MAX_PAIR_OVERLAP = 0.25;
+const SURFACE_POSITION_SAMPLES = 32;
 type Point = { x: number; y: number };
+type Rect = { left: number; right: number; bottom: number; top: number };
+
+export function rectangleOverlapRatio(a: Rect, b: Rect): number {
+    const width = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+    const height = Math.max(0, Math.min(a.top, b.top) - Math.max(a.bottom, b.bottom));
+    const area = width * height;
+    const aArea = Math.max(0, a.right - a.left) * Math.max(0, a.top - a.bottom);
+    const bArea = Math.max(0, b.right - b.left) * Math.max(0, b.top - b.bottom);
+    return area / Math.max(1e-6, Math.min(aArea, bArea));
+}
 export interface PoolCreationOptions {
     isCurrent?: () => boolean;
     deferEntrance?: boolean;
@@ -388,6 +404,62 @@ export class FlowerPoolView {
     }
     get layerCounts(): readonly number[] { return [0, 1, 2, 3].map(layer => this.inLayer(layer).length); }
 
+    /** Keep every ordinary flower still needed by the active orders in Up,
+     * Middle or Bottom. Special pairs deliberately retain their configured
+     * percentage/depth, and diffRange flowers remain governed by FlowerRules. */
+    ensureOrdersReachable(orders: readonly (FlowerOrder | null)[]): void {
+        if (this.disposed) return;
+        const required = new Map<string, number>();
+        for (const order of orders) for (const need of order?.needs ?? []) {
+            const remaining = Math.max(0, need.required - need.filled);
+            required.set(need.kind, (required.get(need.kind) ?? 0) + remaining);
+        }
+        const visible = new Map<string, number>();
+        for (const entry of this.ordered) {
+            if (entry.band >= 3 || entry.flower.specialId !== undefined || entry.flower.status !== 'pool') continue;
+            visible.set(entry.flower.kind, (visible.get(entry.flower.kind) ?? 0) + 1);
+        }
+        let changed = false;
+        for (const [kind, count] of required) {
+            let missing = Math.max(0, count - (visible.get(kind) ?? 0));
+            while (missing > 0) {
+                const candidate = this.inLayer(3).find(entry => entry.flower.specialId === undefined
+                    && entry.flower.kind === kind && entry.flower.status === 'pool');
+                if (!candidate) break;
+                let targetLayer = [2, 1, 0].find(layer => this.canReceive(layer));
+                let displaced: PoolEntry | undefined;
+                if (targetLayer === undefined) {
+                    for (const layer of [2, 1, 0]) {
+                        displaced = this.inLayer(layer).slice().reverse().find(entry => {
+                            if (entry.flower.status !== 'pool' || entry.promotion) return false;
+                            if (entry.flower.specialId !== undefined) return true;
+                            const protectedCount = required.get(entry.flower.kind) ?? 0;
+                            return (visible.get(entry.flower.kind) ?? 0) > protectedCount;
+                        });
+                        if (displaced) { targetLayer = layer; break; }
+                    }
+                }
+                if (targetLayer === undefined) break;
+                const target = displaced
+                    ? { x: displaced.anchorX, y: displaced.anchorY }
+                    : this.choosePosition(candidate, this.inLayer(targetLayer), this.motionRandom);
+                if (displaced) {
+                    const downPosition = { x: candidate.anchorX, y: candidate.anchorY };
+                    if (displaced.flower.specialId === undefined) visible.set(displaced.flower.kind,
+                        Math.max(0, (visible.get(displaced.flower.kind) ?? 0) - 1));
+                    this.moveToLayer(displaced, 3, downPosition);
+                }
+                this.moveToLayer(candidate, targetLayer, target);
+                visible.set(kind, (visible.get(kind) ?? 0) + 1);
+                missing--; changed = true;
+            }
+        }
+        if (changed) {
+            const deferred = !this.entranceStarted && this.ordered.every(entry => !entry.node.active);
+            this.refreshBands(false, deferred);
+        }
+    }
+
     /** Original SpawnFlower: 3–4 pieces per .05s batch, four layers round-robin. */
     playEntrance(): number {
         if (this.disposed) return 0;
@@ -690,11 +762,37 @@ export class FlowerPoolView {
     }
     setWaterSurface(sprite: Sprite): void { this.waterRenderer.applySurface(sprite); }
 
-    /** Original 41043 + 44354 spawn rectangle and circular jitter. No farthest-
-     * point spreading, PNG wall clamps or hand-written neighbour repacking. */
-    private choosePosition(entry: PoolEntry, _existing: PoolEntry[], _random: () => number): Point {
-        const spawn=this.physics.spawn();entry.initialImpulse=spawn.impulse;
-        return {x:spawn.x,y:spawn.y};
+    private footprint(entry: PoolEntry, point: Point): Rect {
+        const scale = LAYER_SCALE[entry.band];
+        const halfWidth = entry.width * scale * 0.5, halfHeight = entry.height * scale * 0.5;
+        return { left: point.x - halfWidth, right: point.x + halfWidth,
+            bottom: point.y - halfHeight, top: point.y + halfHeight };
+    }
+
+    /** Preserve the extracted spawn distribution, but sample it enough to keep
+     * surface artwork near the requested pairwise overlap target. Physics still
+     * owns subsequent drifting and separation. */
+    private choosePosition(entry: PoolEntry, existing: PoolEntry[], _random: () => number): Point {
+        const samples = entry.band === 0 ? SURFACE_POSITION_SAMPLES : 1;
+        let best: { point: Point; impulse: Point; max: number; total: number } | null = null;
+        for (let index = 0; index < samples; index++) {
+            const spawn = this.physics.spawn(), point = { x: spawn.x, y: spawn.y };
+            const footprint = this.footprint(entry, point);
+            let max = 0, total = 0;
+            for (const neighbour of existing) {
+                const ratio = rectangleOverlapRatio(footprint,
+                    this.footprint(neighbour, { x: neighbour.anchorX, y: neighbour.anchorY }));
+                max = Math.max(max, ratio); total += ratio;
+            }
+            if (!best || max < best.max - 1e-6 || Math.abs(max - best.max) <= 1e-6 && total < best.total) {
+                best = { point, impulse: spawn.impulse, max, total };
+            }
+            // The total guard prevents several flowers sharing the same small
+            // overlap patch even when each individual pair is under 25%.
+            if (max <= SURFACE_MAX_PAIR_OVERLAP && total <= SURFACE_MAX_PAIR_OVERLAP * 1.5) break;
+        }
+        entry.initialImpulse = best!.impulse;
+        return best!.point;
     }
 
     private refreshBands(initial = false, deferEntrance = false): void {
