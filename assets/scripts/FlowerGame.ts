@@ -427,7 +427,7 @@ export class FlowerGame extends Component {
             this.firstPlayFrame = true;
             this.ready = true; this.bgm('bgm_level'); this.updateHUD();
             board.active = true;
-            if (DEBUG) console.info(`[FlowerGame] level ${level} visible in ${Date.now() - entryStarted}ms (build ${Date.now() - buildStarted}ms)`);
+            if (DEBUG) console.info(`[FlowerGame] level ${level} visible in ${Date.now() - entryStarted}ms (build ${Date.now() - buildStarted}ms), physics=${this.pool?.physicsRevision}`);
             this.sound('flowerstart');
             const entrance = await Promise.all([this.waitForPoolEntrance(),
                 ...Array.from(this.orderViews.keys()).map(slot => this.enterBouquet(slot, slot * 0.06))]);

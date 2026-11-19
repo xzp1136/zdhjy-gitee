@@ -1,4 +1,4 @@
-import { FlowerPhysics } from './FlowerPhysics';
+import { FlowerPhysics, FLOWER_PHYSICS_REVISION } from './FlowerPhysics';
 import { FlowerWaterRenderer } from './FlowerWater';
 import { loadFlowerAsset } from './FlowerAssets';
 import { Color, Director, director, EventTouch, JsonAsset, Node, Sprite, SpriteFrame, Tween, UITransform, UIOpacity, Vec3 } from 'cc';
@@ -321,6 +321,7 @@ function clamp(value: number, min: number, max: number): number { return Math.ma
  * animations remain owned by FlowerGame. Call take only after rules accept a move.
  */
 export class FlowerPoolView {
+    get physicsRevision(): string { return FLOWER_PHYSICS_REVISION; }
     readonly root: Node;
     private readonly nodes = new Map<string, Node>();
     private readonly entries = new Map<string, PoolEntry>();
@@ -1054,8 +1055,8 @@ export class FlowerPoolView {
         }
         if (waitingBirth) this.entranceUntil = Math.max(this.entranceUntil,
             this.clock + this.motion.spawn.visibleScaleIn.duration + this.motion.spawn.finalWait);
-        // Independent rigid-body nodes use real world metres, with fixed .02s
-        // stepping. Render roots retain the original UI/camera unit conversion.
+        // Numeric collision states use world metres and a bounded fixed step.
+        // Render roots retain the original UI/camera unit conversion.
         for (const entry of this.ordered) {
             const animated = entry.promotion || this.scatterTargets.has(entry);
             this.physics.sync(entry.flower.id,entry.band,entry.scale,this.clock>=entry.bornAt&&entry.node.active,

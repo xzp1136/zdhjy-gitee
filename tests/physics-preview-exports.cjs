@@ -37,8 +37,16 @@ test('reloading after Creator regenerates all numbered scopes still resolves eve
 });
 test('unknown or disabled project features fail without changing generated files',()=>{
  const f=fixture();try{
-  const previous=fs.readFileSync(f.moduleFile,'utf8');f.write('settings/v2/packages/engine.json',{modules:{configs:{defaultConfig:{includeModules:['base']}}}});
-  assert.throws(()=>refreshPhysicsPreview(f.project,f.engine),/not enabled/);assert.equal(fs.readFileSync(f.moduleFile,'utf8'),previous);
+  const previous=fs.readFileSync(f.moduleFile,'utf8');f.write('settings/v2/packages/engine.json',{modules:{configs:{defaultConfig:{includeModules:['unknown-module']}}}});
+  assert.throws(()=>refreshPhysicsPreview(f.project,f.engine),/Unknown configured/);assert.equal(fs.readFileSync(f.moduleFile,'utf8'),previous);
+ }finally{fs.rmSync(f.project,{recursive:true,force:true});}
+});
+
+test('lightweight solver configuration produces a preview barrel without native physics exports',()=>{
+ const f=fixture();try{
+  f.write('settings/v2/packages/engine.json',{modules:{configs:{defaultConfig:{includeModules:['base']}}}});
+  const result=refreshPhysicsPreview(f.project,f.engine);assert(result.changed);
+  assert.deepEqual([...inspect(f.moduleFile).dependencies],['cce:/internal/x/cc-fu/base']);
  }finally{fs.rmSync(f.project,{recursive:true,force:true});}
 });
 
