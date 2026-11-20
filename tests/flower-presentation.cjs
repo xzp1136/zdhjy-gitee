@@ -109,7 +109,8 @@ function load(name) {
     if (request === './FlowerHaptics') return {vibrateFlowerTap() { hapticTaps++; }};
     if (request === './FlowerPause') return {createPause: async (_parent, actions) => { pauseDialogs.push(actions); }};
     if (request === './FlowerCatalog') return catalog;
-    if (['./FlowerRules', './FlowerBoardSkin', './FlowerBouquet', './FlowerBouquetFinish', './FlowerPetalBloom', './FlowerRewardedVideo'].includes(request)) return load(request.slice(2));
+    if (['./FlowerRules', './FlowerBoardSkin', './FlowerBouquet', './FlowerBouquetFinish', './FlowerCollectionFeedback',
+      './FlowerPetalBloom', './FlowerRewardedVideo'].includes(request)) return load(request.slice(2));
     return {};
   } });
   return exports;
@@ -306,7 +307,7 @@ test('clearing a scene mid-flight prevents the old event stream from landing or 
   const flower = rules.flowers.find(item => item.kind === 'cdy_lxq');
   const events = rules.select(flower.id), work = game.animateEvents(events);
   const flight = animationTweens.at(-1);
-  assert.equal(game.pendingAnimations.size, 1);
+  assert.equal(game.pendingAnimations.size, 2, 'the flight and its pickup ripple are both cancellable');
   game.clear('home');
   await work;
   flight.target.progress = 1; flight.steps[0].options.onUpdate(); flight.callback();
@@ -362,7 +363,7 @@ test('a flower flight follows its live destination after a viewport resize witho
   flight.callback(); assert.equal(await work, true); assert.equal(node.position.y, 340);
 });
 
-test('each flower unfolds from a blank frame independently and the basket exits after the gold effect', async () => {
+test('the original completion flash starts alongside the petal bloom and the basket exits after the gold effect', async () => {
   await load('FlowerPetalBloom').preloadFlowerPetals();
   const game = new FlowerGame(), root = uiNode(new Node('Orders'), 'Order');
   const bouquet = uiNode(root, 'Bouquet');
@@ -378,6 +379,12 @@ test('each flower unfolds from a blank frame independently and the basket exits 
   let stoppedLanding = false;
   game.orderViews.set(0, {root, bouquet: {root: bouquet, placedFlowers: slots},
     landingEffects: new Set([{cancel() { stoppedLanding = true; }}])});
+  const completionEffects = [];
+  game.orderEffects = {play(kind, anchor, point) {
+    assert.equal(stoppedLanding, true);
+    completionEffects.push([kind, anchor, point.x, point.y]);
+    return {finished: new Promise(() => {})};
+  }};
   let finishGold;
   game.playBouquetGold = () => new Promise(resolve => { finishGold = resolve; });
   game.animate = async (_node, _seconds, properties) => { assert.ok(properties.position); return true; };
@@ -385,7 +392,7 @@ test('each flower unfolds from a blank frame independently and the basket exits 
   const work = game.removeBouquet(0);
   const tween = animationTweens.at(-1);
   const materials = slots.map(({node}) => node.getComponent(cc.Sprite).customMaterial);
-  assert.equal(stoppedLanding, true);
+  assert.deepEqual(completionEffects, [['complete', bouquet, 0, 145 * 750 / 1080]]);
   assert.deepEqual(materials.map(mat => mat.properties.get('timing').x), [0, 0, 0]);
   assert.deepEqual(materials.map(mat => mat.properties.get('flower').w), [1, 0, 2]);
   tween.target.progress = 0.52;
@@ -399,17 +406,17 @@ test('each flower unfolds from a blank frame independently and the basket exits 
   assert.equal(root.isValid, true);
   finishGold(true);
   assert.equal(await work, true);
+  assert.equal(completionEffects.length, 1);
   assert.equal(root.isValid, false);
   assert.equal(game.orderViews.has(0), false);
 });
 
-test('the completion spiral redraws both layers from scratch and leaves the old completion flash out', async () => {
+test('the completion spiral redraws both layers from scratch and releases its own layers', async () => {
   const game = new FlowerGame(), board = uiNode(new Node('Scene'), 'Board');
   game.ordersRoot = uiNode(board, 'Orders');
   const bouquet = uiNode(game.ordersRoot, 'Bouquet');
   uiNode(board, 'OrderEffects');
   game.hud = uiNode(board, 'HUD');
-  game.orderEffects = {play() { assert.fail('The older completion flash overlaps the spiral'); }};
   game.waitFor = async () => true;
   const work = game.playBouquetGold(bouquet);
   await flush();
@@ -558,7 +565,7 @@ test('scene replacement cancels overlapping flights and the old collector cannot
   const flowers = rules.flowers.filter(flower => flower.kind === 'cdy_lxq');
   const oldView = game.visual;
   const work = [game.collect(flowers[0].id), game.collect(flowers[1].id)];
-  assert.equal(game.pendingAnimations.size, 2);
+  assert.equal(game.pendingAnimations.size, 4, 'each overlapping flight has a corresponding pickup ripple');
   game.clear('home'); game.busy = true;
   await Promise.all(work);
   for (const flight of flights) flight.complete();

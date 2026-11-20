@@ -3,10 +3,9 @@ import { FlowerButterflyStarlight } from './FlowerButterflyStarlight';
 import { fade, uiNode } from './FlowerUI';
 
 export const BUTTERFLY_WING_HEIGHT = 48;
-export const BUTTERFLY_PAIR_OFFSET = new Vec3(50, 11, 0);
 
 const TAU = Math.PI * 2;
-const TRAIL_PARTICLES = 56;
+const TRAIL_PARTICLES = 28;
 const TRAIL_LIFETIME = 0.60;
 const smooth = (t: number) => t * t * (3 - 2 * t);
 
@@ -22,10 +21,10 @@ export class FlowerButterflyFlight {
     private readonly light: FlowerButterflyStarlight;
     private readonly hinge: number;
 
-    constructor(parent: Node, frame: SpriteFrame, private readonly slot: Vec3, pink: boolean) {
-        this.root = uiNode(parent, 'ButterflyPair', 0, 0, 1, 1);
+    constructor(parent: Node, frame: SpriteFrame, private readonly slot: Vec3, pink: boolean, courier = false) {
+        this.root = uiNode(parent, courier ? 'ButterflyCourier' : 'ButterflyPair', 0, 0, 1, 1);
         this.light = new FlowerButterflyStarlight(this.root, pink);
-        this.takeoff = new Vec3(slot.x + 13, slot.y + 8, slot.z);
+        this.takeoff = new Vec3(slot.x, slot.y, slot.z);
         this.butterfly = uiNode(this.root, 'Butterfly', 0, 0, 1, 1);
         this.opacity = this.butterfly.addComponent(UIOpacity);
         const { width, height } = frame.originalSize;
@@ -37,7 +36,7 @@ export class FlowerButterflyFlight {
         this.right = this.makeWing('RightWing', frame, wingWidth, anchor);
         this.body = uiNode(this.butterfly, 'Body', 0, 0, 1, 1);
         this.drawBody(pink);
-        this.merge(0);
+        this.merge(courier ? 1 : 0);
     }
 
     private makeWing(name: string, frame: SpriteFrame, width: number, anchor: number): Node {
@@ -80,9 +79,9 @@ export class FlowerButterflyFlight {
 
     merge(progress: number): void {
         const t = smooth(progress), apart = 1 - t;
-        this.butterfly.setPosition(this.slot.x + 13 * t, this.slot.y + 8 * t, this.slot.z);
+        this.butterfly.setPosition(this.slot);
         this.left.setPosition(this.hinge * apart, 0, 0);
-        this.right.setPosition((BUTTERFLY_PAIR_OFFSET.x - this.hinge) * apart, BUTTERFLY_PAIR_OFFSET.y * apart, 0);
+        this.right.setPosition(-this.hinge * apart, 0, 0);
         this.left.angle = 7 * Math.sin(Math.PI * t);
         this.right.angle = -11 * Math.sin(Math.PI * t);
         const spread = 1 + 0.12 * Math.sin(Math.PI * t);
@@ -101,12 +100,31 @@ export class FlowerButterflyFlight {
         const turn = Math.max(-28, Math.min(28, (this.takeoff.x - destination.x) * 0.16));
         this.butterfly.setPosition(x, y, z);
         this.butterfly.angle = rise * (turn + 13 * Math.sin(progress * TAU * 1.25));
-        const size = 1 + 0.63 * rise;
+        const size = 1 + 0.58 * rise + 0.30 * progress;
         this.butterfly.setScale(size, size, 1);
         this.flap(TAU * (5.5 * progress + 0.22 * Math.sin(Math.PI * progress)));
         this.light.beginFrame();
-        if (progress < 0.13) this.burst(this.takeoff, 0.68 + progress * 2.46, 30);
-        this.trail(progress, destination);
+        this.trail(progress, t => this.flightPoint(t, destination));
+        this.light.endFrame();
+    }
+
+    /** Stay with the flower's real flight so the butterfly never overtakes its cargo. */
+    carry(progress: number, from: Vec3, target: Vec3, travel: (t: number) => number): void {
+        const path = (t: number) => {
+            const mix = travel(t), arch = Math.sin(Math.PI * t);
+            return { x: from.x + (target.x - from.x) * mix + 9 * arch * Math.sin(t * TAU),
+                y: from.y + (target.y - from.y) * mix + 19 * arch };
+        };
+        const position = path(progress);
+        const emphasis = Math.sin(Math.PI * progress);
+        this.butterfly.setPosition(position.x, position.y, from.z);
+        this.butterfly.angle = 13 * emphasis * Math.sin(progress * TAU);
+        const size = 1.30 + 0.34 * emphasis - 0.29 * progress;
+        this.butterfly.setScale(size, size, 1);
+        this.opacity.opacity = Math.round(255 * Math.min(1, (1 - progress) * 6));
+        this.flap(TAU * progress * 4.2);
+        this.light.beginFrame();
+        this.trail(progress, path, Math.min(1, (1 - progress) * 8));
         this.light.endFrame();
     }
 
@@ -117,13 +135,12 @@ export class FlowerButterflyFlight {
         this.butterfly.setScale(size, size, 1);
         this.opacity.opacity = Math.round(255 * (1 - smooth(progress)));
         this.light.beginFrame();
-        this.trail(1 + progress * TRAIL_LIFETIME, destination);
         this.burst(destination, progress, 65);
         this.light.endFrame();
     }
 
     private flap(phase: number): void {
-        const spread = (offset: number) => 0.19 + 0.81 * (0.5 + 0.5 * Math.cos(phase + offset)) ** 0.8;
+        const spread = (offset: number) => 0.30 + 0.70 * (0.5 + 0.5 * Math.cos(phase + offset)) ** 0.8;
         this.left.setScale(spread(0), 0.96 + 0.04 * Math.cos(phase), 1);
         this.right.setScale(-spread(0.43), 0.96 + 0.04 * Math.cos(phase + 0.43), 1);
         this.left.angle = 8 * Math.sin(phase);
@@ -137,23 +154,24 @@ export class FlowerButterflyFlight {
         return new Vec3(start.x + (end.x - start.x) * t + sway, start.y + (end.y - start.y) * t + lift, start.z);
     }
 
-    private trail(time: number, destination: Vec3): void {
-        const first = Math.max(0, Math.ceil((time - TRAIL_LIFETIME) * TRAIL_PARTICLES - 0.5));
-        const last = Math.min(TRAIL_PARTICLES - 1, Math.floor(time * TRAIL_PARTICLES - 0.5));
+    private trail(time: number, path: (t: number) => {x: number; y: number}, strength = 1): void {
+        const count = TRAIL_PARTICLES;
+        const first = Math.max(0, Math.ceil((time - TRAIL_LIFETIME) * count - 0.5));
+        const last = Math.min(count - 1, Math.floor(time * count - 0.5));
         for (let i = first; i <= last; i++) {
-            const emitted = (i + 0.5) / TRAIL_PARTICLES;
+            const emitted = (i + 0.5) / count;
             const age = (time - emitted) / TRAIL_LIFETIME;
-            const { x, y } = this.flightPoint(emitted, destination);
-            const next = this.flightPoint(Math.min(1, emitted + 0.025), destination);
+            const { x, y } = path(emitted);
+            const next = path(Math.min(1, emitted + 0.025));
             const dx = next.x - x, dy = next.y - y;
             const distance = Math.max(0.01, Math.hypot(dx, dy));
             const side = i % 2 ? -1 : 1;
-            const spread = side * (10 + (15 + i % 4 * 3) * age + 8 * Math.sin(emitted * TAU * 3.2));
+            const spread = side * (7 + (11 + i % 4 * 2) * age + 6 * Math.sin(emitted * TAU * 3.2));
             const lag = 12 + 20 * age;
             // Stay on the previous flight path, then drift outward and fall a little as the light cools.
             const px = x - (dy * spread + dx * lag) / distance;
             const py = y + (dx * spread - dy * lag) / distance - 18 * age;
-            const alpha = Math.max(0, 1 - age) ** 0.54;
+            const alpha = Math.max(0, 1 - age) ** 0.54 * strength;
             const twinkle = 0.87 + 0.13 * Math.cos(age * TAU * 2 + i * 2.39996);
             if (i % 5 === 0) {
                 const radius = (10 + i % 4 * 1.45) * (1 - 0.32 * age);

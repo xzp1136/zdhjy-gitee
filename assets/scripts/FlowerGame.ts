@@ -9,7 +9,8 @@ import { FlowerLoadingView } from './FlowerLoading';
 import { runStartupTasks } from './FlowerStartup';
 import { FlowerCatalog, flowerSpritePath } from './FlowerCatalog';
 import { BouquetLanding, FlowerBouquetView, preloadBouquets } from './FlowerBouquet';
-import { BUTTERFLY_PAIR_OFFSET, BUTTERFLY_WING_HEIGHT, FlowerButterflyFlight } from './FlowerButterflyFlight';
+import { BUTTERFLY_WING_HEIGHT, FlowerButterflyFlight } from './FlowerButterflyFlight';
+import { CollectionPulse, drawCollectionPulse, FlowerFlightTrail } from './FlowerCollectionFeedback';
 import { BOUQUET_FINISH_DURATION, FlowerBouquetFinish } from './FlowerBouquetFinish';
 import { BOUQUET_BLOOM_SECONDS, BOUQUET_GOLD_DELAY, FlowerPetalBloom, preloadFlowerPetals } from './FlowerPetalBloom';
 import { BOARD_HEIGHT, BOARD_UNIT, BOARD_WIDTH, BOUQUET_BASE_Y, ORDER_X, TOOL_NAMES, TOOL_X, TOOL_Y,
@@ -25,6 +26,7 @@ import { rewardedVideo } from './FlowerRewardedVideo';
 import { fade, fittedSprite, label, loadFrame, message, panel, preloadTypography, sprite, tap, uiNode } from './FlowerUI';
 const { ccclass, property } = _decorator;
 const A = 'original/';
+const POOL_GROUP_SCALE = 1.05;
 
 /** Saved progress must always point at a board present in the shipped catalog. */
 export function normalizePlayableLevel(value: number, available: Iterable<number>): number {
@@ -138,6 +140,7 @@ export class FlowerGame extends Component {
     private orderViews = new Map<number, OrderView>();
     private trayCells: Node[] = [];
     private trayCapacity = 0;
+    private trayWarning: Graphics | null = null;
     private progressTarget = -1;
     private readonly progressTween = { percent: 0 };
     private pendingAnimations = new Set<() => void>();
@@ -214,22 +217,36 @@ export class FlowerGame extends Component {
             this.pendingAnimations.add(cancel); this.scheduleOnce(finish, seconds);
         });
     }
-    private flyFlower(node: Node, destination: Vec3 | (() => Vec3), targetScale: Vec3, targetAngle: number): Promise<boolean> {
+    private async flyFlower(node: Node, destination: Vec3 | (() => Vec3), targetScale: Vec3, targetAngle: number,
+        courier?: FlowerButterflyFlight): Promise<boolean> {
         const from = new Vec3(node.position.x, node.position.y, node.position.z);
         const scale = new Vec3(node.scale.x, node.scale.y, node.scale.z);
         const angle = node.angle, turn = ((targetAngle - angle + 540) % 360) - 180;
+        const trail = !courier && node.parent ? uiNode(node.parent, 'FlowerFlightTrail', 0, 0, 1, 1) : undefined;
+        trail?.setSiblingIndex(node.getSiblingIndex());
+        const ribbon = trail && new FlowerFlightTrail(trail.addComponent(Graphics));
+        const size = node.getComponent(UITransform);
+        const width = (size?.width ?? 50) * Math.abs(scale.x);
+        const height = (size?.height ?? 50) * Math.abs(scale.y);
+        const travel = (t: number) => flowerFlightPhase(t).travel;
         // Original ctor44385 moveDuration=.58, pickedScaleRatio=1.25.
-        return this.animateProgress(node, 0.58, progress => {
-            const sample = flowerFlightPhase(progress);
-            const target = typeof destination === 'function' ? destination() : destination;
-            const axis = (initial: number, target: number) => progress <= 0.2
-                ? initial * (1 + 0.25 * sample.pickup)
-                : initial * 1.25 + (target - initial * 1.25) * sample.settle;
-            node.setPosition(from.x + (target.x - from.x) * sample.travel,
-                from.y + (target.y - from.y) * sample.travel, from.z);
-            node.setScale(axis(scale.x, targetScale.x), axis(scale.y, targetScale.y), 1);
-            node.angle = angle + turn * sample.rotation;
-        });
+        try {
+            return await this.animateProgress(node, 0.58, progress => {
+                const sample = flowerFlightPhase(progress);
+                const target = typeof destination === 'function' ? destination() : destination;
+                const axis = (initial: number, target: number) => progress <= 0.2
+                    ? initial * (1 + 0.25 * sample.pickup)
+                    : initial * 1.25 + (target - initial * 1.25) * sample.settle;
+                node.setPosition(from.x + (target.x - from.x) * sample.travel,
+                    from.y + (target.y - from.y) * sample.travel, from.z);
+                node.setScale(axis(scale.x, targetScale.x), axis(scale.y, targetScale.y), 1);
+                node.angle = angle + turn * sample.rotation;
+                ribbon?.draw(from, node.position, progress, width, height);
+                courier?.carry(progress, from, target, travel);
+            });
+        } finally {
+            if (trail?.isValid) trail.destroy();
+        }
     }
     private animateProgress(node: Node, duration: number, draw: (progress: number) => void): Promise<boolean> {
         const rev = this.revision, phase = { progress: 0 };
@@ -282,7 +299,7 @@ export class FlowerGame extends Component {
     private clear(mode: 'home' | 'game') {
         this.revision++; this.sceneMode = mode; this.paused = false; this.busy = false; this.finished = false; this.ready = false;
         this.collectionWork = null;
-        this.cancelAnimations(); this.visual = null; this.orderViews.clear(); this.trayCells = []; this.trayCapacity = 0; this.progressTarget = -1;
+        this.cancelAnimations(); this.visual = null; this.orderViews.clear(); this.trayCells = []; this.trayCapacity = 0; this.trayWarning = null; this.progressTarget = -1;
         this.firstPlayFrame = false;
         this.buildingPool?.dispose(); this.buildingPool = null;
         this.pool?.dispose(); this.pool = null;
@@ -394,10 +411,10 @@ export class FlowerGame extends Component {
             const shape = mask.subComp as Graphics;
             shape.roundRect(-waterWidth / 2, -waterHeight / 2, waterWidth, waterHeight, 48 * BOARD_UNIT);
             shape.fill();
-            // Scale both depth roots together to the new skin. Native body sizes,
-            // contact layers and fixed-step simulation remain in original local units.
-            const poolScale=Math.min(waterWidth/ORIGINAL_POOL_GEOMETRY.waterWidth,waterHeight/ORIGINAL_POOL_GEOMETRY.waterHeight);
-            const poolY=-ORIGINAL_POOL_GEOMETRY.waterY*poolScale;
+            // Enlarge both flower layers uniformly around the centre of the water.
+            const poolFit = Math.min(waterWidth / ORIGINAL_POOL_GEOMETRY.waterWidth, waterHeight / ORIGINAL_POOL_GEOMETRY.waterHeight);
+            const poolScale = poolFit * POOL_GROUP_SCALE;
+            const poolY = -ORIGINAL_POOL_GEOMETRY.waterY * poolScale;
             this.belowWaterRoot=uiNode(waterMask,'UnderwaterFlowers',0,poolY);
             this.belowWaterRoot.setScale(poolScale,poolScale,1);
             this.waterSurface=await boardWater(waterMask,waterWidth,waterHeight);
@@ -556,6 +573,7 @@ export class FlowerGame extends Component {
         view.tip?.cancel();
         view.departing = true;
         for (const landing of Array.from(view.landingEffects ?? [])) landing.cancel();
+        this.orderEffects?.play('complete', node, {x: 0, y: 145 * 750 / 1080});
         const bloom = new FlowerPetalBloom(bouquet.placedFlowers);
         try {
             const opened = this.animateProgress(node, BOUQUET_BLOOM_SECONDS, progress => bloom.draw(progress));
@@ -638,6 +656,22 @@ export class FlowerGame extends Component {
             if (!this.current(rev)) return;
             node.setPosition(TRAY_X[i], TRAY_Y, 0);
         }
+        this.drawTrayWarning();
+    }
+    private drawTrayWarning(strength = 1): void {
+        const occupied = this.visual!.buffer.length, capacity = this.rules!.bufferCapacity;
+        const full = occupied >= capacity;
+        this.trayWarning?.clear();
+        if (occupied < capacity - 1) return;
+        const art = this.trayWarning ??= uiNode(this.trayRoot, 'TrayWarning', 0, 0, 1, 1).addComponent(Graphics);
+        art.node.setSiblingIndex(this.trayRoot.children.length - 1);
+        art.fillColor = new Color(255, full ? 129 : 173, 63, Math.round(38 * strength));
+        art.strokeColor = new Color(255, full ? 153 : 198, 83, Math.round(215 * strength));
+        art.lineWidth = 3.6;
+        for (let i = full ? 0 : capacity - 1; i < capacity; i++) {
+            art.roundRect(TRAY_X[i] - 43, TRAY_Y - 28, 86, 56, 11); art.fill();
+            art.roundRect(TRAY_X[i] - 43, TRAY_Y - 28, 86, 56, 11); art.stroke();
+        }
     }
     private async spawnFlowers() {
         const rev = this.revision, rules = this.rules!;
@@ -711,10 +745,12 @@ export class FlowerGame extends Component {
             tap(root, () => this.useTool(i));
         }
     }
-    private startFlowerFlight(event: FlowerMove, node: Node, landing?: BouquetLanding | null, pair?: ButterflyPair): FlowerFlight {
+    private startFlowerFlight(event: FlowerMove, node: Node, landing?: BouquetLanding | null, pair?: ButterflyPair,
+        courier?: FlowerButterflyFlight): FlowerFlight {
         if (node.parent !== this.flowerRoot) node.setParent(this.flowerRoot, true);
         const ripple = node.getChildByName('Ripple'); if (ripple) ripple.active = false;
         const size = node.getComponent(UITransform)!;
+        if (event.from === 'pool') void this.flashCollection('water', node.position, Math.min(52, 18 + size.width * 0.23));
         let destination = () => event.to === 'waiting'
             ? this.mapPoint(this.toolsRoot, new Vec3(TOOL_X[2], TOOL_Y, 0), this.flowerRoot)
             : this.mapPoint(this.trayRoot, new Vec3(TRAY_X[event.slot], TRAY_Y, 0), this.flowerRoot);
@@ -725,7 +761,7 @@ export class FlowerGame extends Component {
             wing.setScale(1, 1, 1);
             const wingFit = BUTTERFLY_WING_HEIGHT / wing.getComponent(UITransform)!.height;
             scale = new Vec3(-wingFit, wingFit, 1);
-            destination = () => this.butterflyTrayPoint(pair).add(BUTTERFLY_PAIR_OFFSET);
+            destination = () => this.butterflyTrayPoint(pair);
         }
         if (event.to === 'order') {
             // Use the resting anchor even if the new vase has not entered yet.
@@ -738,7 +774,8 @@ export class FlowerGame extends Component {
             }
         }
         node.setSiblingIndex(this.flowerRoot.children.length - 1);
-        return { event, node, completed: this.flyFlower(node, destination, scale, angle) };
+        if (courier) courier.root.setSiblingIndex(this.flowerRoot.children.length - 1);
+        return { event, node, completed: this.flyFlower(node, destination, scale, angle, courier) };
     }
     private async collect(id: string): Promise<void> {
         const rules = this.rules;
@@ -781,6 +818,7 @@ export class FlowerGame extends Component {
         const rules = this.rules!, visual = this.visual!;
         const completionCount = events.filter(event => event.type === 'order-completed').length;
         const starsPerCompletion = completionCount ? starsEarned / completionCount : 0;
+        let deliveries: Map<FlowerMove, Promise<FlowerFlight | undefined>> | undefined;
         for (let index = 0; index < events.length; index++) {
             const event = events[index];
             if (!this.current(rev)) return;
@@ -800,8 +838,12 @@ export class FlowerGame extends Component {
                 continue;
             }
             if (event.type === 'special-paired') {
-                const target = events.slice(index + 1).find((item): item is FlowerMove => item.type === 'move' && item.to === 'order');
-                if (!await this.animateButterfly(event, target, startedFlight, rev)) return;
+                const carried = new Set(event.carriedFlowerIds);
+                const moves = events.slice(index + 1).filter((item): item is FlowerMove =>
+                    item.type === 'move' && item.to === 'order' && carried.has(item.flowerId));
+                const flightPlan = await this.animateButterfly(event, moves, startedFlight, rev);
+                if (!flightPlan || !this.current(rev)) return;
+                deliveries = flightPlan;
                 continue;
             }
             if (event.type !== 'move') continue;
@@ -817,7 +859,9 @@ export class FlowerGame extends Component {
             const landingView = event.to === 'order' ? this.orderViews.get(event.slot) : undefined;
             const landingBouquet = landingView?.bouquet;
             const landing = landingOrder && landingBouquet?.landing(landingOrder);
-            const flight = startedFlight?.event === event ? startedFlight : undefined;
+            const planned = deliveries?.get(event);
+            const flight = planned ? await planned : startedFlight?.event === event ? startedFlight : undefined;
+            if (!this.current(rev)) return;
             let node = flight?.node ?? this.pool?.take(event.flowerId) ?? this.trayRoot.getChildByName('Buffered-' + event.flowerId);
             if (!node && event.from === 'waiting') {
                 const waiting = this.mapPoint(this.toolsRoot, new Vec3(TOOL_X[2], TOOL_Y, 0), this.flowerRoot);
@@ -827,6 +871,7 @@ export class FlowerGame extends Component {
             const activeFlight = flight ?? (node?.isValid && node.parent ? this.startFlowerFlight(event, node, landing) : undefined);
             if (activeFlight && !await activeFlight.completed) return;
             if (!this.current(rev)) return;
+            if (activeFlight && event.to !== 'waiting') void this.flashCollection(event.to === 'buffer' ? 'tray' : 'order', activeFlight.node.position, 29);
             // Swap the flight for the permanent flower at exactly the same slot.
             if (node?.isValid) node.active = false;
             visual.move(event, flower);
@@ -878,19 +923,31 @@ export class FlowerGame extends Component {
         const point = stored?.position ?? new Vec3(TRAY_X[pair.slot], TRAY_Y);
         return this.mapPoint(this.trayRoot, point, this.flowerRoot);
     }
-    private async animateButterfly(pair: ButterflyPair, target: FlowerMove | undefined, startedFlight: FlowerFlight | undefined,
-        rev: number): Promise<boolean> {
+    private async flashCollection(kind: CollectionPulse, point: Vec3, extent: number): Promise<void> {
+        const parent = kind === 'water' ? this.poolRoot?.parent ?? this.flowerRoot : this.flowerRoot;
+        const position = parent === this.flowerRoot ? point : this.mapPoint(this.flowerRoot, point, parent);
+        const layer = uiNode(parent, `CollectionPulse-${kind}`, position.x, position.y, 1, 1);
+        const art = layer.addComponent(Graphics), ink = new Color();
+        try {
+            await this.animateProgress(layer, kind === 'water' ? 0.35 : 0.22, t => drawCollectionPulse(art, ink, kind, t, extent));
+        } finally {
+            if (layer.isValid) layer.destroy();
+        }
+    }
+    private async animateButterfly(pair: ButterflyPair, moves: FlowerMove[], startedFlight: FlowerFlight | undefined,
+        rev: number): Promise<Map<FlowerMove, Promise<FlowerFlight | undefined>> | null> {
         const [firstId, secondId] = pair.flowerIds;
         const incoming = startedFlight?.event.flowerId === secondId ? startedFlight : undefined;
+        const deliveries = new Map<FlowerMove, Promise<FlowerFlight | undefined>>();
         let butterfly: FlowerButterflyFlight | undefined;
         try {
-            if ((incoming && !await incoming.completed) || !this.current(rev)) return false;
+            if ((incoming && !await incoming.completed) || !this.current(rev)) return null;
             const pink = pair.specialId === 2001;
             const frame = await loadFrame(flowerSpritePath(pink ? 'hd_02' : 'hd_01')).catch(error => {
                 if (this.current(rev)) console.warn('[FlowerGame] butterfly art', error);
                 return null;
             });
-            if (!this.current(rev)) return false;
+            if (!this.current(rev)) return null;
             if (frame) {
                 const effect = new FlowerButterflyFlight(this.flowerRoot, frame, this.butterflyTrayPoint(pair), pink);
                 butterfly = effect;
@@ -898,39 +955,95 @@ export class FlowerGame extends Component {
                 if (stored) stored.active = false;
                 if (incoming?.node.isValid) incoming.node.active = false;
                 let combined = false;
-                if (!await this.animateProgress(effect.root, pair.delaySeconds + 0.13, t => {
+                if (!await this.animateProgress(effect.root, pair.delaySeconds + 0.08, t => {
                     effect.merge(t);
                     if (!combined && t >= 0.60) {
                         combined = true;
                         this.sound('combine', 0.50);
                     }
-                })) return false;
+                })) return null;
             }
 
             this.visual!.buffer = this.visual!.buffer.filter(id => id !== firstId && id !== secondId);
             await this.renderTray();
-            if (!this.current(rev)) return false;
-            if (!butterfly) return true;
+            if (!this.current(rev)) return null;
+            if (!butterfly || !frame) return deliveries;
+            const effect = butterfly;
+            const order = moves.length ? this.visual!.orders[moves[0].slot] : undefined;
+            if (!order) {
+                await this.animateProgress(effect.root, 0.20, t => effect.land(t, effect.takeoff));
+                return deliveries;
+            }
 
-            const effect = butterfly, start = effect.takeoff;
-            const order = target && this.visual!.orders[target.slot];
-            const bouquet = order && order.id === target.orderId ? this.orderViews.get(target.slot)?.bouquet : undefined;
-            const landing = bouquet && bouquet.landing(order);
-            const perch = new Vec3(landing?.effectPosition.x ?? 0, (landing?.effectPosition.y ?? 76) + 16);
-            const destination = () => {
-                if (!target) return new Vec3(start.x + 8, start.y + 100, start.z);
-                if (bouquet?.root.isValid) return this.mapPoint(bouquet.root, perch, this.flowerRoot);
-                return this.mapPoint(this.ordersRoot, new Vec3(ORDER_X[target.slot] + perch.x, BOUQUET_BASE_Y + perch.y), this.flowerRoot);
-            };
-            const end = destination();
-            const duration = 0.88 + Math.min(0.36, Math.hypot(end.x - start.x, end.y - start.y) / 1300);
+            const reserved = cloneOrder(order);
             this.sound('hudiefly', 0.64);
-            if (!await this.animateProgress(effect.root, duration, t => effect.fly(t, destination()))) return false;
-            this.sound('starAdd', 0.46);
-            return await this.animateProgress(effect.root, 0.24, t => effect.land(t, destination()));
+            for (let index = 0; index < moves.length; index++) {
+                const move = moves[index];
+                const landing = FlowerBouquetView.landingFor(reserved);
+                const need = reserved.needs.find(group => group.filled < group.required);
+                if (need) need.filled++;
+                const start = new Vec3(effect.takeoff.x + (index - (moves.length - 1) / 2) * 9, effect.takeoff.y, 0);
+                const flight = this.deliverWithButterfly(move, landing, frame, pink, start, index, rev).catch(error => {
+                    if (this.current(rev)) console.warn('[FlowerGame] butterfly delivery', error);
+                    return undefined;
+                });
+                deliveries.set(move, flight);
+            }
+            return deliveries;
         } finally {
             if (incoming?.node.isValid) incoming.node.destroy();
             if (butterfly?.root.isValid) butterfly.root.destroy();
+        }
+    }
+    private async deliverWithButterfly(move: FlowerMove, landing: BouquetLanding | null, frame: SpriteFrame,
+        pink: boolean, start: Vec3, index: number, rev: number): Promise<FlowerFlight | undefined> {
+        if (index > 0 && !await this.waitFor(index * 0.13)) return;
+        if (!this.current(rev)) return;
+        const flower = this.rules!.flowers.find(piece => piece.id === move.flowerId);
+        if (!flower) return;
+        const sourceNode = () => move.from === 'pool' ? this.pool?.nodeMap.get(move.flowerId)
+            : this.trayRoot.getChildByName('Buffered-' + move.flowerId);
+        if (move.from === 'pool' && !sourceNode()) await this.pool?.reveal(flower);
+        if (!this.current(rev)) return;
+        const sourcePosition = () => {
+            const source = sourceNode();
+            if (source?.isValid) return this.mapPoint(source, new Vec3(), this.flowerRoot);
+            return this.mapPoint(this.toolsRoot, new Vec3(TOOL_X[2], TOOL_Y), this.flowerRoot);
+        };
+        if (move.from !== 'waiting' && !sourceNode()) return;
+        const courier = new FlowerButterflyFlight(this.flowerRoot, frame, start, pink, true);
+        let launched = false, node: Node | null | undefined;
+        try {
+            const pickup = sourcePosition();
+            const duration = 0.38 + Math.min(0.13, Math.hypot(pickup.x - start.x, pickup.y - start.y) / 3100);
+            if (!await this.animateProgress(courier.root, duration, t => courier.fly(t, sourcePosition()))) return;
+            if (!this.current(rev)) return;
+            if (move.from === 'pool') node = this.pool?.take(move.flowerId);
+            else {
+                const point = sourcePosition(), stored = sourceNode();
+                node = await fittedSprite(this.flowerRoot, `Carried-${move.flowerId}`, flowerSpritePath(flower.kind, flower.variant), point.x, point.y, 54, 48);
+                if (!this.current(rev)) return;
+                // Keep the tray placeholder during concurrent flights so compaction never recreates it.
+                if (stored?.isValid) stored.active = false;
+            }
+            if (!node?.isValid || !node.parent) return;
+            const flight = this.startFlowerFlight(move, node, landing, undefined, courier);
+            launched = true;
+            const completed = (async () => {
+                try {
+                    const landed = await flight.completed;
+                    if (landed && index === 0) this.sound('starAdd', 0.40);
+                    return landed;
+                } finally {
+                    if (courier.root.isValid) courier.root.destroy();
+                }
+            })();
+            return { ...flight, completed };
+        } finally {
+            if (!launched) {
+                if (courier.root.isValid) courier.root.destroy();
+                if (node?.isValid) node.destroy();
+            }
         }
     }
 
@@ -1113,7 +1226,12 @@ export class FlowerGame extends Component {
                     this.finished = false;
                     this.sound('time_add'); this.updateHUD(); return true;
                 });
-            } else await failure();
+            } else {
+                const warning = this.trayWarning?.node;
+                if (warning?.isValid && !await this.animateProgress(warning, 0.24,
+                    t => this.drawTrayWarning(0.62 + 0.38 * Math.sin(Math.PI * t)))) return;
+                await failure();
+            }
         }
     }
 }

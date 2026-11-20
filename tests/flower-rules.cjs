@@ -569,12 +569,31 @@ test('paired butterflies share one storage slot and trigger one bouquet without 
   assert.equal(paired.specialId, 2000);
   assert.equal(paired.flowerIds.length, 2);
   assert.equal(paired.delaySeconds, 0.12);
+  assert.deepEqual(Array.from(paired.carriedFlowerIds),
+    Array.from(second.filter(event => event.type === 'move' && event.to === 'order'), event => event.flowerId));
   assert.equal(game.buffer.length, 0);
   assert.equal(game.stars, 1);
   assert.equal(game.completedOrders, 1);
   assert.equal(game.progress, 3 / 9);
   assert.equal(game.displayProgressPercent, 56);
   assert.equal(butterflies.every(flower => flower.status === 'collected'), true);
+});
+
+test('a butterfly pair assigns carriers only to the flowers still needed by its target group', () => {
+  const game = create({ level: 1, timeLimit: 180, flowers: kinds.map(kind => ({kind, count: 3})),
+    specials: [
+      {specialId: 2000, kind: 'hd_01', insertAtPercent: 8},
+      {specialId: 2000, kind: 'hd_01', insertAtPercent: 12},
+    ],
+  });
+  game.select(game.flowers.find(piece => piece.kind === game.orders[0].kind).id);
+  const wings = game.flowers.filter(piece => piece.specialId === 2000);
+  game.select(wings[0].id);
+  const events = game.select(wings[1].id);
+  const paired = events.find(event => event.type === 'special-paired');
+  const carried = events.filter(event => event.type === 'move' && event.to === 'order');
+  assert.equal(carried.length, 2);
+  assert.deepEqual(Array.from(paired.carriedFlowerIds), Array.from(carried, event => event.flowerId));
 });
 
 test('different butterfly ids occupy separate slots and a single butterfly counts toward a full tray', () => {

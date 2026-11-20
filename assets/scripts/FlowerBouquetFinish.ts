@@ -55,22 +55,25 @@ export class FlowerBouquetFinish {
     }
 
     drawRewardStar(start: { x: number; y: number }, end: { x: number; y: number }, elapsed: number): void {
-        const p = elapsed / 0.34;
-        if (p >= 1) return;
-        const t = p * p * (3 - 2 * p);
-        const crest = Math.sin(Math.PI * t);
-        const x = start.x + (end.x - start.x) * t, y = start.y + (end.y - start.y) * t + 21 * crest;
-        const size = 7 + 3 * Math.sin(Math.PI * p);
         const art = this.front;
-        art.fillColor = this.color(255, 219, 119, 240 * Math.min(1, (1 - p) * 5));
-        for (let i = 0; i < 10; i++) {
-            const angle = i * Math.PI / 5 + 0.26 * p - Math.PI / 2;
-            const radius = size * (i % 2 ? .48 : 1);
-            const px = x + Math.cos(angle) * radius, py = y + Math.sin(angle) * radius;
-            if (i === 0) art.moveTo(px, py);
-            else art.lineTo(px, py);
+        for (let star = 0; star < 3; star++) {
+            const p = (elapsed - 0.22 - star * 0.06) / 0.30;
+            if (p < 0 || p >= 1) continue;
+            const t = p * p * (3 - 2 * p), crest = Math.sin(Math.PI * t);
+            const offset = (star - 1) * 21 * (1 - t);
+            const x = start.x + (end.x - start.x) * t + offset;
+            const y = start.y + (end.y - start.y) * t + (17 + star * 11) * crest;
+            const size = 8.5 + 4 * Math.sin(Math.PI * p);
+            art.fillColor = this.color(255, 214 + star * 12, 113, 245 * Math.min(1, (1 - p) * 5));
+            for (let i = 0; i < 10; i++) {
+                const angle = i * Math.PI / 5 + 0.26 * p - Math.PI / 2;
+                const radius = size * (i % 2 ? .48 : 1);
+                const px = x + Math.cos(angle) * radius, py = y + Math.sin(angle) * radius;
+                if (i === 0) art.moveTo(px, py);
+                else art.lineTo(px, py);
+            }
+            art.close(); art.fill();
         }
-        art.close(); art.fill();
     }
 
     private color(r: number, g: number, b: number, alpha: number): Color {

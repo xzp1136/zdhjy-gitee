@@ -31,6 +31,8 @@ const LAYER_ALPHA = [255, 255, 255, 0];
 const FLOWER_PIXEL_SCALE = WORLD_UNIT / 100;
 const NEAR_RADIUS = 1.3 * WORLD_UNIT;
 const MOTION_RESPONSE = 9;
+// Open up the flower arrangement equally in both directions inside the pool walls.
+const POOL_SPAWN_SPREAD = 1.18;
 /** The extracted competitor tables use per-level piece counts (8-28 initially),
  * not one global area budget. Keep those counts and use area only to spread the
  * organic artwork. This is a target: a very full configured board may need the
@@ -779,7 +781,7 @@ export class FlowerPoolView {
         const samples = entry.band === 0 ? SURFACE_POSITION_SAMPLES : 1;
         let best: { point: Point; impulse: Point; max: number; total: number } | null = null;
         for (let index = 0; index < samples; index++) {
-            const spawn = this.physics.spawn(), point = { x: spawn.x, y: spawn.y };
+            const spawn = this.physics.spawn(POOL_SPAWN_SPREAD), point = { x: spawn.x, y: spawn.y };
             const footprint = this.footprint(entry, point);
             let max = 0, total = 0;
             for (const neighbour of existing) {

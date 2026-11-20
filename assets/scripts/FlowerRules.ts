@@ -79,7 +79,7 @@ export type FlowerEvent =
     | { type: 'order-unlocked'; slot: number }
     | { type: 'time-revived'; seconds: number; cost: number }
     | { type: 'flower-revealed'; flowerId: string; layer: 2 }
-    | { type: 'special-paired'; specialId: number; flowerIds: string[]; slot: number; delaySeconds: number }
+    | { type: 'special-paired'; specialId: number; flowerIds: string[]; slot: number; delaySeconds: number; carriedFlowerIds: string[] }
     | { type: 'won'; stars: number; coins: number }
     | { type: 'lost'; reason: 'time' | 'buffer' };
 
@@ -418,7 +418,7 @@ export class FlowerRules {
     }
 
     /** Complete only the current flower group of the first active bouquet. */
-    collectMatchingOrder(): FlowerEvent[] {
+    collectMatchingOrder(carriedFlowerIds?: string[]): FlowerEvent[] {
         if (this.status !== 'playing') return [];
         const events: FlowerEvent[] = [];
         let target: FlowerOrder | null = null;
@@ -451,6 +451,7 @@ export class FlowerRules {
                 const index = stored.indexOf(flower.id);
                 if (index >= 0) stored.splice(index, 1);
             }
+            carriedFlowerIds?.push(flower.id);
             this.collect(flower, target, from, events);
         }
         this.settleBuffer(events);
@@ -542,13 +543,14 @@ export class FlowerRules {
         }
         const first = this.pieces.get(this.buffer[slot])!;
         events.push({ type: 'move', flowerId: piece.id, from: 'pool', to: 'buffer', slot });
-        events.push({ type: 'special-paired', specialId: piece.specialId!, flowerIds: [first.id, piece.id], slot, delaySeconds: 0.12 });
+        const carriedFlowerIds: string[] = [];
+        events.push({ type: 'special-paired', specialId: piece.specialId!, flowerIds: [first.id, piece.id], slot, delaySeconds: 0.12, carriedFlowerIds });
         first.status = 'collected';
         piece.status = 'collected';
         this.buffer.splice(slot, 1);
         // The UI plays the placement/pairing delay before the subsequent move events.
         // Green and pink butterflies invoke the same current-group compose operation.
-        events.push(...this.collectMatchingOrder());
+        events.push(...this.collectMatchingOrder(carriedFlowerIds));
         this.checkEnd(events);
         return events;
     }

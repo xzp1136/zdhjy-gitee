@@ -187,12 +187,12 @@ export class FlowerPhysics {
         const angle=this.random()*Math.PI*2,radius=Math.sqrt(this.random());
         return radius*radius<=.001?{x:1,y:0}:{x:Math.cos(angle),y:Math.sin(angle)};
     }
-    spawn():{x:number;y:number;impulse:Point}{
+    spawn(spread = 1):{x:number;y:number;impulse:Point}{
         const s=this.data.spawn,angle=this.random()*Math.PI*2,radius=Math.sqrt(this.random())*s.jitterRadius;
         const x=Math.cos(angle)*radius,y=Math.sin(angle)*radius,speed=this.range(s.initialImpulseRange[0],s.initialImpulseRange[1]);
         const direction=radius>.001?{x:x/radius,y:y/radius}:this.direction();
-        return {x:(s.center[0]+this.range(s.xRange[0],s.xRange[1])+x)*FLOWER_WORLD_UNIT,
-            y:(s.center[1]+this.range(s.yRange[0],s.yRange[1])+y)*FLOWER_WORLD_UNIT,
+        return {x:(s.center[0]+spread*(this.range(s.xRange[0],s.xRange[1])+x))*FLOWER_WORLD_UNIT,
+            y:(s.center[1]+spread*(this.range(s.yRange[0],s.yRange[1])+y))*FLOWER_WORLD_UNIT,
             impulse:{x:direction.x*speed,y:direction.y*speed}};
     }
     add(id:string,path:string,x:number,y:number,angle:number,baseScale:number,band:number,impulse:Point):void {
