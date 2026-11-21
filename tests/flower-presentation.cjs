@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
-const ts = require('/Applications/Cocos/Creator/3.8.7/CocosCreator.app/Contents/Resources/app.asar.unpacked/node_modules/typescript');
+const ts = require('./typescript.cjs');
 const root = path.join(__dirname, '..');
 class Vec3 {
   constructor(x = 0, y = 0, z = 0) { Object.assign(this, { x, y, z }); }
@@ -188,12 +188,13 @@ test('original vessel art, foreground masks and landing points follow each order
   const order = { id: 'order-0', kind: 'cdy_lxq', required: 3, filled: 0, slot: 0, vaseId: 1301,
     needs: [{ kind: 'cdy_lxq', required: 3, filled: 0 }] };
   const view = await FlowerBouquetView.create(new Node('Parent'), order);
-  assert.equal(view.root.children.map(node => node.name).join(','), 'VaseLayer0,PlacedFlowers,VaseLayer100');
-  assert.equal(view.root.getChildByName('VaseLayer0').resource, 'original/vase/bkt1_3cdy_01');
+  assert.equal(view.artwork.parent, view.root);
+  assert.equal(view.artwork.children.map(node => node.name).join(','), 'VaseLayer0,PlacedFlowers,VaseLayer100');
+  assert.equal(view.artwork.getChildByName('VaseLayer0').resource, 'original/vase/bkt1_3cdy_01');
   const vase = await FlowerBouquetView.create(new Node('Parent'), {...order, vaseId: 1601});
-  assert.equal(vase.root.getChildByName('VaseLayer0').resource, 'original/vase/bkt1_3dy_01');
+  assert.equal(vase.artwork.getChildByName('VaseLayer0').resource, 'original/vase/bkt1_3dy_01');
   assert.notDeepEqual(vase.landing(order), view.landing(order));
-  const flowers = view.root.getChildByName('PlacedFlowers');
+  const flowers = view.artwork.getChildByName('PlacedFlowers');
   const points = new Set();
   for (let filled = 1; filled <= 3; filled++) {
     const landing = view.landing(order);
@@ -202,10 +203,10 @@ test('original vessel art, foreground masks and landing points follow each order
     order.filled = order.needs[0].filled = filled; await view.sync(order);
   }
   assert.equal(points.size, 3);
-  assert.equal(view.root.getChildByName('PlacedFlowers'), flowers);
+  assert.equal(view.artwork.getChildByName('PlacedFlowers'), flowers);
   assert.equal(view.landing(order), null);
   await view.sync(order);
-  assert.equal(view.root.getChildByName('PlacedFlowers').children.length, 3);
+  assert.equal(flowers.children.length, 3);
 });
 
 test('changing scene cancels pending flight and tool waits instead of leaving async interactions locked', async () => {
@@ -306,6 +307,7 @@ test('clearing a scene mid-flight prevents the old event stream from landing or 
   game.updateHUD = () => hudUpdates++; game.sound = () => {};
   const flower = rules.flowers.find(item => item.kind === 'cdy_lxq');
   const events = rules.select(flower.id), work = game.animateEvents(events);
+  await flush();
   const flight = animationTweens.at(-1);
   assert.equal(game.pendingAnimations.size, 2, 'the flight and its pickup ripple are both cancellable');
   game.clear('home');
@@ -363,13 +365,17 @@ test('a flower flight follows its live destination after a viewport resize witho
   flight.callback(); assert.equal(await work, true); assert.equal(node.position.y, 340);
 });
 
-test('the original completion flash starts alongside the petal bloom and the basket exits after the gold effect', async () => {
-  await load('FlowerPetalBloom').preloadFlowerPetals();
+test('a completed bouquet pulses with the petal bloom, then exits after the gold effect', async () => {
+  const { BOUQUET_BLOOM_SECONDS, preloadFlowerPetals } = load('FlowerPetalBloom');
+  await preloadFlowerPetals();
   const game = new FlowerGame(), root = uiNode(new Node('Orders'), 'Order');
   const bouquet = uiNode(root, 'Bouquet');
+  const art = uiNode(bouquet, 'BouquetArtwork');
+  const label = uiNode(bouquet, 'OrderTag');
+  art.setScale(.9, .95, 1);
   const artwork = [['cdy_lxq_01', 120, 120], ['dy_zmj_01', 120, 100], ['cdcs_jyc_01', 80, 160]];
   const slots = artwork.map(([name, width, height], index) => {
-    const node = uiNode(bouquet, `Flower${index}`);
+    const node = uiNode(art, `Flower${index}`);
     node.setPosition(index * 30, 0);
     node.addComponent(cc.Sprite).spriteFrame = {
       name, texture: {}, rect: {width, height}, uv: [0, 1, 1, 1, 0, 0, 1, 0], on() {}, off() {},
@@ -377,7 +383,7 @@ test('the original completion flash starts alongside the petal bloom and the bas
     return {node, path: 'original/flower/' + name};
   });
   let stoppedLanding = false;
-  game.orderViews.set(0, {root, bouquet: {root: bouquet, placedFlowers: slots},
+  game.orderViews.set(0, {root, bouquet: {root: bouquet, artwork: art, placedFlowers: slots},
     landingEffects: new Set([{cancel() { stoppedLanding = true; }}])});
   const completionEffects = [];
   game.orderEffects = {play(kind, anchor, point) {
@@ -395,12 +401,20 @@ test('the original completion flash starts alongside the petal bloom and the bas
   assert.deepEqual(completionEffects, [['complete', bouquet, 0, 145 * 750 / 1080]]);
   assert.deepEqual(materials.map(mat => mat.properties.get('timing').x), [0, 0, 0]);
   assert.deepEqual(materials.map(mat => mat.properties.get('flower').w), [1, 0, 2]);
+  tween.target.progress = 0.12 / BOUQUET_BLOOM_SECONDS;
+  tween.steps[0].options.onUpdate();
+  assert.equal(art.scale.x, .9 * 1.07);
+  assert.equal(art.scale.y, .95 * 1.07);
+  assert.deepEqual(bouquet.scale, new Vec3(1, 1, 1));
+  assert.deepEqual(label.scale, new Vec3(1, 1, 1));
   tween.target.progress = 0.52;
   tween.steps[0].options.onUpdate();
   const phases = materials.map(mat => mat.properties.get('timing').x);
   assert.ok(phases[0] > phases[1] && phases[1] > phases[2]);
+  assert.ok(art.scale.x > .9 && art.scale.x < .9 * 1.07);
   assert.ok(slots.every(({node}) => node.scale.x === 1 && node.scale.y === 1));
   tween.callback();
+  assert.deepEqual(art.scale, new Vec3(.9, .95, 1));
   assert.ok(slots.every(({node}) => node.getComponent(cc.Sprite).customMaterial === null));
   assert.ok(materials.every(mat => mat.destroyed));
   assert.equal(root.isValid, true);
@@ -453,7 +467,8 @@ function collectingGame(config) {
   game.ordersRoot = uiNode(game.content, 'Orders');
   game.trayRoot = uiNode(game.content, 'Tray');
   const poolNodes = new Map(rules.flowers.map(flower => [flower.id, uiNode(game.flowerRoot, flower.id)]));
-  game.pool = {take(id) { const node = poolNodes.get(id); poolNodes.delete(id); return node; }, update() {}, dispose() {}};
+  game.pool = {take(id) { const node = poolNodes.get(id); poolNodes.delete(id); return node; },
+    ensureOrdersReachable() {}, update() {}, dispose() {}};
   game.rules = rules; game.visual = new FlowerPresentationState(rules);
   game.ready = true; game.sceneMode = 'game';
   const flights = [], sounds = [];
@@ -462,16 +477,104 @@ function collectingGame(config) {
   game.renderOrder = async () => {}; game.renderTray = async () => {};
   game.endLevel = async () => { ended++; game.finished = true; };
   const flyFlower = game.flyFlower.bind(game);
-  game.flyFlower = (node, destination, scale, angle) => {
-    const flight = flyFlower(node, destination, scale, angle);
-    flights.push({id: node.name, destination: destination(), complete: animationTweens.at(-1).callback});
+  game.flyFlower = (node, destination, scale, angle, courier, landInOrder) => {
+    const flight = flyFlower(node, destination, scale, angle, courier, landInOrder);
+    const motion = animationTweens.at(-1);
+    flights.push({id: node.name, node, destination: destination(), scale, motion, complete: motion.callback});
     return flight;
   };
   return {game, rules, flights, sounds, get ended() { return ended; }};
 }
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
-test('rapid taps start every flight immediately, reserve distinct attachments and settle in tap order', async () => {
+test('compose casts one star per missing flower and lets subsequent tray refills use the normal flight', async () => {
+  const {game, rules} = collectingGame({level: 2, timeLimit: 180,
+    flowers: [{kind: 'cdy_lxq', count: 3}, {kind: 'dy_zmj', count: 3}, {kind: 'cdcs_jyc', count: 3}],
+    orders: [{vaseId: 1301, needs: [{kind: 'cdy_lxq', count: 3}]}, {vaseId: 1601, needs: [{kind: 'dy_zmj', count: 3}]},
+      {vaseId: 1201, needs: [{kind: 'cdcs_jyc', count: 3}]}]});
+  const blue = rules.flowers.filter(flower => flower.kind === 'cdy_lxq');
+  const stored = rules.flowers.find(flower => flower.kind === 'cdcs_jyc');
+  rules.select(blue[0].id);
+  rules.select(stored.id);
+  game.visual = new FlowerPresentationState(rules);
+  let inventory = 2;
+  game.read = () => inventory;
+  game.write = (key, value) => { assert.equal(key, 'compose'); inventory = value; };
+  game.buildTools = async () => {};
+  const deliveryPlan = new Map();
+  let castMoves = [];
+  game.animateCompose = async moves => { castMoves = moves; return deliveryPlan; };
+  game.animateEvents = async (events, _rev, _flight, _stars, deliveries) => {
+    assert.equal(deliveries, deliveryPlan);
+    assert.ok(castMoves.every(move => events.includes(move)));
+    assert.ok(events.some(event => event.type === 'move' && event.flowerId === stored.id && event.from === 'buffer'));
+    for (const event of events) apply(game.visual, rules, event);
+  };
+
+  await game.useTool(0);
+  assert.deepEqual(Array.from(castMoves, move => move.flowerId), Array.from(blue.slice(1), flower => flower.id));
+  assert.equal(game.visual.orders[0].filled, 1);
+  assert.equal(game.visual.stars, 1);
+  assert.equal(inventory, 1);
+});
+
+test('three rapid order flights each rebound at their own arrival before queued effects', async () => {
+  const {game, rules, flights} = collectingGame({level: 1, timeLimit: 180,
+    flowers: [{kind: 'cdy_lxq', count: 3}], orders: [{vaseId: 1301, needs: [{kind: 'cdy_lxq', count: 3}]}]});
+  const root = uiNode(game.ordersRoot, 'Order');
+  const bouquet = await FlowerBouquetView.create(root, game.visual.orders[0]);
+  game.orderViews.set(0, {root, bouquet});
+  let completions = 0;
+  game.removeBouquet = async () => { completions++; return true; };
+  const work = rules.flowers.map(flower => game.collect(flower.id));
+  assert.equal(flights.length, 3);
+
+  for (const {node, destination, scale, motion} of flights) {
+    const [{duration, options}] = motion.steps;
+    assert.equal(duration, 0.62);
+    motion.target.progress = 0.42 / duration;
+    options.onUpdate();
+    assert.deepEqual(node.position, destination);
+    assert.ok(Math.abs(node.scale.x - scale.x) < 1e-12);
+    motion.target.progress = 0.47 / duration;
+    options.onUpdate();
+    assert.deepEqual(node.position, destination);
+    assert.ok(Math.abs(node.scale.x / scale.x - 1.16) < 1e-12);
+    assert.ok(Math.abs(node.scale.y / scale.y - 1.16) < 1e-12);
+  }
+
+  assert.equal(bouquet.placedFlowers.length, 0);
+  assert.equal(completions, 0);
+  for (const flight of flights) flight.complete();
+  assert.ok(flights.every(({node, scale}) => Math.abs(node.scale.x - scale.x) < 1e-12));
+  await Promise.all(work);
+  assert.equal(bouquet.placedFlowers.length, 3);
+  assert.equal(completions, 1);
+  assert.ok(flights.every(({node}) => !node.isValid));
+});
+
+test('a guided order flight plays its arrival cue once at contact, before the rebound finishes', async () => {
+  const game = new FlowerGame();
+  const node = uiNode(new Node('FlightParent'), 'Flower');
+  const destination = new Vec3(48, 200, 0);
+  let arrivals = 0;
+  const guide = {root: new Node('Guide'), carry() {}, onArrival() {
+    arrivals++;
+    assert.deepEqual(node.position, destination);
+  }};
+  const work = game.flyFlower(node, destination, new Vec3(1, 1, 1), 0, guide, true);
+  const motion = animationTweens.at(-1);
+  for (const [time, expected] of [[0.40, 0], [0.42, 1], [0.50, 1]]) {
+    motion.target.progress = time / motion.steps[0].duration;
+    motion.steps[0].options.onUpdate();
+    assert.equal(arrivals, expected);
+  }
+  motion.callback();
+  assert.equal(await work, true);
+  assert.equal(arrivals, 1);
+});
+
+test('rapid taps start every flight immediately and settle each vase in its own tap order', async () => {
   const {game, rules, flights, sounds} = collectingGame({level: 1, timeLimit: 180,
     flowers: [{kind: 'cdy_lxq', count: 3}, {kind: 'dy_zmj', count: 3}],
     orders: [{vaseId: 1301, needs: [{kind: 'cdy_lxq', count: 3}]}, {vaseId: 1601, needs: [{kind: 'dy_zmj', count: 3}]}]});
@@ -491,6 +594,7 @@ test('rapid taps start every flight immediately, reserve distinct attachments an
   for (const flight of flights.slice(1)) flight.complete();
   await flush();
   assert.equal(game.visual.orders[0].filled, 0); assert.equal(game.visual.stars, 0);
+  assert.equal(game.visual.orders[1].filled, 1);
   flights[0].complete();
   // The fixture has no live bouquet nodes but still runs the group pause.
   await flush();
@@ -499,6 +603,54 @@ test('rapid taps start every flight immediately, reserve distinct attachments an
   assert.equal(game.visual.stars, rules.stars); assert.equal(game.visual.stars, 1);
   assert.equal(game.visual.orders[1].filled, 1);
   assert.equal(game.busy, false); assert.equal(game.collectionWork, null);
+});
+
+test('a full vase clears and refills independently of a vase whose flowers are still landing', async () => {
+  const kinds = ['cdy_lxq', 'dy_zmj', 'cdcs_jyc'];
+  const vaseIds = [1301, 1601, 1301];
+  const {game, rules, flights} = collectingGame({level: 2, timeLimit: 180,
+    flowers: kinds.map(kind => ({kind, count: 3})),
+    orders: kinds.map((kind, i) => ({vaseId: vaseIds[i], needs: [{kind, count: 3}]}))});
+  await load('FlowerBouquet').preloadBouquets(vaseIds);
+  const [left, right, replacement] = kinds.map(kind => rules.flowers.filter(flower => flower.kind === kind));
+  const departures = new Map(), replacedSlots = [];
+  game.removeBouquet = slot => new Promise(resolve => departures.set(slot, resolve));
+  game.renderOrder = async slot => { replacedSlots.push(slot); };
+  function tap(flower) {
+    const work = game.collect(flower.id);
+    assert.equal(flights.at(-1).id, flower.id);
+    return {work, land: flights.at(-1).complete};
+  }
+  for (const flower of [left[0], right[0], right[1]]) {
+    const {work, land} = tap(flower);
+    land(); await work;
+  }
+  const delayed = tap(left[1]);
+  const rightLast = tap(right[2]);
+  const leftLast = tap(left[2]);
+  const next = tap(replacement[0]);
+  rightLast.land(); next.land();
+  await flush();
+  assert.deepEqual(Array.from(departures.keys()), [1]);
+  assert.equal(game.visual.orders[0].filled, 1);
+  assert.equal(game.visual.orders[1], null);
+  assert.deepEqual(replacedSlots, []);
+
+  delayed.land(); leftLast.land();
+  await flush();
+  assert.deepEqual(Array.from(departures.keys()), [1, 0]);
+  assert.equal(game.visual.stars, 2);
+
+  departures.get(1)(true);
+  await flush();
+  assert.deepEqual(replacedSlots, [1]);
+  assert.equal(game.visual.orders[1].needs[0].kind, kinds[2]);
+  assert.equal(game.visual.orders[1].filled, 1);
+  assert.equal(game.busy, true);
+
+  departures.get(0)(true);
+  await Promise.all([delayed.work, rightLast.work, leftLast.work, next.work]);
+  assert.equal(game.busy, false);
 });
 
 test('a full buffer ends once after its accepted flights land and rejects further taps', async () => {

@@ -5930,7 +5930,7 @@
           "cdtx_qsh_02",
           "cdtx_qsh_03"
         ],
-        "name": "七色花",
+        "name": "六出花",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6367,7 +6367,7 @@
           "cdy_lblh_02",
           "cdy_lblh_03"
         ],
-        "name": "蓝白大丽花",
+        "name": "白色仙人掌型大丽花",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6528,7 +6528,7 @@
           "cdsy_lth_02",
           "cdsy_lth_03"
         ],
-        "name": "蓝昙花",
+        "name": "紫红色令箭荷花",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -6781,7 +6781,7 @@
           "dys_huangbh_02",
           "dys_huangbh_03"
         ],
-        "name": "琥珀晨光",
+        "name": "杏色百合",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -7103,7 +7103,7 @@
           "cs_lmtx_02",
           "cs_lmtx_03"
         ],
-        "name": "蓝色满天星",
+        "name": "蓝花亚麻",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -7126,7 +7126,7 @@
           "cs_zmtx_02",
           "cs_zmtx_03"
         ],
-        "name": "紫色满天星",
+        "name": "紫色补血草",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -7287,7 +7287,7 @@
           "cdyz_flh_02",
           "cdyz_flh_03"
         ],
-        "name": "樱梦兰",
+        "name": "粉色蝴蝶兰",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -7310,7 +7310,7 @@
           "cdyz_blh_02",
           "cdyz_blh_03"
         ],
-        "name": "素月兰",
+        "name": "白色蝴蝶兰",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -7333,7 +7333,7 @@
           "cdyz_hlh_02",
           "cdyz_hlh_03"
         ],
-        "name": "兰花枝",
+        "name": "紫色石斛兰",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.0,
@@ -7655,7 +7655,7 @@
           "zy_lmg_02",
           "zy_lmg_03"
         ],
-        "name": "蓝紫月季",
+        "name": "西番莲",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -8529,7 +8529,7 @@
           "zdgh_nzhhh_02",
           "zdgh_nzhhh_03"
         ],
-        "name": "琉璃花",
+        "name": "琉璃苣",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.100000023841858,
@@ -8575,7 +8575,7 @@
           "xy_lyjg_02",
           "xy_lyjg_03"
         ],
-        "name": "绿桔梗",
+        "name": "浅绿洋桔梗",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.2000000476837158,
@@ -8874,7 +8874,7 @@
           "xy_llh_02",
           "xy_llh_03"
         ],
-        "name": "青玉兰",
+        "name": "浅绿玉兰",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.2000000476837158,
@@ -8897,7 +8897,7 @@
           "xy_zlh_02",
           "xy_zlh_03"
         ],
-        "name": "紫晶兰",
+        "name": "紫玉兰",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.2000000476837158,
@@ -8920,7 +8920,7 @@
           "xy_wyc_02",
           "xy_wyc_03"
         ],
-        "name": "忘忧草",
+        "name": "萱草",
         "sound": "click",
         "layerOrderValue": 10,
         "flowerSize": 1.2000000476837158,

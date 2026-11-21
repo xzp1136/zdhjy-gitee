@@ -11,6 +11,8 @@ import { FlowerCatalog, flowerSpritePath } from './FlowerCatalog';
 import { BouquetLanding, FlowerBouquetView, preloadBouquets } from './FlowerBouquet';
 import { BUTTERFLY_WING_HEIGHT, FlowerButterflyFlight } from './FlowerButterflyFlight';
 import { CollectionPulse, drawCollectionPulse, FlowerFlightTrail } from './FlowerCollectionFeedback';
+import { COMPOSE_RELEASE, COMPOSE_SEEK_DURATION, COMPOSE_STAR_INTERVAL, COMPOSE_WAND_DURATION, COMPOSE_WAND_PATH,
+    FlowerComposeCast, FlowerComposeStar } from './FlowerComposeEffect';
 import { BOUQUET_FINISH_DURATION, FlowerBouquetFinish } from './FlowerBouquetFinish';
 import { BOUQUET_BLOOM_SECONDS, BOUQUET_GOLD_DELAY, FlowerPetalBloom, preloadFlowerPetals } from './FlowerPetalBloom';
 import { BOARD_HEIGHT, BOARD_UNIT, BOARD_WIDTH, BOUQUET_BASE_Y, ORDER_X, TOOL_NAMES, TOOL_X, TOOL_Y,
@@ -27,6 +29,9 @@ import { fade, fittedSprite, label, loadFrame, message, panel, preloadTypography
 const { ccclass, property } = _decorator;
 const A = 'original/';
 const POOL_GROUP_SCALE = 1.05;
+const BOUQUET_PULSE_SCALE = 0.07;
+const BOUQUET_PULSE_PEAK = 0.12;
+const BOUQUET_PULSE_END = 0.36;
 
 /** Saved progress must always point at a board present in the shipped catalog. */
 export function normalizePlayableLevel(value: number, available: Iterable<number>): number {
@@ -96,7 +101,14 @@ type OrderView = {
 };
 type FlowerMove = Extract<FlowerEvent, { type: 'move' }>;
 type ButterflyPair = Extract<FlowerEvent, { type: 'special-paired' }>;
-type FlowerFlight = { event: FlowerMove; node: Node; completed: Promise<boolean> };
+type FlowerFlight = { event: FlowerMove; node: Node; completed: Promise<boolean>; customLandingSound?: boolean };
+type FlowerDeliveries = Map<FlowerMove, Promise<FlowerFlight | undefined>>;
+type FlowerAnimationLane = number | 'tray';
+type FlowerFlightGuide = Pick<FlowerButterflyFlight, 'root'> & {
+    carry(progress: number, from: Vec3, target: Vec3, travel: (t: number) => number, landing: number): void;
+    position?(progress: number, from: Vec3, target: Vec3, travel: (t: number) => number): { x: number; y: number };
+    onArrival?(): void;
+};
 
 @ccclass('FlowerGame')
 export class FlowerGame extends Component {
@@ -111,6 +123,7 @@ export class FlowerGame extends Component {
     private paused = false;
     private busy = false;
     private collectionWork: Promise<void> | null = null;
+    private readonly eventLanes = new Map<FlowerAnimationLane, Promise<boolean>>();
     private revision = 0;
     private catalog: FlowerCatalog | null = null;
     private pool: FlowerPoolView | null = null;
@@ -191,7 +204,7 @@ export class FlowerGame extends Component {
             loading?.setError(() => this.loadStartup());
         }
     }
-    onDestroy() { this.startupRevision++; this.startupLoading?.dispose(); this.revision++; this.collectionWork = null; this.cancelAnimations(); Tween.stopAllByTarget(this.progressTween); this.buildingPool?.dispose(); this.pool?.dispose(); this.orderEffects?.dispose(); this.music?.stop(); game.off('flower-settings-changed', this.applyAudioSettings, this); game.off('flower-ui-sound', this.onUISound, this); }
+    onDestroy() { this.startupRevision++; this.startupLoading?.dispose(); this.revision++; this.collectionWork = null; this.eventLanes.clear(); this.cancelAnimations(); Tween.stopAllByTarget(this.progressTween); this.buildingPool?.dispose(); this.pool?.dispose(); this.orderEffects?.dispose(); this.music?.stop(); game.off('flower-settings-changed', this.applyAudioSettings, this); game.off('flower-ui-sound', this.onUISound, this); }
     private current(rev: number): boolean { return this.isValid && this.revision === rev; }
     private cancelAnimations(): void { for (const cancel of Array.from(this.pendingAnimations)) cancel(); this.pendingAnimations.clear(); }
     private animate(node: Node, duration: number, properties: Record<string, unknown>, easing = 'quadOut'): Promise<boolean> {
@@ -218,7 +231,7 @@ export class FlowerGame extends Component {
         });
     }
     private async flyFlower(node: Node, destination: Vec3 | (() => Vec3), targetScale: Vec3, targetAngle: number,
-        courier?: FlowerButterflyFlight): Promise<boolean> {
+        courier?: FlowerFlightGuide, landInOrder = false): Promise<boolean> {
         const from = new Vec3(node.position.x, node.position.y, node.position.z);
         const scale = new Vec3(node.scale.x, node.scale.y, node.scale.z);
         const angle = node.angle, turn = ((targetAngle - angle + 540) % 360) - 180;
@@ -229,20 +242,33 @@ export class FlowerGame extends Component {
         const width = (size?.width ?? 50) * Math.abs(scale.x);
         const height = (size?.height ?? 50) * Math.abs(scale.y);
         const travel = (t: number) => flowerFlightPhase(t).travel;
-        // Original ctor44385 moveDuration=.58, pickedScaleRatio=1.25.
+        // Let each order flight land and rebound before queued order effects can cover it.
+        const travelDuration = landInOrder ? 0.42 : 0.58;
+        const landingDuration = landInOrder ? 0.2 : 0;
+        const duration = travelDuration + landingDuration;
+        const arrival = travelDuration / duration;
+        let hasArrived = false;
         try {
-            return await this.animateProgress(node, 0.58, progress => {
-                const sample = flowerFlightPhase(progress);
+            return await this.animateProgress(node, duration, progress => {
+                const flightProgress = Math.min(1, progress / arrival);
+                const sample = flowerFlightPhase(flightProgress);
+                const landingProgress = progress > arrival ? (progress - arrival) / (1 - arrival) : 0;
+                const pop = 1 + 0.16 * Math.sin(Math.PI * Math.sqrt(landingProgress));
                 const target = typeof destination === 'function' ? destination() : destination;
-                const axis = (initial: number, target: number) => progress <= 0.2
+                const axis = (initial: number, target: number) => flightProgress <= 0.2
                     ? initial * (1 + 0.25 * sample.pickup)
                     : initial * 1.25 + (target - initial * 1.25) * sample.settle;
-                node.setPosition(from.x + (target.x - from.x) * sample.travel,
-                    from.y + (target.y - from.y) * sample.travel, from.z);
-                node.setScale(axis(scale.x, targetScale.x), axis(scale.y, targetScale.y), 1);
+                const guided = courier?.position?.(flightProgress, from, target, travel);
+                node.setPosition(guided?.x ?? from.x + (target.x - from.x) * sample.travel,
+                    guided?.y ?? from.y + (target.y - from.y) * sample.travel, from.z);
+                node.setScale(axis(scale.x, targetScale.x) * pop, axis(scale.y, targetScale.y) * pop, 1);
                 node.angle = angle + turn * sample.rotation;
-                ribbon?.draw(from, node.position, progress, width, height);
-                courier?.carry(progress, from, target, travel);
+                ribbon?.draw(from, node.position, flightProgress, width, height);
+                courier?.carry(flightProgress, from, target, travel, landingProgress);
+                if (!hasArrived && progress >= arrival) {
+                    hasArrived = true;
+                    courier?.onArrival?.();
+                }
             });
         } finally {
             if (trail?.isValid) trail.destroy();
@@ -299,6 +325,7 @@ export class FlowerGame extends Component {
     private clear(mode: 'home' | 'game') {
         this.revision++; this.sceneMode = mode; this.paused = false; this.busy = false; this.finished = false; this.ready = false;
         this.collectionWork = null;
+        this.eventLanes.clear();
         this.cancelAnimations(); this.visual = null; this.orderViews.clear(); this.trayCells = []; this.trayCapacity = 0; this.trayWarning = null; this.progressTarget = -1;
         this.firstPlayFrame = false;
         this.buildingPool?.dispose(); this.buildingPool = null;
@@ -345,7 +372,8 @@ export class FlowerGame extends Component {
     private onUISound(name?: string): void { if (name) this.sound(name); }
     private async preloadEffects(): Promise<void> {
         const names = ['click', 'open', 'close', 'flowerstart', 'flowerhit', 'vasesuccss', 'flowerfuqi',
-            'level_new', 'level_checkceng', 'level_daluan', 'bgm_home', 'bgm_level', 'combine', 'hudiefly', 'starAdd'];
+            'level_new', 'level_checkceng', 'level_daluan', 'bgm_home', 'bgm_level', 'combine', 'hudiefly', 'starAdd', 'collect',
+            'compose-charge', 'compose-flick', 'compose-catch', 'compose-land'];
         await Promise.all(names.map(name =>
             new Promise<void>((resolve, reject) => {
                 loadFlowerAsset(A + 'audio/' + name, AudioClip, (error, clip) => {
@@ -364,6 +392,7 @@ export class FlowerGame extends Component {
             const flowers = new FlowerRules(config).flowers;
             await Promise.all([
                 loadFrame(A + 'ui/game/guidehand'), loadFrame(A + 'ui/game/lock'), loadFrame(A + 'order/commonvase'), preloadBoardSkin(),
+                level >= 2 ? loadFrame(COMPOSE_WAND_PATH) : Promise.resolve(),
                 FlowerPoolView.preload(flowers), preloadBouquets(config.orders?.map(order => order.vaseId)),
                 FlowerEffects.preload(), preloadFlowerPetals(), preloadPause(), preloadFailure(), preloadContinue(), preloadWinResult(level),
             ]);
@@ -575,11 +604,20 @@ export class FlowerGame extends Component {
         for (const landing of Array.from(view.landingEffects ?? [])) landing.cancel();
         this.orderEffects?.play('complete', node, {x: 0, y: 145 * 750 / 1080});
         const bloom = new FlowerPetalBloom(bouquet.placedFlowers);
+        const artwork = bouquet.artwork, baseScale = artwork.scale.clone();
         try {
-            const opened = this.animateProgress(node, BOUQUET_BLOOM_SECONDS, progress => bloom.draw(progress));
+            const opened = this.animateProgress(node, BOUQUET_BLOOM_SECONDS, progress => {
+                bloom.draw(progress);
+                const time = Math.min(progress * BOUQUET_BLOOM_SECONDS, BOUQUET_PULSE_END);
+                const phase = time < BOUQUET_PULSE_PEAK ? time / BOUQUET_PULSE_PEAK
+                    : (BOUQUET_PULSE_END - time) / (BOUQUET_PULSE_END - BOUQUET_PULSE_PEAK);
+                const scale = 1 + BOUQUET_PULSE_SCALE * (1 - Math.cos(Math.PI * phase)) / 2;
+                artwork.setScale(baseScale.x * scale, baseScale.y * scale, baseScale.z);
+            });
             const glow = this.playBouquetGold(node);
             if ((await Promise.all([opened, glow])).some(done => !done)) return false;
         } finally {
+            if (artwork.isValid) artwork.setScale(baseScale);
             bloom.dispose();
         }
         const opacity = node.getComponent(UIOpacity) ?? node.addComponent(UIOpacity);
@@ -746,7 +784,7 @@ export class FlowerGame extends Component {
         }
     }
     private startFlowerFlight(event: FlowerMove, node: Node, landing?: BouquetLanding | null, pair?: ButterflyPair,
-        courier?: FlowerButterflyFlight): FlowerFlight {
+        courier?: FlowerFlightGuide): FlowerFlight {
         if (node.parent !== this.flowerRoot) node.setParent(this.flowerRoot, true);
         const ripple = node.getChildByName('Ripple'); if (ripple) ripple.active = false;
         const size = node.getComponent(UITransform)!;
@@ -775,7 +813,8 @@ export class FlowerGame extends Component {
         }
         node.setSiblingIndex(this.flowerRoot.children.length - 1);
         if (courier) courier.root.setSiblingIndex(this.flowerRoot.children.length - 1);
-        return { event, node, completed: this.flyFlower(node, destination, scale, angle, courier) };
+        return { event, node, completed: this.flyFlower(node, destination, scale, angle, courier, event.to === 'order'),
+            customLandingSound: !!courier?.onArrival };
     }
     private async collect(id: string): Promise<void> {
         const rules = this.rules;
@@ -792,17 +831,16 @@ export class FlowerGame extends Component {
         if (this.hand) { Tween.stopAllByTarget(this.hand); this.hand.destroy(); this.hand = null; this.handTarget = null; }
         const rev = this.revision;
         const previous = this.collectionWork;
-        const work = (async () => {
-            // Select reserves the destination synchronously. Start the clicked flower
-            // now, then keep tray compaction and order changes in rules event order.
-            const order = move.to === 'order' ? orders[move.slot] : null;
-            const node = this.pool?.take(id);
-            const flight = node?.isValid && node.parent
-                ? this.startFlowerFlight(move, node, order && FlowerBouquetView.landingFor(order), pair)
-                : undefined;
-            if (previous) await previous;
-            if (this.current(rev)) await this.animateEvents(events, rev, flight, starsEarned);
-        })().catch(error => { if (this.current(rev)) console.error('[FlowerGame] collect animation', error); });
+        // The rules reserve the attachment synchronously, so each tap can begin its flight immediately.
+        const order = move.to === 'order' ? orders[move.slot] : null;
+        const node = this.pool?.take(id);
+        const flight = node?.isValid && node.parent
+            ? this.startFlowerFlight(move, node, order && FlowerBouquetView.landingFor(order), pair)
+            : undefined;
+        const batch = this.animateEvents(events, rev, flight, starsEarned)
+            .catch(error => { if (this.current(rev)) console.error('[FlowerGame] collect animation', error); });
+        // Keep the level result behind every accepted tap without delaying this tap's visuals.
+        const work = previous ? Promise.all([previous, batch]).then(() => {}) : batch;
         this.collectionWork = work; this.busy = true;
         try {
             await work;
@@ -813,110 +851,152 @@ export class FlowerGame extends Component {
             }
         }
     }
+    private queueFlowerEvent(lanes: FlowerAnimationLane[], rev: number, play: () => Promise<boolean>): Promise<boolean> {
+        const pending = lanes.map(lane => this.eventLanes.get(lane)?.catch(() => false));
+        const work = Promise.all(pending).then(results => this.current(rev)
+            && results.every(result => result !== false) && play());
+        for (const lane of lanes) this.eventLanes.set(lane, work);
+        const release = () => {
+            for (const lane of lanes) if (this.eventLanes.get(lane) === work) this.eventLanes.delete(lane);
+        };
+        void work.then(release, release);
+        return work;
+    }
     private async animateEvents(events: FlowerEvent[], rev = this.revision, startedFlight?: FlowerFlight,
-        starsEarned = this.rules!.stars - this.visual!.stars) {
+        starsEarned = this.rules!.stars - this.visual!.stars, deliveries?: FlowerDeliveries) {
         const rules = this.rules!, visual = this.visual!;
         const completionCount = events.filter(event => event.type === 'order-completed').length;
         const starsPerCompletion = completionCount ? starsEarned / completionCount : 0;
-        let deliveries: Map<FlowerMove, Promise<FlowerFlight | undefined>> | undefined;
+        const tasks: Promise<boolean>[] = [];
+        const reveals = new Map<string, Promise<boolean>>();
+        const schedule = (lanes: FlowerAnimationLane[], play: () => Promise<boolean>) =>
+            tasks.push(this.queueFlowerEvent(lanes, rev, play));
         for (let index = 0; index < events.length; index++) {
             const event = events[index];
             if (!this.current(rev)) return;
             if (event.type === 'flower-revealed') {
-                const flower = rules.flowers.find(piece => piece.id === event.flowerId);
-                if (flower) await this.pool?.reveal(flower);
+                const reveal = this.queueFlowerEvent([], rev, async () => {
+                    const flower = rules.flowers.find(piece => piece.id === event.flowerId);
+                    if (flower) await this.pool?.reveal(flower);
+                    return this.current(rev);
+                });
+                reveals.set(event.flowerId, reveal); tasks.push(reveal);
                 continue;
             }
             if (event.type === 'order-completed') {
-                visual.complete(event.order, starsPerCompletion); this.updateHUD(); this.sound('vasesuccss');
-                if (!await this.removeBouquet(event.order.slot)) return;
+                schedule([event.order.slot], async () => {
+                    visual.complete(event.order, starsPerCompletion); this.updateHUD(); this.sound('vasesuccss');
+                    return this.removeBouquet(event.order.slot);
+                });
                 continue;
             }
             if (event.type === 'order-added') {
-                this.pool?.ensureOrdersReachable(rules.orders);
-                visual.add(event.order); await this.renderOrder(event.order.slot, true);
+                schedule([event.order.slot], async () => {
+                    this.pool?.ensureOrdersReachable(rules.orders);
+                    visual.add(event.order); await this.renderOrder(event.order.slot, true);
+                    return this.current(rev);
+                });
                 continue;
             }
             if (event.type === 'special-paired') {
                 const carried = new Set(event.carriedFlowerIds);
                 const moves = events.slice(index + 1).filter((item): item is FlowerMove =>
                     item.type === 'move' && item.to === 'order' && carried.has(item.flowerId));
-                const flightPlan = await this.animateButterfly(event, moves, startedFlight, rev);
-                if (!flightPlan || !this.current(rev)) return;
-                deliveries = flightPlan;
+                const lanes: FlowerAnimationLane[] = ['tray', ...Array.from(new Set(moves.map(move => move.slot)))];
+                schedule(lanes, async () => {
+                    const flightPlan = await this.animateButterfly(event, moves, startedFlight, rev);
+                    if (!flightPlan || !this.current(rev)) return false;
+                    deliveries = flightPlan;
+                    return true;
+                });
                 continue;
             }
             if (event.type !== 'move') continue;
             const next = events[index + 1];
             // Keep the second wing visible until the pair has fused in the tray.
             if (next?.type === 'special-paired' && next.flowerIds[1] === event.flowerId) continue;
-            const flower = rules.flowers.find(piece => piece.id === event.flowerId)!;
-            const landingOrder = event.to === 'order' ? visual.orders[event.slot] : null;
-            const landingGroup = landingOrder?.needs.findIndex(need => need.filled < need.required) ?? -1;
-            const group = landingOrder && landingGroup >= 0 ? landingOrder.needs[landingGroup] : null;
-            const completesGroup = !!group && group.filled + 1 === group.required;
-            const completesOrder = completesGroup && landingOrder.filled + 1 === landingOrder.required;
-            const landingView = event.to === 'order' ? this.orderViews.get(event.slot) : undefined;
-            const landingBouquet = landingView?.bouquet;
-            const landing = landingOrder && landingBouquet?.landing(landingOrder);
-            const planned = deliveries?.get(event);
-            const flight = planned ? await planned : startedFlight?.event === event ? startedFlight : undefined;
-            if (!this.current(rev)) return;
-            let node = flight?.node ?? this.pool?.take(event.flowerId) ?? this.trayRoot.getChildByName('Buffered-' + event.flowerId);
-            if (!node && event.from === 'waiting') {
-                const waiting = this.mapPoint(this.toolsRoot, new Vec3(TOOL_X[2], TOOL_Y, 0), this.flowerRoot);
-                node = await fittedSprite(this.flowerRoot, 'Waiting-' + event.flowerId, flowerSpritePath(flower.kind, flower.variant), waiting.x, waiting.y, 54, 48);
-            }
-            if (!this.current(rev)) return;
-            const activeFlight = flight ?? (node?.isValid && node.parent ? this.startFlowerFlight(event, node, landing) : undefined);
-            if (activeFlight && !await activeFlight.completed) return;
-            if (!this.current(rev)) return;
-            if (activeFlight && event.to !== 'waiting') void this.flashCollection(event.to === 'buffer' ? 'tray' : 'order', activeFlight.node.position, 29);
-            // Swap the flight for the permanent flower at exactly the same slot.
-            if (node?.isValid) node.active = false;
-            visual.move(event, flower);
-            if (event.to === 'order') {
-                if (completesGroup) {
-                    const view = this.orderViews.get(event.slot);
-                    if (view?.bouquet && visual.orders[event.slot]) await view.bouquet.sync(visual.orders[event.slot]!);
-                    if (view?.remaining && group) view.remaining.string = `${group.required}/${group.required}`;
-                } else await this.refreshOrder(event.slot);
-            }
-            if (!this.current(rev)) return;
-            node?.destroy();
-            if (event.from === 'buffer' || event.to === 'buffer' || event.to === 'waiting') await this.renderTray();
-            if (!this.current(rev)) return;
-            this.updateHUD();
-            if (landingBouquet && landing) {
-                // Original DelayPlayFlowerSpineEffect yields one frame. Do not
-                // delay the group pulse or attach this effect to the flying PNG.
-                void this.waitFor(0).then(current => {
-                    if (!current || !landingBouquet.root.isValid) return;
-                    this.sound('flowerhit');
-                    if (completesOrder || landingView.departing) return;
-                    const effect = this.orderEffects?.play('landing', landingBouquet.root, landing.effectPosition);
-                    if (!effect) return;
-                    const active = landingView.landingEffects ??= new Set();
-                    active.add(effect);
-                    void effect.finished.then(() => active.delete(effect));
-                });
-            }
-            if (completesGroup && !completesOrder) {
-                if (!await this.pulseBouquetGroup(event.slot, landingGroup)) return;
-                const order = visual.orders[event.slot];
-                if (order?.needs.some(need => need.filled < need.required)) {
-                    await this.refreshOrder(event.slot);
-                    if (!this.current(rev)) return;
-                    const view = this.orderViews.get(event.slot);
-                    if (view?.bouquet) this.orderEffects?.play('group-switch', view.bouquet.root, {x: 0, y: 145 * 750 / 1080});
-                    if (view?.request) {
-                        view.tip?.cancel();
-                        view.tip = this.orderEffects?.play('order-tip', view.request, {x: 0, y: -3}) ?? undefined;
-                    }
-                    this.sound('level_checkceng');
+            const lanes: FlowerAnimationLane[] = [];
+            if (event.to === 'order') lanes.push(event.slot);
+            if (event.from === 'buffer' || event.to === 'buffer' || event.to === 'waiting') lanes.push('tray');
+            const reveal = reveals.get(event.flowerId);
+            schedule(lanes, async () => {
+                if (reveal && !await reveal) return false;
+                if (!this.current(rev)) return false;
+                return this.animateFlowerMove(event, rev, startedFlight, deliveries);
+            });
+        }
+        const errors = await Promise.all(tasks.map(task => task.then(() => null, reason => ({reason}))));
+        for (const error of errors) if (error) throw error.reason;
+    }
+    private async animateFlowerMove(event: FlowerMove, rev: number, startedFlight?: FlowerFlight,
+        deliveries?: FlowerDeliveries): Promise<boolean> {
+        const rules = this.rules!, visual = this.visual!;
+        const flower = rules.flowers.find(piece => piece.id === event.flowerId)!;
+        const landingOrder = event.to === 'order' ? visual.orders[event.slot] : null;
+        const landingGroup = landingOrder?.needs.findIndex(need => need.filled < need.required) ?? -1;
+        const group = landingOrder && landingGroup >= 0 ? landingOrder.needs[landingGroup] : null;
+        const completesGroup = !!group && group.filled + 1 === group.required;
+        const completesOrder = completesGroup && landingOrder.filled + 1 === landingOrder.required;
+        const landingView = event.to === 'order' ? this.orderViews.get(event.slot) : undefined;
+        const landingBouquet = landingView?.bouquet;
+        const landing = landingOrder && landingBouquet?.landing(landingOrder);
+        const planned = deliveries?.get(event);
+        const flight = planned ? await planned : startedFlight?.event === event ? startedFlight : undefined;
+        if (!this.current(rev)) return false;
+        let node = flight?.node ?? this.pool?.take(event.flowerId) ?? this.trayRoot.getChildByName('Buffered-' + event.flowerId);
+        if (!node && event.from === 'waiting') {
+            const waiting = this.mapPoint(this.toolsRoot, new Vec3(TOOL_X[2], TOOL_Y, 0), this.flowerRoot);
+            node = await fittedSprite(this.flowerRoot, 'Waiting-' + event.flowerId, flowerSpritePath(flower.kind, flower.variant), waiting.x, waiting.y, 54, 48);
+        }
+        if (!this.current(rev)) return false;
+        const activeFlight = flight ?? (node?.isValid && node.parent ? this.startFlowerFlight(event, node, landing) : undefined);
+        if (activeFlight && !await activeFlight.completed) return false;
+        if (!this.current(rev)) return false;
+        visual.move(event, flower);
+        if (event.to === 'order') {
+            if (completesGroup) {
+                const view = this.orderViews.get(event.slot);
+                if (view?.bouquet && visual.orders[event.slot]) await view.bouquet.sync(visual.orders[event.slot]!);
+                if (view?.remaining && group) view.remaining.string = `${group.required}/${group.required}`;
+            } else await this.refreshOrder(event.slot);
+        }
+        if (!this.current(rev)) return false;
+        if (activeFlight && event.to !== 'waiting') void this.flashCollection(event.to === 'buffer' ? 'tray' : 'order', activeFlight.node.position, 29);
+        // Keep the flight visible until the bouquet sprite is ready to take its place.
+        if (node?.isValid) { node.active = false; node.destroy(); }
+        if (event.from === 'buffer' || event.to === 'buffer' || event.to === 'waiting') await this.renderTray();
+        if (!this.current(rev)) return false;
+        this.updateHUD();
+        if (landingBouquet && landing) {
+            // Original DelayPlayFlowerSpineEffect yields one frame. Do not
+            // delay the group pulse or attach this effect to the flying PNG.
+            void this.waitFor(0).then(current => {
+                if (!current || !landingBouquet.root.isValid) return;
+                if (!activeFlight?.customLandingSound) this.sound('flowerhit');
+                if (completesOrder || landingView.departing) return;
+                const effect = this.orderEffects?.play('landing', landingBouquet.root, landing.effectPosition);
+                if (!effect) return;
+                const active = landingView.landingEffects ??= new Set();
+                active.add(effect);
+                void effect.finished.then(() => active.delete(effect));
+            });
+        }
+        if (completesGroup && !completesOrder) {
+            if (!await this.pulseBouquetGroup(event.slot, landingGroup)) return false;
+            const order = visual.orders[event.slot];
+            if (order?.needs.some(need => need.filled < need.required)) {
+                await this.refreshOrder(event.slot);
+                if (!this.current(rev)) return false;
+                const view = this.orderViews.get(event.slot);
+                if (view?.bouquet) this.orderEffects?.play('group-switch', view.bouquet.root, {x: 0, y: 145 * 750 / 1080});
+                if (view?.request) {
+                    view.tip?.cancel();
+                    view.tip = this.orderEffects?.play('order-tip', view.request, {x: 0, y: -3}) ?? undefined;
                 }
+                this.sound('level_checkceng');
             }
         }
+        return true;
     }
     private butterflyTrayPoint(pair: ButterflyPair): Vec3 {
         const stored = this.trayRoot.getChildByName('Buffered-' + pair.flowerIds[0]);
@@ -934,11 +1014,110 @@ export class FlowerGame extends Component {
             if (layer.isValid) layer.destroy();
         }
     }
+    private async animateCompose(moves: FlowerMove[], rev: number): Promise<FlowerDeliveries | undefined> {
+        const order = this.visual?.orders[moves[0]?.slot];
+        if (!order) return;
+        const frame = await loadFrame(COMPOSE_WAND_PATH).catch(error => {
+            if (this.current(rev)) console.warn('[FlowerGame] compose wand art', error);
+            return undefined;
+        });
+        if (!frame || !this.current(rev)) return;
+        const button = this.mapPoint(this.toolsRoot, new Vec3(TOOL_X[0], TOOL_Y), this.flowerRoot);
+        const water = this.waterSurface.node;
+        const pivot = this.mapPoint(water, new Vec3(0, -water.getComponent(UITransform)!.height * 0.28), this.flowerRoot);
+        const cast = new FlowerComposeCast(this.flowerRoot, frame, button, pivot);
+        const launch = cast.tip(COMPOSE_RELEASE);
+        let release: (completed: boolean) => void;
+        const released = new Promise<boolean>(resolve => { release = resolve; });
+        let hasReleased = false, hasPickedUp = false, arrived = 0;
+        const finishCast = () => {
+            release(false);
+            if (cast.root.isValid) cast.root.destroy();
+        };
+        const onPickup = () => {
+            if (hasPickedUp) return;
+            hasPickedUp = true;
+            this.sound('compose-catch', 0.69);
+        };
+        const onArrival = () => {
+            if (++arrived === moves.length) this.sound('compose-land', 0.66);
+        };
+        this.sound('compose-charge', 0.67);
+        void this.animateProgress(cast.root, COMPOSE_WAND_DURATION, progress => {
+            const time = progress * COMPOSE_WAND_DURATION;
+            cast.draw(time);
+            if (time >= COMPOSE_RELEASE && !hasReleased) {
+                hasReleased = true;
+                this.sound('compose-flick', 0.74);
+                release(true);
+            }
+        }).then(finishCast, error => {
+            finishCast();
+            if (this.current(rev)) console.warn('[FlowerGame] compose cast', error);
+        });
+
+        const reserved = cloneOrder(order), deliveries: FlowerDeliveries = new Map();
+        for (let index = 0; index < moves.length; index++) {
+            const move = moves[index];
+            const landing = FlowerBouquetView.landingFor(reserved);
+            const need = reserved.needs.find(group => group.filled < group.required);
+            if (need) need.filled++;
+            const delivery = (async () => {
+                if (!await released || (index > 0 && !await this.waitFor(index * COMPOSE_STAR_INTERVAL)) || !this.current(rev)) return;
+                const star = new FlowerComposeStar(this.flowerRoot, index, launch, onArrival);
+                return this.deliverWithCompose(move, landing, star, onPickup, rev);
+            })().catch(error => {
+                if (this.current(rev)) console.warn('[FlowerGame] compose delivery', error);
+                return undefined;
+            });
+            deliveries.set(move, delivery);
+        }
+        return deliveries;
+    }
+    private async deliverWithCompose(move: FlowerMove, landing: BouquetLanding | null, star: FlowerComposeStar,
+        onPickup: () => void, rev: number): Promise<FlowerFlight | undefined> {
+        let launched = false, node: Node | null | undefined;
+        try {
+            const flower = this.rules!.flowers.find(piece => piece.id === move.flowerId);
+            if (!flower) return;
+            const sourceNode = () => move.from === 'pool' ? this.pool?.nodeMap.get(move.flowerId)
+                : this.trayRoot.getChildByName('Buffered-' + move.flowerId);
+            if (move.from === 'pool' && !sourceNode()) await this.pool?.reveal(flower);
+            if (!this.current(rev) || (move.from !== 'waiting' && !sourceNode())) return;
+            const sourcePosition = () => {
+                const source = sourceNode();
+                return source?.isValid ? this.mapPoint(source, new Vec3(), this.flowerRoot)
+                    : this.mapPoint(this.toolsRoot, new Vec3(TOOL_X[2], TOOL_Y), this.flowerRoot);
+            };
+            if (!await this.animateProgress(star.root, COMPOSE_SEEK_DURATION, t => star.seek(t, sourcePosition()))) return;
+            if (move.from === 'pool') node = this.pool?.take(move.flowerId);
+            else {
+                const point = sourcePosition(), stored = sourceNode();
+                node = await fittedSprite(this.flowerRoot, `ComposeFlower-${move.flowerId}`, flowerSpritePath(flower.kind, flower.variant), point.x, point.y, 54, 48);
+                if (!this.current(rev)) return;
+                if (stored?.isValid) stored.active = false;
+            }
+            if (!node?.isValid || !node.parent) return;
+            onPickup();
+            const flight = this.startFlowerFlight(move, node, landing, undefined, star);
+            launched = true;
+            const completed = (async () => {
+                try { return await flight.completed; }
+                finally { if (star.root.isValid) star.root.destroy(); }
+            })();
+            return {...flight, completed};
+        } finally {
+            if (!launched) {
+                if (star.root.isValid) star.root.destroy();
+                if (node?.isValid) node.destroy();
+            }
+        }
+    }
     private async animateButterfly(pair: ButterflyPair, moves: FlowerMove[], startedFlight: FlowerFlight | undefined,
-        rev: number): Promise<Map<FlowerMove, Promise<FlowerFlight | undefined>> | null> {
+        rev: number): Promise<FlowerDeliveries | null> {
         const [firstId, secondId] = pair.flowerIds;
         const incoming = startedFlight?.event.flowerId === secondId ? startedFlight : undefined;
-        const deliveries = new Map<FlowerMove, Promise<FlowerFlight | undefined>>();
+        const deliveries: FlowerDeliveries = new Map();
         let butterfly: FlowerButterflyFlight | undefined;
         try {
             if ((incoming && !await incoming.completed) || !this.current(rev)) return null;
@@ -1143,13 +1322,18 @@ export class FlowerGame extends Component {
                 if (!completed) return;
             }
             else {
-                const events = index === 2 ? this.rules!.clearBuffer() : this.rules!.collectMatchingOrder();
+                const picked: string[] = [];
+                const events = index === 2 ? rules.clearBuffer() : rules.collectMatchingOrder(picked);
                 const consumed = events.some(event => event.type === 'move') || (index === 2 && this.rules!.buffer.length > 0);
                 // The original clear button consumes a use when only butterfly
                 // slots are occupied, although those special objects stay put.
                 if (!events.length && !consumed) return;
-                this.sound('collect');
-                await this.animateEvents(events, rev);
+                const chosen = new Set(picked);
+                const moves = events.filter((event): event is FlowerMove => event.type === 'move' && chosen.has(event.flowerId));
+                const deliveries = moves.length ? await this.animateCompose(moves, rev) : undefined;
+                if (!this.current(rev)) return;
+                if (!deliveries) this.sound('collect');
+                await this.animateEvents(events, rev, undefined, undefined, deliveries);
                 if (!this.current(rev)) return;
                 if (!consumed) return;
             }

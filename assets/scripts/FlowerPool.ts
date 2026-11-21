@@ -223,9 +223,10 @@ class RipplePlayer {
 
     dispose(): void { if (this.root.isValid) { this.root.active = false; this.root.destroy(); } }
 }
-export type FlowerClickShape =
-    | { type: 'polygon'; paths: number[][][]; artPaths?: number[][][] }
-    | { type: 'ellipse'; center: number[]; axisX: number[]; axisY: number[] };
+export type FlowerClickShape = (
+    | { type: 'polygon'; paths: number[][][] }
+    | { type: 'ellipse'; center: number[]; axisX: number[]; axisY: number[] }
+) & { artPaths?: number[][][] };
 type FlowerClickShapes = Record<string, FlowerClickShape>;
 type ClickShapeData = { shapes: FlowerClickShapes };
 let clickShapes: Promise<ClickShapeData> | null = null;
@@ -242,7 +243,7 @@ function loadClickShapes(): Promise<ClickShapeData> {
 
 /** Coordinates use the exported cropped PNG center, with positive Y upwards. */
 export function flowerShapeContains(shape: FlowerClickShape, point: Point): boolean {
-    if (shape.type === 'ellipse') {
+    if (shape.type === 'ellipse' && !shape.artPaths) {
         const x = point.x - shape.center[0], y = point.y - shape.center[1];
         const determinant = shape.axisX[0] * shape.axisY[1] - shape.axisX[1] * shape.axisY[0];
         if (Math.abs(determinant) < 1e-12) return false;
@@ -250,7 +251,8 @@ export function flowerShapeContains(shape: FlowerClickShape, point: Point): bool
         const v = (shape.axisX[0] * y - shape.axisX[1] * x) / determinant;
         return u * u + v * v <= 1 + 1e-8;
     }
-    return (shape.artPaths ?? shape.paths).some(path => {
+    const paths = shape.artPaths ?? (shape.type === 'polygon' ? shape.paths : []);
+    return paths.some(path => {
         let inside = false;
         for (let i = 0, j = path.length - 1; i < path.length; j = i++) {
             const a = path[j], b = path[i];
@@ -682,7 +684,7 @@ export class FlowerPoolView {
         // Unity SpriteRenderer opacity does not dim sibling water effects.
         const opacity = art.addComponent(UIOpacity);
         image.sizeMode = Sprite.SizeMode.CUSTOM;
-        if (hitShape.type === 'polygon' && hitShape.artPaths) image.trim = false;
+        if (hitShape.artPaths) image.trim = false;
         image.spriteFrame = frame;
         const angle=flower.kind==='cdcs_jyc'?[-12,-48,18][flower.variant-1]:(random()-.5)*24;
         const entry: PoolEntry = {

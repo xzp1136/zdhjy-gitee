@@ -48,6 +48,22 @@ for (const [name, expected] of Object.entries(plan.bundles)) {
 }
 
 const plannedRoutes = new Set(plan.moves.filter(move => move.bundle).map(move => sourceKey(move.source)));
+const audioBundle = 'core-audio';
+for (const name of ['compose-charge', 'compose-flick', 'compose-catch', 'compose-land']) {
+    const resource = `original/audio/${name}`;
+    const file = path.join(project, 'assets/bundles', audioBundle, `${resource}.m4a`);
+    plannedRoutes.add(resource);
+    if (routes.routes[resource] !== audioBundle || !fs.existsSync(file) || !fs.existsSync(file + '.meta')) {
+        issues.push(`Missing or unrouted compose audio: ${resource}`);
+        continue;
+    }
+    buckets[audioBundle].bytes += fs.statSync(file).size;
+    buckets[audioBundle].files++;
+}
+if (routes.bundles[audioBundle].sourceBytes !== buckets[audioBundle].bytes ||
+    routes.bundles[audioBundle].fileCount !== buckets[audioBundle].files) {
+    issues.push(`Bundle totals mismatch: ${audioBundle} including compose audio`);
+}
 const petalEffect = 'original/effects/bouquet-petals', effectsBundle = 'core-effects';
 const effectFile = path.join(project, 'assets/bundles', effectsBundle, petalEffect + '.effect');
 if (routes.routes[petalEffect] !== effectsBundle || !fs.existsSync(effectFile) || !fs.existsSync(effectFile + '.meta')) {

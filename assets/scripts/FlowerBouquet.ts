@@ -52,9 +52,11 @@ export type BouquetFlower = { readonly node: Node; readonly path: string };
 export class FlowerBouquetView {
     private placed = new Map<string, BouquetFlower>();
     private flowersRoot: Node;
+    readonly artwork: Node;
     private constructor(readonly root: Node, private readonly layout: Layout, private readonly metrics: Record<string, Metric>,
         private readonly unit: number, readonly entranceOffset: number) {
-        this.flowersRoot = uiNode(root, 'PlacedFlowers');
+        this.artwork = uiNode(root, 'BouquetArtwork');
+        this.flowersRoot = uiNode(this.artwork, 'PlacedFlowers');
     }
 
     static async create(parent: Node, order: FlowerOrder, x = 0, y = BOUQUET_BASE_Y): Promise<FlowerBouquetView> {
@@ -69,11 +71,12 @@ export class FlowerBouquetView {
         const unit = vesselUnit(motionLayout);
         const view = new FlowerBouquetView(root, layout, metrics, unit, (motionLayout.width + 80) * unit);
         const layer = async (part: Layer, index: number) => {
-            const n = await sprite(root, 'VaseLayer' + index, part.resource, part.x * unit, part.y * unit, part.width * unit, part.height * unit);
+            const n = await sprite(view.artwork, 'VaseLayer' + index, part.resource, part.x * unit, part.y * unit,
+                part.width * unit, part.height * unit);
             n.angle = part.angle || 0;
         };
         for (let i = 0; i < layout.baseLayers.length; i++) await layer(layout.baseLayers[i], i);
-        view.flowersRoot.setSiblingIndex(root.children.length - 1);
+        view.flowersRoot.setSiblingIndex(view.artwork.children.length - 1);
         for (let i = 0; i < layout.foregroundLayers.length; i++) await layer(layout.foregroundLayers[i], 100 + i);
         await view.sync(order);
         root.active = true;
