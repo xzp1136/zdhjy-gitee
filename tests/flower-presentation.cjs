@@ -30,6 +30,7 @@ class Node {
 class UITransform {
   width = 100; height = 100;
   setContentSize(width, height) { this.width = width; this.height = height; }
+  setAnchorPoint() {}
   convertToWorldSpaceAR(point) {
     const out = new Vec3(point.x, point.y, point.z);
     for (let node = this.node; node; node = node.parent) { out.x += node.position.x; out.y += node.position.y; }
@@ -48,16 +49,20 @@ class Component {
 const animationTweens = [];
 const cc = {
   _decorator: { ccclass: () => value => value, property: () => () => {} }, Component, Node, Vec3, UITransform, Mask,
-  Sprite: class { isValid = true; customMaterial = null; }, UIOpacity: class {}, EffectAsset: class {},
+  Sprite: class { static SizeMode = {CUSTOM: 0}; isValid = true; customMaterial = null; },
+  UIOpacity: class { opacity = 255; }, EffectAsset: class {},
   Graphics: class {
     static LineCap = {ROUND: 1};
     clears = 0;
     fills = 0;
-    clear() { this.clears++; this.fills = 0; }
+    rects = [];
+    clear() { this.clears++; this.fills = 0; this.rects = []; }
     fill() { this.fills++; }
+    roundRect(x, y, width) { this.rects.push(x + width / 2); }
     ellipse() {}
     moveTo() {}
     lineTo() {}
+    quadraticCurveTo() {}
     bezierCurveTo() {}
     close() {}
     stroke() {}
@@ -85,7 +90,8 @@ const uiNode = (parent, name, x = 0, y = 0, width = 750, height = 1334) => {
 };
 const rewardDialogs = [];
 const pauseDialogs = [];
-const ui = { uiNode, sprite: async (...args) => { const node = uiNode(...args); node.resource = args[2]; return node; }, loadFrame: async () => ({}),
+const ui = { uiNode, sprite: async (...args) => { const node = uiNode(...args); node.resource = args[2]; return node; },
+  loadFrame: async resource => resource === 'greenhouse/clear-brush' ? {originalSize: {width: 125, height: 162}} : {},
   message: async (parent, title, body, action, onAction) => { rewardDialogs.push({title, body, action, onAction}); return new Node('Message'); } };
 const originalFlowerSpritePath = (kind, variant = 1) => 'original/flower/' + kind + '_0' + variant;
 const catalog = { flowerSpritePath: originalFlowerSpritePath, originalFlowerSpritePath };
@@ -109,7 +115,7 @@ function load(name) {
     if (request === './FlowerHaptics') return {vibrateFlowerTap() { hapticTaps++; }};
     if (request === './FlowerPause') return {createPause: async (_parent, actions) => { pauseDialogs.push(actions); }};
     if (request === './FlowerCatalog') return catalog;
-    if (['./FlowerRules', './FlowerBoardSkin', './FlowerBouquet', './FlowerBouquetFinish', './FlowerCollectionFeedback',
+    if (['./FlowerRules', './FlowerBoardSkin', './FlowerBouquet', './FlowerBouquetFinish', './FlowerCollectionFeedback', './FlowerClearSweep',
       './FlowerPetalBloom', './FlowerRewardedVideo'].includes(request)) return load(request.slice(2));
     return {};
   } });
@@ -486,6 +492,66 @@ function collectingGame(config) {
   return {game, rules, flights, sounds, get ended() { return ended; }};
 }
 const flush = () => new Promise(resolve => setImmediate(resolve));
+
+test('the clear prop sweeps each stored flower on contact and keeps the butterfly in the tray', async () => {
+  const {game, rules, sounds} = collectingGame({level: 4, timeLimit: 180,
+    flowers: [{kind: 'cdy_lxq', count: 3}, {kind: 'dy_zmj', count: 3}, {kind: 'cdcs_jyc', count: 3}],
+    orders: [{needs: [{kind: 'cdy_lxq', count: 3}]}, {needs: [{kind: 'dy_zmj', count: 3}]},
+      {needs: [{kind: 'cdcs_jyc', count: 3}]}],
+    specials: [{specialId: 2000, kind: 'hd_01', insertAtPercent: 0}, {specialId: 2000, kind: 'hd_01', insertAtPercent: 100}]});
+  const {TRAY_X, TRAY_Y, TOOL_X, TOOL_Y} = load('FlowerBoardSkin');
+  const [left, right] = rules.flowers.filter(flower => flower.kind === 'cdcs_jyc');
+  const butterfly = rules.flowers.find(flower => flower.specialId === 2000);
+  for (const flower of [left, butterfly, right]) rules.select(flower.id);
+  game.visual = new FlowerPresentationState(rules);
+  const stored = [left, butterfly, right].map((flower, slot) => {
+    const node = uiNode(game.trayRoot, 'Buffered-' + flower.id);
+    node.setPosition(TRAY_X[slot], TRAY_Y);
+    return node;
+  });
+  game.hud = uiNode(game.content, 'HUD');
+  game.toolsRoot = uiNode(game.hud, 'Tools');
+  const button = uiNode(game.toolsRoot, 'Tool2Hit');
+  button.setPosition(TOOL_X[2], TOOL_Y);
+  const sprite = uiNode(button, 'Tool2').addComponent(cc.Sprite), original = {};
+  sprite.spriteFrame = original;
+  let inventory = 2, trayRenders = 0;
+  game.read = () => inventory;
+  game.write = (key, value) => { assert.equal(key, 'clear'); inventory = value; };
+  game.buildTools = async () => {};
+  game.renderTray = async () => { trayRenders++; };
+
+  const work = game.useTool(2);
+  await flush();
+  const motion = animationTweens.at(-1);
+  const sweep = game.hud.getChildByName('ClearSweep');
+  assert.notEqual(sprite.spriteFrame, original);
+  assert.ok(sweep.isValid);
+  assert.deepEqual(Array.from(rules.waiting), [left.id, right.id]);
+  assert.equal(trayRenders, 0);
+
+  motion.target.progress = 0.54;
+  motion.steps[0].options.onUpdate();
+  assert.equal(stored[0].position.x, TRAY_X[0]);
+  assert.equal(stored[1].position.x, TRAY_X[1]);
+  assert.ok(stored[2].position.x < TRAY_X[2]);
+  assert.equal(game.visual.buffer.length, 3);
+  assert.deepEqual(sounds, ['level_qinsao']);
+
+  motion.target.progress = 0.9;
+  motion.steps[0].options.onUpdate();
+  const graphics = sweep.getChildByName('SweepDust').getComponent(cc.Graphics);
+  assert.deepEqual([...new Set(graphics.rects)], [TRAY_X[0], TRAY_X[2]]);
+  assert.equal(stored[1].position.x, TRAY_X[1]);
+  motion.callback();
+  await work;
+
+  assert.deepEqual(Array.from(game.visual.buffer), [butterfly.id]);
+  assert.equal(trayRenders, 1);
+  assert.equal(inventory, 1);
+  assert.equal(sprite.spriteFrame, original);
+  assert.equal(game.hud.getChildByName('ClearSweep').isValid, false);
+});
 
 test('compose casts one star per missing flower and lets subsequent tray refills use the normal flight', async () => {
   const {game, rules} = collectingGame({level: 2, timeLimit: 180,

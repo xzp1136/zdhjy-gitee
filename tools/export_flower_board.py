@@ -64,6 +64,8 @@ def export(psd_path: Path, output: Path) -> None:
     layer('progress-track', 41)
     layer('tool-base', 12)
     layer('compose-wand', 18)
+    layer('clear-brush', 16)
+    composite('tool-clear-in-use', [14, 21], psd[14].bbox)
     for name, base, icon, title in [('compose', 12, 18, 19), ('shuffle', 13, 17, 20), ('clear', 14, 16, 21)]:
         composite(f'tool-{name}', [base, icon, title], psd[base].bbox)
 

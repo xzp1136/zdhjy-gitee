@@ -13,6 +13,7 @@ import { BUTTERFLY_WING_HEIGHT, FlowerButterflyFlight } from './FlowerButterflyF
 import { CollectionPulse, drawCollectionPulse, FlowerFlightTrail } from './FlowerCollectionFeedback';
 import { COMPOSE_RELEASE, COMPOSE_SEEK_DURATION, COMPOSE_STAR_INTERVAL, COMPOSE_WAND_DURATION, COMPOSE_WAND_PATH,
     FlowerComposeCast, FlowerComposeStar } from './FlowerComposeEffect';
+import { CLEAR_BRUSH_PATH, CLEAR_TOOL_IN_USE_PATH, FlowerClearSweep } from './FlowerClearSweep';
 import { BOUQUET_FINISH_DURATION, FlowerBouquetFinish } from './FlowerBouquetFinish';
 import { BOUQUET_BLOOM_SECONDS, BOUQUET_GOLD_DELAY, FlowerPetalBloom, preloadFlowerPetals } from './FlowerPetalBloom';
 import { BOARD_HEIGHT, BOARD_UNIT, BOARD_WIDTH, BOUQUET_BASE_Y, ORDER_X, TOOL_NAMES, TOOL_X, TOOL_Y,
@@ -372,7 +373,7 @@ export class FlowerGame extends Component {
     private onUISound(name?: string): void { if (name) this.sound(name); }
     private async preloadEffects(): Promise<void> {
         const names = ['click', 'open', 'close', 'flowerstart', 'flowerhit', 'vasesuccss', 'flowerfuqi',
-            'level_new', 'level_checkceng', 'level_daluan', 'bgm_home', 'bgm_level', 'combine', 'hudiefly', 'starAdd', 'collect',
+            'level_new', 'level_checkceng', 'level_daluan', 'level_qinsao', 'bgm_home', 'bgm_level', 'combine', 'hudiefly', 'starAdd', 'collect',
             'compose-charge', 'compose-flick', 'compose-catch', 'compose-land'];
         await Promise.all(names.map(name =>
             new Promise<void>((resolve, reject) => {
@@ -393,6 +394,7 @@ export class FlowerGame extends Component {
             await Promise.all([
                 loadFrame(A + 'ui/game/guidehand'), loadFrame(A + 'ui/game/lock'), loadFrame(A + 'order/commonvase'), preloadBoardSkin(),
                 level >= 2 ? loadFrame(COMPOSE_WAND_PATH) : Promise.resolve(),
+                level >= 4 ? Promise.all([loadFrame(CLEAR_BRUSH_PATH), loadFrame(CLEAR_TOOL_IN_USE_PATH)]) : Promise.resolve(),
                 FlowerPoolView.preload(flowers), preloadBouquets(config.orders?.map(order => order.vaseId)),
                 FlowerEffects.preload(), preloadFlowerPetals(), preloadPause(), preloadFailure(), preloadContinue(), preloadWinResult(level),
             ]);
@@ -1014,6 +1016,58 @@ export class FlowerGame extends Component {
             if (layer.isValid) layer.destroy();
         }
     }
+    private async animateClear(events: FlowerEvent[], rev: number): Promise<void> {
+        const rules = this.rules!, visual = this.visual!;
+        const cleared = events.filter((event): event is FlowerMove =>
+            event.type === 'move' && event.from === 'buffer' && event.to === 'waiting');
+        if (!await this.playClearSweep(cleared, rev)) {
+            if (!this.current(rev)) return;
+            this.sound('collect');
+            await this.animateEvents(events, rev);
+            return;
+        }
+        if (!this.current(rev)) return;
+        // The tray stays in place under the bristles and compacts once the swipe is complete.
+        for (const move of cleared) visual.move(move, rules.flowers.find(flower => flower.id === move.flowerId)!);
+        if (cleared.length) {
+            await this.renderTray();
+            if (!this.current(rev)) return;
+            this.updateHUD();
+        }
+        await this.animateEvents(events.slice(cleared.length), rev);
+    }
+    private async playClearSweep(cleared: FlowerMove[], rev: number): Promise<boolean> {
+        const frames = await Promise.all([loadFrame(CLEAR_BRUSH_PATH), loadFrame(CLEAR_TOOL_IN_USE_PATH)]).catch(error => {
+            if (this.current(rev)) console.warn('[FlowerGame] clear brush art', error);
+            return null;
+        });
+        if (!frames || !this.current(rev)) return false;
+        const tool = this.toolsRoot.getChildByName('Tool2Hit')?.getChildByName('Tool2')?.getComponent(Sprite);
+        const restingFrame = tool?.spriteFrame;
+        const buffer = this.visual!.buffer;
+        if (!tool || !restingFrame || !buffer.length) return false;
+        const slot = (index: number) => this.mapPoint(this.trayRoot, new Vec3(TRAY_X[index], TRAY_Y), this.hud);
+        const sweptFlowers = [];
+        for (const event of cleared) {
+            const node = this.trayRoot.getChildByName('Buffered-' + event.flowerId);
+            if (!node?.isValid) continue;
+            sweptFlowers.push({node, point: this.mapPoint(this.trayRoot, node.position, this.hud)});
+        }
+        const button = this.mapPoint(tool.node, new Vec3(), this.hud);
+        const sweep = new FlowerClearSweep(this.hud, frames[0], button, slot(0), slot(buffer.length - 1), sweptFlowers);
+        let completed = false;
+        const draw = (progress: number) => sweep.draw(progress, () => this.sound('level_qinsao', 0.64));
+        try {
+            tool.spriteFrame = frames[1];
+            draw(0);
+            completed = await this.animateProgress(sweep.root, sweep.duration, draw);
+            return completed;
+        } finally {
+            if (tool.isValid) tool.spriteFrame = restingFrame;
+            if (!completed) sweep.restoreFlowers();
+            if (sweep.root.isValid) sweep.root.destroy();
+        }
+    }
     private async animateCompose(moves: FlowerMove[], rev: number): Promise<FlowerDeliveries | undefined> {
         const order = this.visual?.orders[moves[0]?.slot];
         if (!order) return;
@@ -1320,14 +1374,17 @@ export class FlowerGame extends Component {
                     else resolve(false);
                 });
                 if (!completed) return;
-            }
-            else {
-                const picked: string[] = [];
-                const events = index === 2 ? rules.clearBuffer() : rules.collectMatchingOrder(picked);
-                const consumed = events.some(event => event.type === 'move') || (index === 2 && this.rules!.buffer.length > 0);
-                // The original clear button consumes a use when only butterfly
-                // slots are occupied, although those special objects stay put.
+            } else if (index === 2) {
+                const events = rules.clearBuffer();
+                // A tray containing only butterflies still consumes the prop and keeps the butterflies.
+                const consumed = events.some(event => event.type === 'move') || rules.buffer.length > 0;
                 if (!events.length && !consumed) return;
+                await this.animateClear(events, rev);
+                if (!consumed) return;
+            } else {
+                const picked: string[] = [];
+                const events = rules.collectMatchingOrder(picked);
+                if (!events.length) return;
                 const chosen = new Set(picked);
                 const moves = events.filter((event): event is FlowerMove => event.type === 'move' && chosen.has(event.flowerId));
                 const deliveries = moves.length ? await this.animateCompose(moves, rev) : undefined;
@@ -1335,7 +1392,7 @@ export class FlowerGame extends Component {
                 if (!deliveries) this.sound('collect');
                 await this.animateEvents(events, rev, undefined, undefined, deliveries);
                 if (!this.current(rev)) return;
-                if (!consumed) return;
+                if (!events.some(event => event.type === 'move')) return;
             }
             if (this.current(rev)) { this.write(key, count - 1); await this.buildTools(); }
         } finally { if (this.current(rev)) this.busy = false; }
