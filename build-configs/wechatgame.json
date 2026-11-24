@@ -17,7 +17,7 @@
   "startSceneAssetBundle": true,
   "mainBundleCompressionType": "merge_dep",
   "mainBundleIsRemote": false,
-  "server": "https://game2cdn.chujinggamefun.com/zdhjy/wechat/v0002/",
+  "server": "https://game2cdn.chujinggamefun.com/zdhjy/wechat/v20261124-butterfly/",
   "nativeCodeBundleMode": "wasm",
   "packages": {
     "wechatgame": {

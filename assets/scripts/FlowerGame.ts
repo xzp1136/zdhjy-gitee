@@ -1432,6 +1432,72 @@ export class FlowerGame extends Component {
             onHome: () => { if (this.current(rev)) void this.showHome(); },
         });
     }
+    /** Once every ordinary flower is gone, hatch any unused butterfly wings before showing the result. */
+    private async releaseRemainingButterflies(rev: number): Promise<boolean> {
+        const rules = this.rules, visual = this.visual;
+        if (!rules || !visual) return false;
+        const remaining = rules.flowers.filter(piece => piece.specialId !== undefined && piece.status !== 'collected');
+        if (!remaining.length) return this.current(rev);
+
+        const frames = new Map<string, SpriteFrame>();
+        await Promise.all(Array.from(new Set(remaining.map(piece => piece.kind))).map(async kind => {
+            const frame = await loadFrame(flowerSpritePath(kind));
+            frames.set(kind, frame);
+        }));
+        if (!this.current(rev)) return false;
+
+        this.sound('combine', 0.52);
+        const released = await Promise.all(remaining.map(async (piece, index) => {
+            if (index > 0 && !await this.waitFor(index * 0.08)) return false;
+            if (!this.current(rev)) return false;
+            let shell = piece.status === 'buffer'
+                ? this.trayRoot.getChildByName('Buffered-' + piece.id)
+                : this.pool?.take(piece.id) ?? null;
+            const origin = shell?.parent
+                ? this.mapPoint(shell.parent, shell.position, this.flowerRoot)
+                : new Vec3((index - (remaining.length - 1) / 2) * 64, -80, 0);
+            if (shell) {
+                shell.setParent(this.flowerRoot);
+                shell.setPosition(origin);
+                shell.setScale(1, 1, 1);
+                // Pool.take hides the transparent cocoon used around a butterfly wing; restore it for the hatch beat.
+                const bubble = shell.getChildByName('Bubble');
+                if (bubble) bubble.active = true;
+            }
+            const frame = frames.get(piece.kind);
+            if (!frame) { shell?.destroy(); return this.current(rev); }
+            const butterfly = new FlowerButterflyFlight(this.flowerRoot, frame, origin, piece.specialId === 2001);
+            try {
+                const shellOpacity = shell && (shell.getComponent(UIOpacity) ?? shell.addComponent(UIOpacity));
+                const hatched = await this.animateProgress(butterfly.root, 0.34, progress => {
+                    const opening = Math.min(1, progress / 0.82);
+                    butterfly.merge(opening);
+                    if (shell?.isValid && shellOpacity) {
+                        const pulse = 1 + 0.20 * Math.sin(Math.PI * Math.min(1, progress / 0.72));
+                        shell.setScale(pulse, pulse, 1);
+                        shellOpacity.opacity = Math.round(255 * (1 - Math.max(0, (progress - 0.42) / 0.58)));
+                    }
+                });
+                if (shell?.isValid) shell.destroy();
+                shell = null;
+                if (!hatched || !this.current(rev)) return false;
+                if (index === 0) this.sound('hudiefly', 0.68);
+                const side = index % 2 ? -1 : 1;
+                const spread = (54 + (index % 3) * 38) * side;
+                const destination = new Vec3(origin.x + spread, BOARD_HEIGHT / 2 + 160 + (index % 2) * 55, 0);
+                return await this.animateProgress(butterfly.root, 0.88 + index * 0.025,
+                    progress => butterfly.fly(progress, destination));
+            } finally {
+                if (shell?.isValid) shell.destroy();
+                if (butterfly.root.isValid) butterfly.root.destroy();
+            }
+        }));
+        if (!this.current(rev) || released.some(done => !done)) return false;
+        const ids = new Set(remaining.map(piece => piece.id));
+        visual.buffer = visual.buffer.filter(id => !ids.has(id));
+        await this.renderTray();
+        return this.current(rev);
+    }
     private async endLevel() {
         if (this.finished || this.paused || !this.rules) return;
         this.finished = true;
@@ -1439,6 +1505,7 @@ export class FlowerGame extends Component {
         const won = rules.status === 'won'; const level = rules.level;
         const availableLevels = this.catalog ? this.catalog.levels.keys() : [level];
         const nextLevel = normalizePlayableLevel(level + 1, availableLevels);
+        if (won && !await this.releaseRemainingButterflies(rev)) return;
         this.sound(won ? 'win' : 'lose');
         if (won) {
             this.write('level', normalizePlayableLevel(Math.max(this.read('level', 1), nextLevel),
@@ -1451,8 +1518,29 @@ export class FlowerGame extends Component {
                 () => { if (this.current(rev)) void this.startLevel(nextLevel); }, () => { if (this.current(rev)) void this.showHome(); },
                 nextLevel > level ? '下一关' : '再玩一次');
         } else {
-            const failure = () => this.current(rev) ? createFailure(content, rules.failureReason || 'time',
-                () => { if (this.current(rev)) void this.startLevel(level); }, () => { if (this.current(rev)) void this.showHome(); }) : Promise.resolve(null);
+            const failureReason = rules.failureReason || 'time';
+            const failure = () => this.current(rev) ? createFailure(content, failureReason,
+                () => { if (this.current(rev)) void this.startLevel(level); },
+                () => { if (this.current(rev)) void this.showHome(); }, () => {
+                    if (!this.current(rev) || this.rules !== rules) return false;
+                    const events = failureReason === 'buffer' ? rules.reviveBufferWithReward() : rules.reviveTimeWithReward();
+                    if (!events.length) return false;
+                    this.finished = false;
+                    if (failureReason === 'buffer') {
+                        // The reward succeeds synchronously so FailureOverlay can
+                        // begin closing immediately. Tray work continues behind it.
+                        void (async () => {
+                            await this.renderTray();
+                            if (!this.current(rev)) return;
+                            await this.animateEvents(events, rev);
+                            if (this.current(rev)) this.updateHUD();
+                        })().catch(error => {
+                            if (this.current(rev)) console.error('[FlowerGame] buffer revive', error);
+                        });
+                    } else this.sound('time_add');
+                    this.updateHUD();
+                    return true;
+                }) : Promise.resolve(null);
             if (this.rules.failureReason === 'time') {
                 await createTimeContinue(content, rules.coins, () => {
                     if (!this.current(rev)) return false;

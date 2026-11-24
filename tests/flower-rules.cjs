@@ -663,6 +663,30 @@ test('clearing moves every ordinary stored flower into waiting while preserving 
   assert.equal(game.clearBuffer().length, 0);
 });
 
+test('rewarded buffer revival unlocks the sixth slot and clears ordinary tray flowers without losing them', () => {
+  const game = create({ ...many, specials: [
+    { specialId: 2000, kind: 'hd_01', insertAtPercent: 0 },
+    { specialId: 2000, kind: 'hd_01', insertAtPercent: 100 },
+  ] });
+  const butterfly = game.flowers.find(piece => piece.specialId === 2000);
+  game.select(butterfly.id);
+  ids(game, kinds[2]).slice(0, 4).forEach(id => game.select(id));
+  assert.equal(game.status, 'lost');
+  assert.equal(game.failureReason, 'buffer');
+  const normalBefore = game.flowers.filter(piece => piece.specialId === undefined).length;
+  const events = game.reviveBufferWithReward();
+  assert.equal(events[0].type, 'buffer-revived');
+  assert.equal(events[0].capacity, 6);
+  assert.equal(events.filter(event => event.type === 'move' && event.from === 'buffer' && event.to === 'waiting').length, 4);
+  assert.equal(game.status, 'playing');
+  assert.equal(game.failureReason, null);
+  assert.equal(game.bufferCapacity, 6);
+  assert.equal(JSON.stringify(game.buffer), JSON.stringify([butterfly.id]));
+  assert.equal(game.waiting.length, 4);
+  assert.equal(game.flowers.filter(piece => piece.specialId === undefined).length, normalBefore);
+  assert.equal(game.reviveBufferWithReward().length, 0);
+});
+
 test('a new order consumes waiting flowers before ordinary tray flowers and retains every uncollected piece', () => {
   const game = create({
     level: 2, timeLimit: 400,

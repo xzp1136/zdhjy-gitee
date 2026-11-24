@@ -78,6 +78,7 @@ export type FlowerEvent =
     | { type: 'buffer-expanded'; capacity: number; cost: number }
     | { type: 'order-unlocked'; slot: number }
     | { type: 'time-revived'; seconds: number; cost: number }
+    | { type: 'buffer-revived'; capacity: number }
     | { type: 'flower-revealed'; flowerId: string; layer: 2 }
     | { type: 'special-paired'; specialId: number; flowerIds: string[]; slot: number; delaySeconds: number; carriedFlowerIds: string[] }
     | { type: 'won'; stars: number; coins: number }
@@ -510,6 +511,30 @@ export class FlowerRules {
         this.failureReason = null;
         this.status = 'playing';
         return [{ type: 'time-revived', seconds: 120, cost }];
+    }
+
+    /** Resume a full-tray attempt by opening the sixth slot and clearing ordinary stored flowers. */
+    reviveBufferWithReward(): FlowerEvent[] {
+        if (this.status !== 'lost' || this.failureReason !== 'buffer') return [];
+        this.status = 'playing';
+        this.failureReason = null;
+        this.bufferCapacity = Math.max(this.bufferCapacity, 6);
+        const events: FlowerEvent[] = [{ type: 'buffer-revived', capacity: this.bufferCapacity }];
+        const retained: string[] = [];
+        for (const id of this.buffer) {
+            const piece = this.pieces.get(id)!;
+            // An unmatched butterfly must stay in the tray so its partner can
+            // still find it; ordinary flowers remain available through waiting.
+            if (piece.specialId !== undefined) { retained.push(id); continue; }
+            piece.status = 'waiting';
+            this.waiting.push(id);
+            events.push({ type: 'move', flowerId: id, from: 'buffer', to: 'waiting', slot: this.waiting.length - 1 });
+        }
+        this.buffer = retained;
+        this.settleBuffer(events);
+        this.releaseStalledDifficulties(events);
+        this.checkEnd(events);
+        return events;
     }
 
     buyExtraBufferSlot(): FlowerEvent[] {
