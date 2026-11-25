@@ -1,7 +1,8 @@
 import { Color, Node, Rect, Size, Sprite, SpriteFrame, Texture2D } from 'cc';
 import { uiNode } from './FlowerUI';
 
-type LightShape = 'star' | 'point';
+const LIGHT_SHAPES = ['star', 'point', 'halo'] as const;
+type LightShape = typeof LIGHT_SHAPES[number];
 type LightFrames = Record<LightShape, SpriteFrame[]>;
 
 const CELL = 96;
@@ -11,16 +12,16 @@ let sharedFrames: LightFrames | undefined;
 /** Store the soft halos and pin-sharp highlights in one texture for both butterflies. */
 function starlightFrames(): LightFrames {
     if (sharedFrames) return sharedFrames;
-    const width = CELL * HALO_COLORS.length, height = CELL * 2;
+    const width = CELL * HALO_COLORS.length, height = CELL * LIGHT_SHAPES.length;
     const pixels = new Uint8Array(width * height * 4);
-    const frames: LightFrames = {star: [], point: []};
+    const frames: LightFrames = {star: [], point: [], halo: []};
     const texture = new Texture2D();
     texture.name = 'ButterflyStarlight';
     texture.reset({width, height, format: Texture2D.PixelFormat.RGBA8888});
-    const shapes: LightShape[] = ['star', 'point'];
-    for (let row = 0; row < shapes.length; row++) {
-        const shape = shapes[row];
+    for (let row = 0; row < LIGHT_SHAPES.length; row++) {
+        const shape = LIGHT_SHAPES[row];
         const star = shape === 'star';
+        const bubble = shape === 'halo';
         for (let py = 0; py < CELL; py++) {
             const y = (py + 0.5) * 2 / CELL - 1;
             for (let px = 0; px < CELL; px++) {
@@ -28,10 +29,13 @@ function starlightFrames(): LightFrames {
                 const r2 = x * x + y * y;
                 const edge = Math.max(0, 1 - r2) ** 0.85;
                 const ray = star ? Math.max(crossRay(x, y), crossRay(y, x * 0.94)) : 0;
-                const halo = star ? 0.54 * Math.exp(-5.2 * r2) + ray * 0.42
+                const rim = bubble ? Math.exp(-77 * (Math.sqrt(r2) - 0.59) ** 2) : 0;
+                const halo = bubble ? 0.67 * rim + 0.19 * Math.exp(-4 * r2)
+                    : star ? 0.54 * Math.exp(-5.2 * r2) + ray * 0.42
                     : 0.62 * Math.exp(-7.8 * r2) + 0.18 * Math.exp(-20 * r2);
                 const hotX = x + (star ? 0 : 0.075), hotY = y + (star ? 0 : 0.065);
-                const hot = Math.max(Math.exp(-44 * (hotX * hotX + hotY * hotY)), ray * 0.95);
+                const hot = bubble ? 0.44 * rim + 0.12 * Math.exp(-6 * r2)
+                    : Math.max(Math.exp(-44 * (hotX * hotX + hotY * hotY)), ray * 0.95);
                 const alpha = hot + halo * (1 - hot);
                 const pearl = alpha > 0 ? hot / alpha : 0;
                 for (let column = 0; column < HALO_COLORS.length; column++) {

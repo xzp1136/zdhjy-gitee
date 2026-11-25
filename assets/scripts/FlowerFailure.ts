@@ -15,7 +15,7 @@ export async function createFailure(parent: Node, reason: string, onRetry: () =>
     const overlay = modal(parent, 'FailureOverlay');
     await popupFrame(overlay, '挑战结束', 650, 705);
     await popupIcon(overlay, 'WiltedFlower', 'wilted', 0, 129, 235);
-    const hint = reason === 'buffer' ? '暂存位已满' : '本关时间用完了';
+    const hint = reason === 'buffer' ? '暂存区已满，挑战失败' : '本关时间用完了';
     label(overlay, 'FailureReason', hint, 0, -25, 42, 510, '#8f462d', 'display');
     const reviveHint = reason === 'buffer' ? '复活将解锁一个槽位，并清空暂存花朵' : '复活可增加 120 秒，继续完成花束';
     label(overlay, 'RetryHint', onRevive ? reviveHint : '再试一次，把花束整理好吧！', 0, -83, 28, 540, '#694727');

@@ -22,7 +22,7 @@ const read = (key: string, fallback: number) => {
 const write = (key: string, value: number) => sys.localStorage.setItem(`zdhjy.${key}`, String(value));
 
 /** Homepage controls use the supplied Photoshop document's 1080×2400 coordinates. */
-export async function createHome(parent: Node, onPlay: () => void, level = 1): Promise<Node> {
+export async function createHome(parent: Node, onPlay: () => void, level = 1, startTutorial = false): Promise<Node> {
     const home = uiNode(parent, 'Home');
     home.active = false;
     const [background, font] = await Promise.all([
@@ -88,7 +88,7 @@ export async function createHome(parent: Node, onPlay: () => void, level = 1): P
         () => void notice('游戏圈', '请在微信小游戏中查看游戏圈\n当前预览未连接微信服务', 'community'));
 
     const play = await part(artwork, 'Play', 'play', 259, 1746, 567, 234);
-    label(play, 'Level', `第${level}关`, 0, 1863 - 1908, 53, 460, '#3a8d0e');
+    label(play, 'Level', startTutorial ? '新手引导' : `第${level}关`, 0, 1863 - 1908, 53, 460, '#3a8d0e');
     tap(play, () => {
         if (modalOpen || leaving || !home.isValid) return;
         leaving = true;

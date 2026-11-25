@@ -3,7 +3,7 @@ import { Color, Graphics } from 'cc';
 type Point = {x: number; y: number};
 export type CollectionPulse = 'water' | 'tray' | 'order';
 
-/** A short ribbon that trails behind the current position and contracts on landing. */
+/** A tapered ribbon that trails behind the flower and contracts on landing. */
 export class FlowerFlightTrail {
     private readonly color = new Color();
 
@@ -18,10 +18,14 @@ export class FlowerFlightTrail {
         if (distance < 3 || strength <= 0) return;
         const ux = dx / distance, uy = dy / distance;
         const depth = Math.hypot(width * ux, height * uy);
-        const length = Math.min(distance, 148, 42 + depth * 0.82) * Math.sqrt(strength);
-        const reach = Math.min(14, 5 + width * 0.12) * strength;
-        const hx = current.x - ux * Math.min(8, distance * 0.18);
-        const hy = current.y - uy * Math.min(8, distance * 0.18);
+        const span = Math.hypot(width * uy, height * ux);
+        const inset = Math.min(8, distance * 0.18);
+        // Short flights can trail behind the flower's rear edge at pickup.
+        const pickupReach = Math.min(distance, depth) * 0.45;
+        const length = Math.min(distance - inset + pickupReach, 224, 64 + depth * 1.16) * Math.sqrt(strength);
+        const reach = Math.min(28, 11 + span * 0.14) * strength;
+        const hx = current.x - ux * inset;
+        const hy = current.y - uy * inset;
         for (let band = 0; band < 2; band++) {
             const radius = reach * (band === 0 ? 1 : 0.54);
             for (let i = 0; i < 8; i++) {
@@ -29,8 +33,8 @@ export class FlowerFlightTrail {
                 const a = (1 - fromTail) ** 0.85 * radius, b = (1 - toTail) ** 0.85 * radius;
                 const ax = hx - ux * length * fromTail, ay = hy - uy * length * fromTail;
                 const bx = hx - ux * length * toTail, by = hy - uy * length * toTail;
-                const alpha = Math.round(strength * (1 - (fromTail + toTail) / 2) ** 1.25 * (band === 0 ? 110 : 207));
-                art.fillColor = this.color.set(255, band === 0 ? 225 : 252, band === 0 ? 164 : 226, alpha);
+                const alpha = Math.round(strength * (1 - (fromTail + toTail) / 2) ** 1.05 * (band === 0 ? 155 : 239));
+                art.fillColor = this.color.set(255, band === 0 ? 199 : 246, band === 0 ? 116 : 207, alpha);
                 art.moveTo(ax - uy * a, ay + ux * a);
                 art.lineTo(bx - uy * b, by + ux * b);
                 art.lineTo(bx + uy * b, by - ux * b);

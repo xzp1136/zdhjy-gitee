@@ -398,10 +398,10 @@ export class FlowerRules {
         this.flowers = slots.filter(Boolean);
     }
 
-    select(flowerId: string): FlowerEvent[] {
+    select(flowerId: string, occupiedButterflySlots?: ReadonlySet<number>): FlowerEvent[] {
         const flower = this.pieces.get(flowerId);
         if (this.status !== 'playing' || !flower || flower.status !== 'pool') return [];
-        if (flower.specialId !== undefined) return this.selectSpecial(flower);
+        if (flower.specialId !== undefined) return this.selectSpecial(flower, occupiedButterflySlots);
         const events: FlowerEvent[] = [];
         const order = this.matchingOrder(flower.kind);
         if (order) {
@@ -418,14 +418,18 @@ export class FlowerRules {
         return events;
     }
 
-    /** Complete only the current flower group of the first active bouquet. */
-    collectMatchingOrder(carriedFlowerIds?: string[]): FlowerEvent[] {
+    /** Complete one bouquet's current group, giving unclaimed slots priority for butterflies. */
+    collectMatchingOrder(carriedFlowerIds?: string[], occupiedButterflySlots?: ReadonlySet<number>): FlowerEvent[] {
         if (this.status !== 'playing') return [];
         const events: FlowerEvent[] = [];
         let target: FlowerOrder | null = null;
         let need: FlowerOrderNeed | undefined;
         let candidates: FlowerPiece[] = [];
-        for (const order of this.orders) {
+        const occupied = (order: FlowerOrder | null) => !!order && !!occupiedButterflySlots?.has(order.slot);
+        const orders = occupiedButterflySlots?.size
+            ? this.orders.filter(order => !occupied(order)).concat(this.orders.filter(occupied))
+            : this.orders;
+        for (const order of orders) {
             if (!order) continue;
             const current = order.needs.find(item => item.filled < item.required)!;
             const available = () => this.flowers.filter(piece => piece.specialId === undefined && piece.kind === current.kind
@@ -555,7 +559,7 @@ export class FlowerRules {
         return events;
     }
 
-    private selectSpecial(piece: FlowerPiece): FlowerEvent[] {
+    private selectSpecial(piece: FlowerPiece, occupiedButterflySlots?: ReadonlySet<number>): FlowerEvent[] {
         const slot = this.buffer.findIndex(id => this.pieces.get(id)?.specialId === piece.specialId);
         const events: FlowerEvent[] = [];
         if (slot < 0) {
@@ -575,7 +579,7 @@ export class FlowerRules {
         this.buffer.splice(slot, 1);
         // The UI plays the placement/pairing delay before the subsequent move events.
         // Green and pink butterflies invoke the same current-group compose operation.
-        events.push(...this.collectMatchingOrder(carriedFlowerIds));
+        events.push(...this.collectMatchingOrder(carriedFlowerIds, occupiedButterflySlots));
         this.checkEnd(events);
         return events;
     }

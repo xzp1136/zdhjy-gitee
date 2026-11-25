@@ -50,6 +50,7 @@ const animationTweens = [];
 const cc = {
   _decorator: { ccclass: () => value => value, property: () => () => {} }, Component, Node, Vec3, UITransform, Mask,
   Sprite: class { static SizeMode = {CUSTOM: 0}; isValid = true; customMaterial = null; },
+  Label: class { string = ''; },
   UIOpacity: class { opacity = 255; }, EffectAsset: class {},
   Graphics: class {
     static LineCap = {ROUND: 1};
@@ -59,6 +60,7 @@ const cc = {
     clear() { this.clears++; this.fills = 0; this.rects = []; }
     fill() { this.fills++; }
     roundRect(x, y, width) { this.rects.push(x + width / 2); }
+    circle() {}
     ellipse() {}
     moveTo() {}
     lineTo() {}
@@ -67,7 +69,7 @@ const cc = {
     close() {}
     stroke() {}
   },
-  Color: class { set() { return this; } },
+  Color: class { set() { return this; } fromHEX() { return this; } },
   SpriteFrameEvent: { UV_UPDATED: 'uv_updated' },
   Vec4: class {
     constructor(x = 0, y = 0, z = 0, w = 0) { this.set(x, y, z, w); }
@@ -90,7 +92,11 @@ const uiNode = (parent, name, x = 0, y = 0, width = 750, height = 1334) => {
 };
 const rewardDialogs = [];
 const pauseDialogs = [];
+const failureDialogs = [];
 const ui = { uiNode, sprite: async (...args) => { const node = uiNode(...args); node.resource = args[2]; return node; },
+  panel: uiNode, label: (parent, name, string, x, y) => {
+    const node = uiNode(parent, name, x, y); node.addComponent(cc.Label).string = string; return node;
+  },
   loadFrame: async resource => resource === 'greenhouse/clear-brush' ? {originalSize: {width: 125, height: 162}} : {},
   message: async (parent, title, body, action, onAction) => { rewardDialogs.push({title, body, action, onAction}); return new Node('Message'); } };
 const originalFlowerSpritePath = (kind, variant = 1) => 'original/flower/' + kind + '_0' + variant;
@@ -114,9 +120,12 @@ function load(name) {
     if (request === './FlowerViewport') return require('./viewport-fixture.cjs');
     if (request === './FlowerHaptics') return {vibrateFlowerTap() { hapticTaps++; }};
     if (request === './FlowerPause') return {createPause: async (_parent, actions) => { pauseDialogs.push(actions); }};
+    if (request === './FlowerFailure') return {createFailure: async (_parent, reason, _retry, _home, revive) => {
+      failureDialogs.push({reason, revive});
+    }};
     if (request === './FlowerCatalog') return catalog;
     if (['./FlowerRules', './FlowerBoardSkin', './FlowerBouquet', './FlowerBouquetFinish', './FlowerCollectionFeedback', './FlowerClearSweep',
-      './FlowerPetalBloom', './FlowerRewardedVideo'].includes(request)) return load(request.slice(2));
+      './FlowerPetalBloom', './FlowerRewardedVideo', './FlowerTutorial', './FlowerTrayGuide'].includes(request)) return load(request.slice(2));
     return {};
   } });
   return exports;
@@ -125,6 +134,7 @@ const { FlowerRules } = load('FlowerRules');
 const { FlowerPresentationState } = load('FlowerGame');
 const { FlowerGame, flowerFlightPhase } = load('FlowerGame');
 const { FlowerBouquetView } = load('FlowerBouquet');
+const { TUTORIAL_CONFIG } = load('FlowerTutorial');
 const apply = (view, rules, event) => {
   if (event.type === 'move') view.move(event, rules.flowers.find(piece => piece.id === event.flowerId));
   if (event.type === 'order-completed') view.complete(event.order, 1);
@@ -255,6 +265,27 @@ test('abandoning an entrance resolves its waiter and clears the completion hook'
   assert.equal(await entrance, false);
   assert.equal(game.finishEntrance, null);
   assert.equal(game.pendingAnimations.size, 0);
+});
+
+test('the tutorial transition lets the pool enter before starting the level clock', async () => {
+  const game = new FlowerGame();
+  let gameTime = 0;
+  game.sceneMode = 'game'; game.ready = true; game.busy = true; game.firstPlayFrame = true;
+  game.outgoingTutorial = {content: new Node('Tutorial'), pool: null, effects: null};
+  game.rules = {status: 'playing', tick(dt) { gameTime += dt; return []; }};
+  game.updateHUD = () => {};
+  game.pool = {entering: true, update() { this.entering = false; }};
+  const entrance = game.waitForPoolEntrance();
+  game.update(0.3);
+  assert.equal(await entrance, true);
+  assert.equal(gameTime, 0);
+  assert.equal(game.busy, true);
+
+  game.outgoingTutorial = null;
+  game.update(0.016);
+  assert.equal(game.busy, false);
+  game.update(0.016);
+  assert.equal(gameTime, 0.016);
 });
 
 test('original flower flight picks up during the first fifth before settling and rotating into the bouquet', () => {
@@ -493,6 +524,112 @@ function collectingGame(config) {
 }
 const flush = () => new Promise(resolve => setImmediate(resolve));
 
+test('two butterfly pairs fly and deliver independently to different order slots', async () => {
+  const kinds = ['cdy_lxq', 'dy_zmj', 'cdcs_jyc'];
+  const {game, rules} = collectingGame({level: 2, timeLimit: 180,
+    flowers: kinds.map(kind => ({kind, count: 3})),
+    orders: kinds.map(kind => ({needs: [{kind, count: 3}]})),
+    specials: [2000, 2001, 2000, 2001].map(specialId => ({specialId,
+      kind: specialId === 2000 ? 'hd_01' : 'hd_02', insertAtPercent: 0})),
+  });
+  game.pool.take = () => null;
+  game.removeBouquet = async () => true;
+  let landFirst;
+  const firstLanding = new Promise(resolve => { landFirst = resolve; });
+  const launches = [], arrivals = [];
+  game.animateButterfly = async (pair, moves, _incoming, beforeTap) => {
+    const order = beforeTap.orders[moves[0].slot];
+    launches.push({color: pair.specialId, slot: order.slot, id: order.id, count: moves.length});
+    return new Map(moves.map(move => [move, pair.specialId === 2000 ? firstLanding : Promise.resolve()]));
+  };
+  game.animateFlowerMove = async (move, _rev, _incoming, deliveries) => {
+    if (deliveries?.has(move)) {
+      await deliveries.get(move);
+      arrivals.push(move.orderId);
+    }
+    game.visual.move(move, rules.flowers.find(flower => flower.id === move.flowerId));
+    return true;
+  };
+  const green = rules.flowers.filter(flower => flower.specialId === 2000);
+  const pink = rules.flowers.filter(flower => flower.specialId === 2001);
+  await game.collect(green[0].id);
+  await game.collect(pink[0].id);
+
+  const first = game.collect(green[1].id);
+  await flush();
+  const second = game.collect(pink[1].id);
+  await flush();
+  assert.deepEqual(launches, [
+    {color: 2000, slot: 0, id: 'order-0', count: 3},
+    {color: 2001, slot: 1, id: 'order-1', count: 3},
+  ]);
+  assert.equal(game.visual.buffer.length, 0);
+  assert.deepEqual(arrivals, ['order-1', 'order-1', 'order-1']);
+  assert.deepEqual(Array.from(game.butterflyOrderSlots.values()), [0]);
+
+  landFirst();
+  await Promise.all([first, second]);
+  assert.deepEqual(arrivals, ['order-1', 'order-1', 'order-1', 'order-0', 'order-0', 'order-0']);
+  assert.equal(game.visual.stars, 2);
+  assert.equal(game.butterflyOrderSlots.size, 0);
+  assert.equal(game.collectionWork, null);
+});
+
+test('the tutorial accepts its two bouquets in order and starts the numbered first level', async () => {
+  const {game, rules} = collectingGame(TUTORIAL_CONFIG);
+  const blue = rules.flowers.filter(flower => flower.kind === 'cdy_lxq');
+  const pink = rules.flowers.filter(flower => flower.kind === 'cdcs_jyc');
+  assert.equal(blue.length, 3);
+  assert.equal(pink.length, 3);
+  assert.deepEqual(Array.from(rules.orders.filter(Boolean), order => order.required), [3, 3]);
+
+  game.tutorialRound = true;
+  let completed = 0, fadeProgress = 0, poolDisposals = 0, effectDisposals = 0;
+  game.tutorial = {complete() { completed++; }, fadeOut(progress) { fadeProgress = progress; }};
+  game.pool.take = () => null;
+  game.pool.dispose = () => { poolDisposals++; };
+  game.orderEffects = {dispose() { effectDisposals++; }};
+  game.animateEvents = async () => {};
+  const writes = [], started = [];
+  game.write = (key, value) => writes.push([key, value]);
+  const tutorialContent = game.content;
+  game.startLevel = async level => {
+    assert.equal(game.outgoingTutorial.content, tutorialContent);
+    game.clear('game');
+    assert.ok(tutorialContent.isValid);
+    assert.ok(tutorialContent.getSiblingIndex() > game.content.getSiblingIndex());
+    assert.equal(poolDisposals + effectDisposals, 0);
+    started.push(level);
+  };
+  delete game.endLevel;
+
+  await game.collect(pink[0].id);
+  assert.equal(pink[0].status, 'pool');
+  assert.equal(rules.progress, 0);
+  for (const flower of blue) await game.collect(flower.id);
+  assert.equal(game.tutorialStep, 1);
+  assert.equal(rules.completedOrders, 1);
+  assert.deepEqual(started, []);
+
+  for (const flower of pink) await game.collect(flower.id);
+  await flush();
+  assert.equal(rules.completedOrders, 2);
+  assert.equal(rules.status, 'won');
+  assert.equal(completed, 1);
+  assert.deepEqual(writes, [['tutorialComplete', 1]]);
+  assert.ok(tutorialContent.isValid);
+  assert.deepEqual(started, []);
+
+  animationTweens.at(-1).callback();
+  await flush();
+  assert.deepEqual(started, [1]);
+  assert.equal(fadeProgress, 1);
+  assert.equal(tutorialContent.isValid, false);
+  assert.equal(game.outgoingTutorial, null);
+  assert.equal(poolDisposals, 1);
+  assert.equal(effectDisposals, 1);
+});
+
 test('the clear prop sweeps each stored flower on contact and keeps the butterfly in the tray', async () => {
   const {game, rules, sounds} = collectingGame({level: 4, timeLimit: 180,
     flowers: [{kind: 'cdy_lxq', count: 3}, {kind: 'dy_zmj', count: 3}, {kind: 'cdcs_jyc', count: 3}],
@@ -551,6 +688,52 @@ test('the clear prop sweeps each stored flower on contact and keeps the butterfl
   assert.equal(inventory, 1);
   assert.equal(sprite.spriteFrame, original);
   assert.equal(game.hud.getChildByName('ClearSweep').isValid, false);
+});
+
+test('full-tray revival sweeps all ordinary flowers together before the clear prop unlocks', async () => {
+  const {game, rules, flights, sounds} = collectingGame({level: 2, timeLimit: 180,
+    flowers: [{kind: 'cdy_lxq', count: 3}, {kind: 'dy_zmj', count: 3}, {kind: 'cdcs_jyc', count: 5}],
+    orders: [{needs: [{kind: 'cdy_lxq', count: 3}]}, {needs: [{kind: 'dy_zmj', count: 3}]},
+      {needs: [{kind: 'cdcs_jyc', count: 5}]}]});
+  const {TRAY_X, TRAY_Y} = load('FlowerBoardSkin');
+  const flowers = rules.flowers.filter(flower => flower.kind === 'cdcs_jyc');
+  for (const [slot, flower] of flowers.entries()) {
+    rules.select(flower.id);
+    const node = uiNode(game.trayRoot, 'Buffered-' + flower.id);
+    node.setPosition(TRAY_X[slot], TRAY_Y);
+  }
+  game.visual = new FlowerPresentationState(rules);
+  game.hud = uiNode(game.content, 'HUD');
+  game.toolsRoot = uiNode(game.hud, 'Tools');
+  let trayRenders = 0;
+  game.renderTray = async () => { trayRenders++; };
+  game.write = () => assert.fail('revival must not spend a clear prop');
+  delete game.endLevel;
+
+  await game.endLevel();
+  const {reason, revive} = failureDialogs.at(-1);
+  assert.equal(reason, 'buffer');
+  assert.equal(revive(), true);
+  await flush();
+
+  const sweep = game.hud.getChildByName('ClearSweep');
+  const motion = animationTweens.at(-1);
+  assert.ok(sweep?.isValid);
+  assert.equal(game.busy, true);
+  assert.equal(game.visual.buffer.length, 5);
+  assert.equal(trayRenders, 0);
+  motion.target.progress = 0.55;
+  motion.steps[0].options.onUpdate();
+  motion.callback();
+  await flush();
+
+  assert.deepEqual(sounds, ['lose', 'level_qinsao']);
+  assert.equal(flights.length, 0);
+  assert.equal(game.visual.buffer.length, 0);
+  assert.equal(rules.waiting.length, 5);
+  assert.equal(rules.bufferCapacity, 6);
+  assert.equal(trayRenders, 1);
+  assert.equal(game.busy, false);
 });
 
 test('compose casts one star per missing flower and lets subsequent tray refills use the normal flight', async () => {
@@ -717,6 +900,44 @@ test('a full vase clears and refills independently of a vase whose flowers are s
   departures.get(0)(true);
   await Promise.all([delayed.work, rightLast.work, leftLast.work, next.work]);
   assert.equal(game.busy, false);
+});
+
+test('the tray guide explains the current limit during the first warning only', () => {
+  const {game, rules} = collectingGame({level: 2, timeLimit: 120, flowers: [{kind: 'a', count: 3}, {kind: 'b', count: 6}],
+    orders: [{needs: [{kind: 'a', count: 3}, {kind: 'b', count: 6}]}]});
+  const {FlowerTrayGuide} = load('FlowerTrayGuide');
+  const {TRAY_X} = load('FlowerBoardSkin');
+  let shows = 0;
+  const guide = game.trayGuide = new FlowerTrayGuide(game.content, () => { shows++; });
+  const count = guide.root.getChildByName('SlotsRemaining').getComponent(cc.Label);
+  const flowers = rules.flowers.filter(flower => flower.kind === 'b');
+  const add = flower => {
+    for (const event of rules.select(flower.id)) apply(game.visual, rules, event);
+    game.drawTrayWarning(); game.update(0);
+  };
+  const highlights = () => [...new Set(game.trayWarning.rects)];
+
+  add(flowers[0]); add(flowers[1]);
+  assert.equal(guide.root.active, false);
+  add(flowers[2]);
+  assert.equal(count.string, '暂存区剩 2 格');
+  assert.deepEqual(highlights(), [TRAY_X[3], TRAY_X[4]]);
+  add(flowers[3]);
+  assert.equal(count.string, '暂存区剩 1 格');
+  assert.deepEqual(highlights(), [TRAY_X[4]]);
+
+  rules.coins = 60;
+  assert.equal(rules.buyExtraBufferSlot().length, 1);
+  game.drawTrayWarning(); game.update(0);
+  assert.equal(count.string, '暂存区剩 2 格');
+  assert.deepEqual(highlights(), [TRAY_X[4], TRAY_X[5]]);
+  for (const event of rules.clearBuffer()) apply(game.visual, rules, event);
+  game.drawTrayWarning(); game.update(0);
+  assert.equal(guide.root.active, false);
+  assert.deepEqual(highlights(), []);
+  assert.equal(guide.update(2), false);
+  assert.equal(guide.update(1), false);
+  assert.equal(shows, 1);
 });
 
 test('a full buffer ends once after its accepted flights land and rejects further taps', async () => {
