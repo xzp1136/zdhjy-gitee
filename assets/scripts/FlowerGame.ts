@@ -935,7 +935,7 @@ export class FlowerGame extends Component {
             if (this.current(rev) && this.collectionWork === work) {
                 this.collectionWork = null; this.busy = false;
                 if (this.tutorialRound && this.tutorialStep === 0 && !rules.orders[0]) this.tutorialStep = 1;
-                if (!this.paused && rules.status !== 'playing') void this.endLevel();
+                if (!this.finished && !this.paused && rules.status !== 'playing') void this.endLevel();
             }
         }
     }
@@ -975,7 +975,13 @@ export class FlowerGame extends Component {
             if (event.type === 'order-completed') {
                 schedule([event.order.slot], async () => {
                     visual.complete(event.order, starsPerCompletion); this.updateHUD(); this.sound('vasesuccss');
-                    return this.removeBouquet(event.order.slot);
+                    const departure = this.removeBouquet(event.order.slot);
+                    if (!this.tutorialRound && rules.status === 'won' && visual.collected === visual.total) {
+                        // Prepare the result while the finishing effects are still on screen.
+                        const ordersSettled = this.collectionWork ?? Promise.all(Array.from(this.eventLanes.values()));
+                        void this.endLevel(ordersSettled, this.eventLanes.get('tray'));
+                    }
+                    return departure;
                 });
                 continue;
             }
@@ -1636,7 +1642,7 @@ export class FlowerGame extends Component {
             this.removeOutgoingTutorial(outgoing);
         }
     }
-    private async endLevel() {
+    private async endLevel(ordersSettled?: Promise<unknown>, traySettled?: Promise<boolean>) {
         if (this.finished || this.paused || !this.rules) return;
         this.finished = true;
         this.trayGuide?.update(0);
@@ -1649,21 +1655,30 @@ export class FlowerGame extends Component {
             await this.enterFirstLevel();
             return;
         }
-        const availableLevels = this.catalog ? this.catalog.levels.keys() : [level];
-        const nextLevel = normalizePlayableLevel(level + 1, availableLevels);
-        if (won && !await this.releaseRemainingButterflies(rev)) return;
-        this.sound(won ? 'win' : 'lose');
         if (won) {
-            this.write('level', normalizePlayableLevel(Math.max(this.read('level', 1), nextLevel),
-                this.catalog ? this.catalog.levels.keys() : [level]));
-            this.write('stars', this.read('stars', 0) + this.rules.stars);
-            this.write('coins', this.rules.coins);
-        }
-        if (won) {
-            await createWinResult(content, level, rules.stars, rules.coinReward,
+            const availableLevels = this.catalog ? Array.from(this.catalog.levels.keys()) : [level];
+            const nextLevel = normalizePlayableLevel(level + 1, availableLevels);
+            const butterflies = Promise.resolve(traySettled).then(() => this.current(rev) && this.releaseRemainingButterflies(rev))
+                .catch(error => {
+                    if (this.current(rev)) console.warn('[FlowerGame] release remaining butterflies', error);
+                    return this.current(rev);
+                });
+            const showWhen = Promise.all([ordersSettled, butterflies]).then(([, released]) => {
+                if (!released || !this.current(rev)) return false;
+                this.sound('win');
+                this.write('level', normalizePlayableLevel(Math.max(this.read('level', 1), nextLevel), availableLevels));
+                this.write('stars', this.read('stars', 0) + rules.stars);
+                this.write('coins', rules.coins);
+                return true;
+            });
+            const result = createWinResult(content, level, rules.stars, rules.coinReward,
                 () => { if (this.current(rev)) void this.startLevel(nextLevel); }, () => { if (this.current(rev)) void this.showHome(); },
-                nextLevel > level ? '下一关' : '再玩一次');
+                nextLevel > level ? '下一关' : '再玩一次', showWhen);
+            await Promise.all([showWhen, result]).catch(error => {
+                if (this.current(rev)) console.error('[FlowerGame] win result', error);
+            });
         } else {
+            this.sound('lose');
             const failureReason = rules.failureReason || 'time';
             const failure = () => this.current(rev) ? createFailure(content, failureReason,
                 () => { if (this.current(rev)) void this.startLevel(level); },

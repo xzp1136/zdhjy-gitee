@@ -313,13 +313,43 @@ test('winning the last known board caps progress and offers a replay without eve
   h.game.catalog = await h.load('FlowerCatalog').FlowerCatalog.load();
   h.load('FlowerResults').createWinResult = async (...args) => { results.push(args); return new h.Node(); };
   h.game.startLevel = async level => { started.push(level); }; h.game.sound = () => {};
-  h.game.rules = {status:'won',level:85,stars:3,coins:10,coinReward:10}; h.storage.set('zdhjy.level','86');
+  h.game.visual = {buffer: []};
+  h.game.rules = {status:'won',level:85,stars:3,coins:10,coinReward:10,flowers:[]}; h.storage.set('zdhjy.level','86');
   await h.game.endLevel();
   assert.equal(h.storage.get('zdhjy.level'),'85'); assert.equal(results[0][6],'再玩一次');
   results[0][4](); assert.deepEqual(started,[85]); assert.equal(typeof results[0][5],'function');
-  h.game.finished = false; h.game.rules = {status:'won',level:84,stars:3,coins:10,coinReward:10};
+  h.game.finished = false; h.game.rules = {status:'won',level:84,stars:3,coins:10,coinReward:10,flowers:[]};
   await h.game.endLevel();
   assert.equal(results[1][6],'下一关'); results[1][4](); assert.deepEqual(started,[85,85]);
+});
+
+test('victory prepares the result while butterflies and the final bouquet finish', async () => {
+  const h = harness();
+  h.game.rules = {status:'won',level:4,stars:3,coins:10,coinReward:10};
+  h.game.sound = () => {};
+  let finishOrders, finishButterflies;
+  const orders = new Promise(resolve => { finishOrders = resolve; });
+  const butterflies = new Promise(resolve => { finishButterflies = resolve; });
+  const stages = [];
+  h.game.releaseRemainingButterflies = () => { stages.push('butterflies'); return butterflies; };
+  h.load('FlowerResults').createWinResult = async (...args) => {
+    stages.push('prepare');
+    assert.equal(await args[7], true);
+    stages.push('show');
+    return new h.Node();
+  };
+
+  const result = h.game.endLevel(orders);
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(stages, ['prepare', 'butterflies']);
+  finishOrders();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.deepEqual(stages, ['prepare', 'butterflies']);
+  assert.equal(h.storage.has('zdhjy.coins'), false);
+  finishButterflies(true);
+  await result;
+  assert.deepEqual(stages, ['prepare', 'butterflies', 'show']);
+  assert.equal(h.storage.get('zdhjy.coins'), '10');
 });
 
 

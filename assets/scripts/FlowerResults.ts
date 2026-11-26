@@ -126,19 +126,17 @@ export class FlowerResultReveal extends Component {
     }
 }
 
-const sharedFrames = [
-    `${A}ui/over/bg`, `${A}ui/itemicon/gold`, `${A}ui/over/output_icon_1`, `${A}extras/green_button_931`,
-];
-
-/** Optional preloading avoids showing cards one at a time at the end of a level. */
-export async function preloadWinResult(level: number): Promise<void> {
-    const paths = [...sharedFrames];
-    if (level > 0) {
-        const data = await loadUnlockPreview(level);
-        paths.push(`${A}ui/over/tittle`, `${A}ui/over/bunchcard`, `${A}ui/over/new`);
-        for (const bouquet of data.bouquets) paths.push(...bouquet.layers.map(layer => layer.resource));
-        if (data.bouquets.length) await FlowerEffects.preload();
-    }
+/** Load preview data at level entry and batch the artwork when the victory transition starts. */
+export async function preloadWinResult(level: number, artwork = false): Promise<void> {
+    if (level <= 0) return;
+    const {bouquets} = await loadUnlockPreview(level);
+    const effects = bouquets.length ? FlowerEffects.preload() : Promise.resolve();
+    if (!artwork) return effects;
+    const paths = new Set<string>();
+    if (bouquets.length) paths.add(`${A}ui/over/new`);
+    for (const bouquet of bouquets) for (const layer of bouquet.layers) paths.add(layer.resource);
+    await Promise.all([effects, preloadPopupFrames(bouquets.length ? ['coin', 'star'] : ['coin', 'star', 'victory']),
+        ...Array.from(paths, path => loadFrame(path))]);
 }
 
 function previewBounds(layers: BouquetPreviewLayer[]) {
@@ -187,11 +185,14 @@ export async function createWinResult(
     onNext: () => void,
     onHome?: () => void,
     nextLabel = '下一关',
+    showWhen?: Promise<boolean>,
 ): Promise<Node> {
-    await Promise.all([preloadWinResult(level),preloadPopupFrames()]);
+    await preloadWinResult(level, true);
     const previewData = await loadUnlockPreview(level);
     const preview = previewData.bouquets.length ? previewData : null;
+    if (!parent.isValid) throw new Error('The result parent was destroyed while loading artwork.');
     const overlay = modal(parent, 'WinResultOverlay', '#141414eb');
+    overlay.active = false;
     await popupFrame(overlay,'通关成功',678,preview?1020:824);
 
     let reveal: FlowerResultReveal | null = null;
@@ -238,6 +239,13 @@ export async function createWinResult(
         const home = await popupButton(overlay, 'BackHome', '返回主页', 0, -350, 204, 72, 'blue');
         tap(home, () => leave(onHome));
     }
-    presentPopup(overlay, {openDuration: 0.5, closeDuration: 0.3, openSound: true});
+    if (showWhen && !await showWhen) {
+        if (overlay.isValid) overlay.destroy();
+        return overlay;
+    }
+    if (overlay.isValid) {
+        overlay.active = true;
+        presentPopup(overlay, {openDuration: 0.5, closeDuration: 0.3, openSound: true});
+    }
     return overlay;
 }

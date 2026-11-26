@@ -100,27 +100,38 @@ export function boardLabel(parent: Node, name: string, value: string, x: number,
     return text;
 }
 
-/** Keep the original height and rounded ends as the progress width grows. */
+const PROGRESS_ART_HEIGHT = 25;
+const PROGRESS_FILL_SCALE = 32 / PROGRESS_ART_HEIGHT;
+const PROGRESS_CAP_LEFT = 13;
+const PROGRESS_CAP_RIGHT = 15;
+
+/** Size the sliced sprite in texture units so the caps keep their proportions. */
 export async function createProgressFill(parent: Node): Promise<Node> {
-    const center = boardX(382 + 91 / 2);
-    const node = await boardSprite(parent, 'ProgressFill', 'progress-fill-cap', center, boardY(403.5), 91, 25);
+    const node = await sprite(parent, 'ProgressFill', skinPath('progress-fill-cap'), boardX(382), boardY(404.5), 91, PROGRESS_ART_HEIGHT);
     const renderer = node.getComponent(Sprite)!;
     const frame = renderer.spriteFrame!.clone();
-    frame.insetLeft = frame.insetRight = 13;
+    frame.insetLeft = PROGRESS_CAP_LEFT;
+    frame.insetRight = PROGRESS_CAP_RIGHT;
     renderer.spriteFrame = frame;
     renderer.type = Sprite.Type.SLICED;
+    renderer.trim = false;
     node.getComponent(UITransform)!.setAnchorPoint(0, 0.5);
-    node.setPosition(boardX(382), boardY(403.5));
+    const scale = BOARD_UNIT * PROGRESS_FILL_SCALE;
+    node.setScale(scale, scale, 1);
     node.active = false;
     node.on(Node.EventType.NODE_DESTROYED, () => frame.destroy());
     return node;
 }
 
 export function setProgressFill(node: Node, percent: number): void {
-    // The PSD sample is 91 px wide at 25%, including its two rounded caps.
-    const width = Math.max(1, 19 + 288 * percent / 100);
-    node.active = percent > 0;
-    node.getComponent(UITransform)!.setContentSize(width * BOARD_UNIT, 25 * BOARD_UNIT);
+    const progress = Math.max(0, Math.min(percent, 100));
+    const capWidth = PROGRESS_CAP_LEFT + PROGRESS_CAP_RIGHT;
+    const sampleWidth = 91 / PROGRESS_FILL_SCALE;
+    // Grow from two full caps to the original 25% sample, then follow the original width curve.
+    const width = progress < 25 ? capWidth + (sampleWidth - capWidth) * progress / 25
+        : (19 + 288 * progress / 100) / PROGRESS_FILL_SCALE;
+    node.active = progress > 0;
+    node.getComponent(UITransform)!.setContentSize(width, PROGRESS_ART_HEIGHT);
 }
 
 /** Water inside the new pool border, in the same PSD coordinate system. */
